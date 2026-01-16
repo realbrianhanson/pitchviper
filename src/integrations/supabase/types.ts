@@ -198,6 +198,100 @@ export type Database = {
         }
         Relationships: []
       }
+      objection_responses: {
+        Row: {
+          approach: Database["public"]["Enums"]["response_approach"]
+          created_at: string
+          created_by: string | null
+          downvotes: number
+          id: string
+          objection_id: string
+          response_text: string
+          times_successful: number
+          times_used: number
+          upvotes: number
+        }
+        Insert: {
+          approach: Database["public"]["Enums"]["response_approach"]
+          created_at?: string
+          created_by?: string | null
+          downvotes?: number
+          id?: string
+          objection_id: string
+          response_text: string
+          times_successful?: number
+          times_used?: number
+          upvotes?: number
+        }
+        Update: {
+          approach?: Database["public"]["Enums"]["response_approach"]
+          created_at?: string
+          created_by?: string | null
+          downvotes?: number
+          id?: string
+          objection_id?: string
+          response_text?: string
+          times_successful?: number
+          times_used?: number
+          upvotes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objection_responses_objection_id_fkey"
+            columns: ["objection_id"]
+            isOneToOne: false
+            referencedRelation: "objections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      objections: {
+        Row: {
+          category: Database["public"]["Enums"]["objection_category"]
+          context: string | null
+          created_at: string
+          created_by: string | null
+          difficulty: Database["public"]["Enums"]["objection_difficulty"]
+          id: string
+          is_approved: boolean
+          objection_text: string
+          team_id: string | null
+          usage_count: number
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["objection_category"]
+          context?: string | null
+          created_at?: string
+          created_by?: string | null
+          difficulty: Database["public"]["Enums"]["objection_difficulty"]
+          id?: string
+          is_approved?: boolean
+          objection_text: string
+          team_id?: string | null
+          usage_count?: number
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["objection_category"]
+          context?: string | null
+          created_at?: string
+          created_by?: string | null
+          difficulty?: Database["public"]["Enums"]["objection_difficulty"]
+          id?: string
+          is_approved?: boolean
+          objection_text?: string
+          team_id?: string | null
+          usage_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objections_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -666,6 +760,21 @@ export type Database = {
         | "roleplay"
         | "objection_practice"
         | "custom"
+      objection_category:
+        | "price"
+        | "timing"
+        | "competition"
+        | "authority"
+        | "need"
+        | "trust"
+        | "stall"
+      objection_difficulty: "easy" | "medium" | "hard"
+      response_approach:
+        | "empathy"
+        | "logic"
+        | "redirect"
+        | "question"
+        | "social_proof"
       roleplay_difficulty: "rookie" | "pro" | "expert" | "nightmare"
       roleplay_session_status: "in_progress" | "completed" | "abandoned"
       sos_alert_status: "pending" | "acknowledged" | "resolved"
@@ -830,6 +939,23 @@ export const Constants = {
         "roleplay",
         "objection_practice",
         "custom",
+      ],
+      objection_category: [
+        "price",
+        "timing",
+        "competition",
+        "authority",
+        "need",
+        "trust",
+        "stall",
+      ],
+      objection_difficulty: ["easy", "medium", "hard"],
+      response_approach: [
+        "empathy",
+        "logic",
+        "redirect",
+        "question",
+        "social_proof",
       ],
       roleplay_difficulty: ["rookie", "pro", "expert", "nightmare"],
       roleplay_session_status: ["in_progress", "completed", "abandoned"],
