@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.roleplay-chat]
 verify_jwt = true
+
+[functions.roleplay-analyze]
+verify_jwt = true
