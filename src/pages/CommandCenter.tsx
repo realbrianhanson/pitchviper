@@ -1,10 +1,45 @@
+import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
 import { ViperStat } from "@/components/ui/viper-stat";
 import { ViperBadge } from "@/components/ui/viper-badge";
 import { DollarSign, Target, TrendingUp, Users, Zap } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Profile {
+  full_name: string;
+  avatar_url: string | null;
+  title: string | null;
+  xp_points: number;
+  current_level: number;
+  current_streak: number;
+}
 
 export default function CommandCenter() {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const loadProfile = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url, title, xp_points, current_level, current_streak")
+        .eq("user_id", user.id)
+        .single();
+
+      if (data) {
+        setProfile(data);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
+
+  const firstName = profile?.full_name?.split(" ")[0] || "there";
+
   return (
     <AppLayout title="Command Center">
       <div className="space-y-6 animate-fade-in">
@@ -12,18 +47,42 @@ export default function CommandCenter() {
         <ViperCard variant="glow" className="relative overflow-hidden">
           <ViperCardContent className="py-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground mb-1">Welcome back,</p>
-                <h2 className="text-3xl font-display font-bold text-foreground">
-                  John Doe
-                </h2>
-                <p className="text-muted-foreground mt-2">
-                  You're <span className="text-success font-semibold">12%</span> ahead of quota this month. Keep crushing it!
-                </p>
+              <div className="flex items-center gap-4">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={profile.full_name}
+                    className="h-16 w-16 rounded-full object-cover border-2 border-primary shadow-glow-sm"
+                  />
+                ) : (
+                  <div className="h-16 w-16 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center">
+                    <span className="text-2xl font-display font-bold text-primary">
+                      {firstName.charAt(0)}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <p className="text-muted-foreground mb-1">Welcome back,</p>
+                  <h2 className="text-3xl font-display font-bold text-foreground">
+                    {firstName}
+                  </h2>
+                  {profile?.title && (
+                    <p className="text-sm text-muted-foreground mt-1">{profile.title}</p>
+                  )}
+                </div>
               </div>
               <div className="hidden md:flex items-center gap-3">
-                <ViperBadge variant="success" glow>On Fire 🔥</ViperBadge>
-                <ViperBadge variant="magenta">Streak: 5 days</ViperBadge>
+                <ViperBadge variant="default">
+                  Level {profile?.current_level || 1}
+                </ViperBadge>
+                <ViperBadge variant="success" glow>
+                  {profile?.xp_points || 0} XP
+                </ViperBadge>
+                {(profile?.current_streak || 0) > 0 && (
+                  <ViperBadge variant="magenta">
+                    🔥 {profile?.current_streak} day streak
+                  </ViperBadge>
+                )}
               </div>
             </div>
           </ViperCardContent>

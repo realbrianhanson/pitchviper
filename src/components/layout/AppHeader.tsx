@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Bell, ChevronDown, User, Settings, LogOut } from "lucide-react";
 import { ViperInput } from "@/components/ui/viper-input";
@@ -10,10 +10,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 interface AppHeaderProps {
   title?: string;
+}
+
+interface Profile {
+  full_name: string;
+  avatar_url: string | null;
+  title: string | null;
+}
+
+interface UserRole {
+  role: string;
 }
 
 export function AppHeader({ title }: AppHeaderProps) {
@@ -21,18 +32,58 @@ export function AppHeader({ title }: AppHeaderProps) {
   const navigate = useNavigate();
   const [hasNotifications] = useState(true);
   const notificationCount = 3;
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [role, setRole] = useState<string>("rep");
+
+  useEffect(() => {
+    if (!user) return;
+
+    const loadData = async () => {
+      // Load profile
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url, title")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profileData) {
+        setProfile(profileData);
+      }
+
+      // Load role
+      const { data: rolesData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+
+      if (rolesData && rolesData.length > 0) {
+        setRole(rolesData[0].role);
+      }
+    };
+
+    loadData();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/sign-in");
   };
 
-  // Get initials from email or name
+  // Get initials from name
   const getInitials = () => {
-    if (!user) return "??";
-    const email = user.email || "";
-    return email.substring(0, 2).toUpperCase();
+    if (profile?.full_name) {
+      return profile.full_name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    return user?.email?.substring(0, 2).toUpperCase() || "??";
   };
+
+  const displayName = profile?.full_name || user?.email?.split("@")[0] || "User";
+  const roleLabel = role === "manager" ? "Sales Manager" : "Sales Rep";
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/80 backdrop-blur-xl px-6">
@@ -82,17 +133,25 @@ export function AppHeader({ title }: AppHeaderProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-all duration-200 hover:bg-accent">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 border border-primary/30">
-                <span className="text-sm font-display font-semibold text-primary">
-                  {getInitials()}
-                </span>
-              </div>
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.full_name}
+                  className="h-8 w-8 rounded-full object-cover border border-primary/30"
+                />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 border border-primary/30">
+                  <span className="text-sm font-display font-semibold text-primary">
+                    {getInitials()}
+                  </span>
+                </div>
+              )}
               <div className="hidden md:flex flex-col items-start">
                 <span className="text-sm font-medium text-foreground">
-                  {user?.email?.split("@")[0] || "User"}
+                  {displayName}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  Sales Rep
+                  {roleLabel}
                 </span>
               </div>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -103,7 +162,7 @@ export function AppHeader({ title }: AppHeaderProps) {
             className="w-56 bg-card border-border z-50"
           >
             <div className="px-3 py-2 border-b border-border">
-              <p className="text-sm font-medium text-foreground">{user?.email?.split("@")[0]}</p>
+              <p className="text-sm font-medium text-foreground">{displayName}</p>
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
             <DropdownMenuItem className="gap-2 cursor-pointer">
