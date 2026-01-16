@@ -189,6 +189,101 @@ export type Database = {
           },
         ]
       }
+      roleplay_scenarios: {
+        Row: {
+          created_at: string
+          description: string
+          difficulty: Database["public"]["Enums"]["roleplay_difficulty"]
+          estimated_minutes: number
+          id: string
+          is_active: boolean
+          name: string
+          objections_to_include: string[]
+          prospect_persona: string
+          prospect_situation: string
+          sort_order: number
+          win_conditions: string[]
+          xp_reward: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          difficulty: Database["public"]["Enums"]["roleplay_difficulty"]
+          estimated_minutes?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          objections_to_include: string[]
+          prospect_persona: string
+          prospect_situation: string
+          sort_order?: number
+          win_conditions: string[]
+          xp_reward?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          difficulty?: Database["public"]["Enums"]["roleplay_difficulty"]
+          estimated_minutes?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          objections_to_include?: string[]
+          prospect_persona?: string
+          prospect_situation?: string
+          sort_order?: number
+          win_conditions?: string[]
+          xp_reward?: number
+        }
+        Relationships: []
+      }
+      roleplay_sessions: {
+        Row: {
+          completed_at: string | null
+          duration_seconds: number | null
+          feedback: string | null
+          id: string
+          scenario_id: string
+          score: number | null
+          started_at: string
+          status: Database["public"]["Enums"]["roleplay_session_status"]
+          transcript: Json
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          duration_seconds?: number | null
+          feedback?: string | null
+          id?: string
+          scenario_id: string
+          score?: number | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["roleplay_session_status"]
+          transcript?: Json
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          duration_seconds?: number | null
+          feedback?: string | null
+          id?: string
+          scenario_id?: string
+          score?: number | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["roleplay_session_status"]
+          transcript?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roleplay_sessions_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "roleplay_scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sos_alerts: {
         Row: {
           acknowledged_by: string | null
@@ -488,6 +583,8 @@ export type Database = {
         | "roleplay"
         | "objection_practice"
         | "custom"
+      roleplay_difficulty: "rookie" | "pro" | "expert" | "nightmare"
+      roleplay_session_status: "in_progress" | "completed" | "abandoned"
       sos_alert_status: "pending" | "acknowledged" | "resolved"
       user_status_type:
         | "available"
@@ -641,6 +738,8 @@ export const Constants = {
         "objection_practice",
         "custom",
       ],
+      roleplay_difficulty: ["rookie", "pro", "expert", "nightmare"],
+      roleplay_session_status: ["in_progress", "completed", "abandoned"],
       sos_alert_status: ["pending", "acknowledged", "resolved"],
       user_status_type: [
         "available",
