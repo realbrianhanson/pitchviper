@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { DailyChallenge } from "@/components/dashboard/DailyChallenge";
@@ -6,24 +5,8 @@ import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { TeamPulse } from "@/components/dashboard/TeamPulse";
 import { MotivationalQuote } from "@/components/dashboard/MotivationalQuote";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { Phone, Calendar, Target, TrendingUp } from "lucide-react";
-
-interface Profile {
-  full_name: string;
-  avatar_url: string | null;
-  title: string | null;
-  xp_points: number;
-  current_level: number;
-  current_streak: number;
-  team_id: string | null;
-}
-
-interface Team {
-  id: string;
-  name: string;
-}
+import { useDashboardData } from "@/hooks/useDashboardData";
+import { Phone, Calendar, Target, TrendingUp, Loader2 } from "lucide-react";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -40,92 +23,65 @@ function formatDate(): string {
   });
 }
 
-// Mock data - will be replaced with real data later
-const mockActivities = [
-  {
-    id: "1",
-    type: "deal" as const,
-    description: "Closed deal with TechCorp Inc.",
-    timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    value: "$45,000",
-  },
-  {
-    id: "2",
-    type: "call" as const,
-    description: "Completed discovery call with Acme Corp",
-    timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-  },
-  {
-    id: "3",
-    type: "badge" as const,
-    description: "Earned 'First Blood' badge for closing first deal of the day",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-    value: "+100 XP",
-  },
-  {
-    id: "4",
-    type: "appointment" as const,
-    description: "Scheduled demo with GlobalTech for Friday",
-    timestamp: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-  },
-  {
-    id: "5",
-    type: "call" as const,
-    description: "Follow-up call with DataSmart completed",
-    timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
-  },
-];
+// Calculate percentage change
+function calcChange(today: number, yesterday: number | null | undefined): number {
+  if (!yesterday || yesterday === 0) return today > 0 ? 100 : 0;
+  return Math.round(((today - yesterday) / yesterday) * 100);
+}
 
+// Mock follow-ups for now (will be real data later)
 const mockFollowUps = [
   { id: "1", company: "Acme Corp", contact: "John Smith", time: "10:30 AM", type: "Follow-up" },
   { id: "2", company: "TechStart", contact: "Sarah Lee", time: "2:00 PM", type: "Demo" },
   { id: "3", company: "GlobalTech", contact: "Mike Chen", time: "4:30 PM", type: "Proposal Review" },
 ];
 
-const mockTeamMembers = [
-  { id: "1", name: "Sarah Johnson", value: 12, metric: "calls", rank: 1 },
-  { id: "2", name: "Mike Chen", value: 10, metric: "calls", rank: 2 },
-  { id: "3", name: "Alex Rivera", value: 8, metric: "calls", rank: 3 },
-];
-
 export default function CommandCenter() {
-  const { user } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [team, setTeam] = useState<Team | null>(null);
+  const { data, loading, error } = useDashboardData();
 
-  useEffect(() => {
-    if (!user) return;
+  if (loading) {
+    return (
+      <AppLayout title="Command Center">
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-10 w-10 text-primary animate-spin" />
+            <p className="text-muted-foreground">Loading your dashboard...</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
-    const loadData = async () => {
-      // Load profile
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("full_name, avatar_url, title, xp_points, current_level, current_streak, team_id")
-        .eq("user_id", user.id)
-        .single();
+  if (error) {
+    return (
+      <AppLayout title="Command Center">
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="text-center">
+            <p className="text-destructive mb-2">Failed to load dashboard</p>
+            <p className="text-sm text-muted-foreground">{error}</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
-      if (profileData) {
-        setProfile(profileData);
+  const firstName = data?.profile?.full_name?.split(" ")[0] || "there";
+  const todayStats = data?.todayStats;
+  const yesterdayStats = data?.yesterdayStats;
+  const challenge = data?.challenge;
+  const activities = data?.activities || [];
+  const teamLeaderboard = data?.teamLeaderboard;
 
-        // Load team if exists
-        if (profileData.team_id) {
-          const { data: teamData } = await supabase
-            .from("teams")
-            .select("id, name")
-            .eq("id", profileData.team_id)
-            .single();
+  // Calculate conversion rate
+  const totalCalls = (todayStats?.calls_made || 0) + (todayStats?.calls_received || 0);
+  const conversions = todayStats?.appointments_set || 0;
+  const conversionRate = totalCalls > 0 ? Math.round((conversions / totalCalls) * 100) : 0;
 
-          if (teamData) {
-            setTeam(teamData);
-          }
-        }
-      }
-    };
-
-    loadData();
-  }, [user]);
-
-  const firstName = profile?.full_name?.split(" ")[0] || "there";
+  const yesterdayTotalCalls = (yesterdayStats?.calls_made || 0) + (yesterdayStats?.calls_received || 0);
+  const yesterdayConversions = yesterdayStats?.appointments_set || 0;
+  const yesterdayConversionRate = yesterdayTotalCalls > 0 
+    ? Math.round((yesterdayConversions / yesterdayTotalCalls) * 100) 
+    : 0;
 
   return (
     <AppLayout title="Command Center">
@@ -142,46 +98,64 @@ export default function CommandCenter() {
 
         {/* Daily Challenge & Streak */}
         <DailyChallenge
-          challenge={{
-            title: "Cold Call Champion",
-            description: "Make 15 cold calls today to earn bonus XP and climb the leaderboard.",
-            reward: 250,
-            progress: 7,
-            goal: 15,
+          challenge={challenge ? {
+            title: challenge.title,
+            description: challenge.description,
+            reward: challenge.xp_reward,
+            progress: challenge.progress,
+            goal: challenge.target,
+          } : {
+            title: "No Challenge Today",
+            description: "Check back tomorrow for a new challenge!",
+            reward: 0,
+            progress: 0,
+            goal: 1,
           }}
-          streak={profile?.current_streak || 0}
+          streak={data?.profile?.current_streak || 0}
         />
 
         {/* Stats Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard
             label="Calls Today"
-            value={23}
+            value={todayStats?.calls_made || 0}
             icon={Phone}
-            comparison={{ value: 15, label: "vs yesterday" }}
+            comparison={{ 
+              value: calcChange(todayStats?.calls_made || 0, yesterdayStats?.calls_made), 
+              label: "vs yesterday" 
+            }}
             delay={0}
           />
           <MetricCard
             label="Appointments Set"
-            value={5}
+            value={todayStats?.appointments_set || 0}
             icon={Calendar}
-            progress={{ current: 5, goal: 8 }}
+            progress={{ current: todayStats?.appointments_set || 0, goal: 8 }}
             delay={100}
           />
           <MetricCard
-            label="Deals Closed"
-            value={127450}
+            label="Revenue Closed"
+            value={Math.round(todayStats?.revenue_closed || 0)}
             format="currency"
             icon={Target}
-            comparison={{ value: 23, label: "vs last week" }}
+            comparison={{ 
+              value: calcChange(
+                Math.round(todayStats?.revenue_closed || 0), 
+                yesterdayStats?.revenue_closed ? Math.round(yesterdayStats.revenue_closed) : null
+              ), 
+              label: "vs yesterday" 
+            }}
             delay={200}
           />
           <MetricCard
             label="Conversion Rate"
-            value={68}
+            value={conversionRate}
             format="percentage"
             icon={TrendingUp}
-            comparison={{ value: 5, label: "improvement" }}
+            comparison={{ 
+              value: conversionRate - yesterdayConversionRate, 
+              label: "vs yesterday" 
+            }}
             delay={300}
           />
         </div>
@@ -190,7 +164,7 @@ export default function CommandCenter() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Activity Feed */}
           <div className="lg:col-span-2">
-            <RecentActivity activities={mockActivities} />
+            <RecentActivity activities={activities} />
           </div>
 
           {/* Right Column - Quick Actions & Follow-ups */}
@@ -202,7 +176,17 @@ export default function CommandCenter() {
         {/* Bottom Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Team Pulse */}
-          <TeamPulse members={mockTeamMembers} teamName={team?.name || null} />
+          <TeamPulse 
+            members={teamLeaderboard?.map(m => ({
+              id: m.user_id,
+              name: m.name,
+              avatarUrl: m.avatar_url || undefined,
+              value: m.calls_made,
+              metric: "calls",
+              rank: m.rank,
+            })) || []} 
+            teamName={data?.profile?.team?.name || null} 
+          />
 
           {/* Motivational Quote */}
           <div className="flex flex-col justify-center">
