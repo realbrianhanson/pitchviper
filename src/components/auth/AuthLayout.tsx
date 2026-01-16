@@ -28,8 +28,9 @@ export function AuthLayout({ children }: AuthLayoutProps) {
               <div className="flex h-14 w-14 items-center justify-center rounded-xl overflow-hidden">
                 <img src={viperLogo} alt="PitchViper" className="h-14 w-14 object-contain" />
               </div>
-              <span className="font-display text-3xl font-bold text-gradient">
-                PitchViper
+              <span className="font-display text-4xl font-black tracking-tight">
+                <span className="text-foreground">Pitch</span>
+                <span className="text-primary">Viper</span>
               </span>
             </div>
             <p className="text-muted-foreground text-sm font-display tracking-wide">
