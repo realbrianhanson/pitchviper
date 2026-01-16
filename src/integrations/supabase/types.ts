@@ -515,6 +515,82 @@ export type Database = {
         }
         Relationships: []
       }
+      toolkit_items: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          item_type: Database["public"]["Enums"]["toolkit_item_type"]
+          metadata: Json | null
+          sort_order: number
+          team_id: string | null
+          title: string
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          item_type: Database["public"]["Enums"]["toolkit_item_type"]
+          metadata?: Json | null
+          sort_order?: number
+          team_id?: string | null
+          title: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          item_type?: Database["public"]["Enums"]["toolkit_item_type"]
+          metadata?: Json | null
+          sort_order?: number
+          team_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "toolkit_items_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      toolkit_usage: {
+        Row: {
+          id: string
+          item_id: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "toolkit_usage_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "toolkit_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_challenge_progress: {
         Row: {
           challenge_id: string
@@ -778,6 +854,7 @@ export type Database = {
       roleplay_difficulty: "rookie" | "pro" | "expert" | "nightmare"
       roleplay_session_status: "in_progress" | "completed" | "abandoned"
       sos_alert_status: "pending" | "acknowledged" | "resolved"
+      toolkit_item_type: "quick_win" | "battlecard" | "proof_point" | "script"
       user_status_type:
         | "available"
         | "on_call"
@@ -960,6 +1037,7 @@ export const Constants = {
       roleplay_difficulty: ["rookie", "pro", "expert", "nightmare"],
       roleplay_session_status: ["in_progress", "completed", "abandoned"],
       sos_alert_status: ["pending", "acknowledged", "resolved"],
+      toolkit_item_type: ["quick_win", "battlecard", "proof_point", "script"],
       user_status_type: [
         "available",
         "on_call",
