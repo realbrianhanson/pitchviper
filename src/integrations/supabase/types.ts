@@ -49,6 +49,39 @@ export type Database = {
           },
         ]
       }
+      audio_training_scores: {
+        Row: {
+          correct_responses: number
+          created_at: string
+          duration_seconds: number
+          id: string
+          mode: string
+          objections_handled: number
+          total_score: number
+          user_id: string
+        }
+        Insert: {
+          correct_responses?: number
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          mode: string
+          objections_handled?: number
+          total_score?: number
+          user_id: string
+        }
+        Update: {
+          correct_responses?: number
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          mode?: string
+          objections_handled?: number
+          total_score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       badges: {
         Row: {
           category: Database["public"]["Enums"]["badge_category"]
@@ -568,6 +601,41 @@ export type Database = {
           xp_required?: number
         }
         Relationships: []
+      }
+      manager_audio_examples: {
+        Row: {
+          audio_url: string
+          created_at: string
+          duration_seconds: number
+          id: string
+          recorded_by: string
+          response_id: string
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          recorded_by: string
+          response_id: string
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          recorded_by?: string
+          response_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manager_audio_examples_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "objection_responses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       objection_responses: {
         Row: {
