@@ -8,7 +8,7 @@ import { StepProfile } from "@/components/onboarding/StepProfile";
 import { StepTeam } from "@/components/onboarding/StepTeam";
 import { StepComplete } from "@/components/onboarding/StepComplete";
 import { ViperCard, ViperCardContent } from "@/components/ui/viper-card";
-import { Zap, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 type Step = 1 | 2 | 3;
 
@@ -149,12 +149,10 @@ export default function Onboarding() {
       <div className="relative z-10 w-full max-w-lg">
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 border border-primary/30">
-              <Zap className="h-5 w-5 text-primary" />
-            </div>
-            <span className="font-display text-2xl font-bold text-gradient">PitchViper</span>
-          </div>
+          <span className="font-display text-2xl tracking-tight text-foreground">
+            <span className="font-normal">Pitch</span>
+            <span className="font-bold">Viper</span>
+          </span>
         </div>
 
         {/* Progress */}

@@ -15,7 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import viperLogo from "@/assets/viper-logo.png";
+
 import {
   Sidebar,
   SidebarContent,
@@ -70,19 +70,15 @@ export function AppSidebar() {
     >
       {/* Logo Header */}
       <SidebarHeader className="p-4 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg overflow-hidden">
-            <img src={viperLogo} alt="PitchViper" className="h-10 w-10 object-contain" />
-          </div>
+        <div className="flex flex-col">
+          <span className="font-display text-lg text-foreground tracking-tight">
+            <span className="font-normal">Pitch</span>
+            <span className="font-bold">Viper</span>
+          </span>
           {!isCollapsed && (
-            <div className="flex flex-col">
-              <span className="font-display font-bold text-lg text-foreground">
-                PitchViper
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Sales Command
-              </span>
-            </div>
+            <span className="text-xs text-muted-foreground">
+              Sales Command
+            </span>
           )}
         </div>
       </SidebarHeader>
