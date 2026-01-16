@@ -201,6 +201,144 @@ export type Database = {
         }
         Relationships: []
       }
+      competition_activity: {
+        Row: {
+          activity_type: string
+          competition_id: string
+          created_at: string
+          id: string
+          new_rank: number | null
+          previous_rank: number | null
+          user_id: string
+          value_change: number | null
+        }
+        Insert: {
+          activity_type: string
+          competition_id: string
+          created_at?: string
+          id?: string
+          new_rank?: number | null
+          previous_rank?: number | null
+          user_id: string
+          value_change?: number | null
+        }
+        Update: {
+          activity_type?: string
+          competition_id?: string
+          created_at?: string
+          id?: string
+          new_rank?: number | null
+          previous_rank?: number | null
+          user_id?: string
+          value_change?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_activity_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_participants: {
+        Row: {
+          competition_id: string
+          current_value: number
+          id: string
+          joined_at: string
+          rank: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          competition_id: string
+          current_value?: number
+          id?: string
+          joined_at?: string
+          rank?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          competition_id?: string
+          current_value?: number
+          id?: string
+          joined_at?: string
+          rank?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_participants_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitions: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string
+          end_date: string
+          id: string
+          metric_type: Database["public"]["Enums"]["competition_metric_type"]
+          name: string
+          number_of_winners: number
+          prize_description: string | null
+          prize_value: number | null
+          qualifying_threshold: number | null
+          start_date: string
+          status: Database["public"]["Enums"]["competition_status"]
+          team_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description: string
+          end_date: string
+          id?: string
+          metric_type: Database["public"]["Enums"]["competition_metric_type"]
+          name: string
+          number_of_winners?: number
+          prize_description?: string | null
+          prize_value?: number | null
+          qualifying_threshold?: number | null
+          start_date: string
+          status?: Database["public"]["Enums"]["competition_status"]
+          team_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string
+          end_date?: string
+          id?: string
+          metric_type?: Database["public"]["Enums"]["competition_metric_type"]
+          name?: string
+          number_of_winners?: number
+          prize_description?: string | null
+          prize_value?: number | null
+          qualifying_threshold?: number | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["competition_status"]
+          team_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitions_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_challenges: {
         Row: {
           challenge_date: string
@@ -986,6 +1124,14 @@ export type Database = {
         | "roleplay"
         | "objection_practice"
         | "custom"
+      competition_metric_type:
+        | "calls"
+        | "appointments"
+        | "revenue"
+        | "deals"
+        | "roleplay"
+        | "custom"
+      competition_status: "upcoming" | "active" | "completed" | "cancelled"
       objection_category:
         | "price"
         | "timing"
@@ -1178,6 +1324,15 @@ export const Constants = {
         "objection_practice",
         "custom",
       ],
+      competition_metric_type: [
+        "calls",
+        "appointments",
+        "revenue",
+        "deals",
+        "roleplay",
+        "custom",
+      ],
+      competition_status: ["upcoming", "active", "completed", "cancelled"],
       objection_category: [
         "price",
         "timing",
