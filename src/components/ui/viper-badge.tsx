@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const viperBadgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold font-display tracking-wide transition-all duration-200",
+  "inline-flex items-center rounded-full border font-semibold font-display tracking-wide transition-all duration-200",
   {
     variants: {
       variant: {
@@ -23,6 +23,11 @@ const viperBadgeVariants = cva(
           "border-primary/50 text-primary bg-transparent",
         glass:
           "border-glass-border bg-card/50 backdrop-blur-sm text-foreground",
+      },
+      size: {
+        default: "px-2.5 py-0.5 text-xs",
+        sm: "px-2 py-0.5 text-[10px]",
+        lg: "px-3 py-1 text-sm",
       },
       glow: {
         true: "",
@@ -53,6 +58,7 @@ const viperBadgeVariants = cva(
     ],
     defaultVariants: {
       variant: "default",
+      size: "default",
       glow: false,
     },
   }
@@ -62,10 +68,10 @@ export interface ViperBadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof viperBadgeVariants> {}
 
-function ViperBadge({ className, variant, glow, ...props }: ViperBadgeProps) {
+function ViperBadge({ className, variant, size, glow, ...props }: ViperBadgeProps) {
   return (
     <div
-      className={cn(viperBadgeVariants({ variant, glow }), className)}
+      className={cn(viperBadgeVariants({ variant, size, glow }), className)}
       {...props}
     />
   );
