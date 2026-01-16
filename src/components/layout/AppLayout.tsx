@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
+import { ClosersToolkit } from "@/components/toolkit/ClosersToolkit";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -27,6 +28,8 @@ export function AppLayout({ children, title }: AppLayoutProps) {
               {children}
             </div>
           </main>
+          {/* Floating Toolkit */}
+          <ClosersToolkit />
         </div>
       </div>
     </SidebarProvider>

@@ -49,6 +49,51 @@ export type Database = {
           },
         ]
       }
+      badges: {
+        Row: {
+          category: Database["public"]["Enums"]["badge_category"]
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          is_secret: boolean
+          name: string
+          rarity: Database["public"]["Enums"]["badge_rarity"]
+          requirement_description: string
+          requirement_type: Database["public"]["Enums"]["badge_requirement_type"]
+          requirement_value: number
+          xp_reward: number
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["badge_category"]
+          created_at?: string
+          description: string
+          icon: string
+          id?: string
+          is_secret?: boolean
+          name: string
+          rarity?: Database["public"]["Enums"]["badge_rarity"]
+          requirement_description: string
+          requirement_type: Database["public"]["Enums"]["badge_requirement_type"]
+          requirement_value?: number
+          xp_reward?: number
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["badge_category"]
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          is_secret?: boolean
+          name?: string
+          rarity?: Database["public"]["Enums"]["badge_rarity"]
+          requirement_description?: string
+          requirement_type?: Database["public"]["Enums"]["badge_requirement_type"]
+          requirement_value?: number
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       calls: {
         Row: {
           appointment_scheduled_at: string | null
@@ -195,6 +240,36 @@ export type Database = {
           revenue_closed?: number
           talk_time_minutes?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      levels: {
+        Row: {
+          badge_icon: string
+          created_at: string
+          id: string
+          level_number: number
+          perks: string[] | null
+          title: string
+          xp_required: number
+        }
+        Insert: {
+          badge_icon: string
+          created_at?: string
+          id?: string
+          level_number: number
+          perks?: string[] | null
+          title: string
+          xp_required: number
+        }
+        Update: {
+          badge_icon?: string
+          created_at?: string
+          id?: string
+          level_number?: number
+          perks?: string[] | null
+          title?: string
+          xp_required?: number
         }
         Relationships: []
       }
@@ -591,6 +666,35 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_challenge_progress: {
         Row: {
           challenge_id: string
@@ -821,6 +925,16 @@ export type Database = {
         | "level_up"
         | "training_completed"
       app_role: "rep" | "manager"
+      badge_category:
+        | "calls"
+        | "closes"
+        | "streaks"
+        | "roleplay"
+        | "training"
+        | "team"
+        | "special"
+      badge_rarity: "common" | "uncommon" | "rare" | "epic" | "legendary"
+      badge_requirement_type: "count" | "streak" | "score" | "custom"
       call_direction: "inbound" | "outbound"
       call_outcome: "connected" | "voicemail" | "no_answer" | "wrong_number"
       call_purpose:
@@ -1000,6 +1114,17 @@ export const Constants = {
         "training_completed",
       ],
       app_role: ["rep", "manager"],
+      badge_category: [
+        "calls",
+        "closes",
+        "streaks",
+        "roleplay",
+        "training",
+        "team",
+        "special",
+      ],
+      badge_rarity: ["common", "uncommon", "rare", "epic", "legendary"],
+      badge_requirement_type: ["count", "streak", "score", "custom"],
       call_direction: ["inbound", "outbound"],
       call_outcome: ["connected", "voicemail", "no_answer", "wrong_number"],
       call_purpose: [
