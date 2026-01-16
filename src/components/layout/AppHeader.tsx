@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Bell, ChevronDown, User, Settings, LogOut, Phone } from "lucide-react";
+import { Search, ChevronDown, User, Settings, LogOut, Phone } from "lucide-react";
 import { ViperInput } from "@/components/ui/viper-input";
 import { ViperButton } from "@/components/ui/viper-button";
 import {
@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
 import { LogCallModal } from "@/components/calls/LogCallModal";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface AppHeaderProps {
   title?: string;
@@ -32,8 +32,6 @@ interface UserRole {
 export function AppHeader({ title }: AppHeaderProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [hasNotifications] = useState(true);
-  const notificationCount = 3;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<string>("rep");
   const [showLogCall, setShowLogCall] = useState(false);
@@ -124,24 +122,9 @@ export function AppHeader({ title }: AppHeaderProps) {
           Log Call
         </ViperButton>
         <LogCallModal open={showLogCall} onOpenChange={setShowLogCall} />
+        
         {/* Notifications */}
-        <button
-          className={cn(
-            "relative flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200",
-            "text-muted-foreground hover:text-foreground hover:bg-accent",
-            hasNotifications && "text-foreground"
-          )}
-        >
-          <Bell className="h-5 w-5" />
-          {hasNotifications && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center">
-              <span className="absolute h-full w-full animate-ping rounded-full bg-magenta/50" />
-              <span className="relative flex h-4 w-4 items-center justify-center rounded-full bg-magenta text-[10px] font-bold text-magenta-foreground">
-                {notificationCount}
-              </span>
-            </span>
-          )}
-        </button>
+        <NotificationBell />
 
         {/* User Dropdown */}
         <DropdownMenu>

@@ -746,6 +746,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          action_url: string | null
+          body: string
+          created_at: string
+          id: string
+          is_read: boolean
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       objection_responses: {
         Row: {
           approach: Database["public"]["Enums"]["response_approach"]
@@ -1445,6 +1478,39 @@ export type Database = {
           },
         ]
       }
+      user_notification_preferences: {
+        Row: {
+          created_at: string
+          email_enabled: boolean
+          id: string
+          in_app_enabled: boolean
+          notification_type: string
+          sound_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          in_app_enabled?: boolean
+          notification_type: string
+          sound_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          in_app_enabled?: boolean
+          notification_type?: string
+          sound_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           celebration_sounds_enabled: boolean
@@ -1680,6 +1746,23 @@ export type Database = {
         | "scenario_response"
       module_status: "not_started" | "in_progress" | "completed"
       module_type: "video" | "reading" | "quiz" | "roleplay"
+      notification_type:
+        | "badge_earned"
+        | "level_up"
+        | "streak_milestone"
+        | "deal_closed"
+        | "sos_alert"
+        | "mentioned"
+        | "coaching_notes"
+        | "training_assigned"
+        | "roleplay_feedback"
+        | "followup_due"
+        | "challenge_reminder"
+        | "deal_cold"
+        | "competition_starting"
+        | "competition_ending"
+        | "leaderboard_overtaken"
+        | "leaderboard_leading"
       objection_category:
         | "price"
         | "timing"
@@ -1892,6 +1975,24 @@ export const Constants = {
       ],
       module_status: ["not_started", "in_progress", "completed"],
       module_type: ["video", "reading", "quiz", "roleplay"],
+      notification_type: [
+        "badge_earned",
+        "level_up",
+        "streak_milestone",
+        "deal_closed",
+        "sos_alert",
+        "mentioned",
+        "coaching_notes",
+        "training_assigned",
+        "roleplay_feedback",
+        "followup_due",
+        "challenge_reminder",
+        "deal_cold",
+        "competition_starting",
+        "competition_ending",
+        "leaderboard_overtaken",
+        "leaderboard_leading",
+      ],
       objection_category: [
         "price",
         "timing",
