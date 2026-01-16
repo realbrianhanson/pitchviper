@@ -731,6 +731,39 @@ export type Database = {
           },
         ]
       }
+      perplexity_cache: {
+        Row: {
+          citations: Json
+          created_at: string
+          expires_at: string
+          id: string
+          query_key: string
+          query_type: string
+          research_data: Json
+          user_id: string
+        }
+        Insert: {
+          citations?: Json
+          created_at?: string
+          expires_at?: string
+          id?: string
+          query_key: string
+          query_type: string
+          research_data?: Json
+          user_id: string
+        }
+        Update: {
+          citations?: Json
+          created_at?: string
+          expires_at?: string
+          id?: string
+          query_key?: string
+          query_type?: string
+          research_data?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

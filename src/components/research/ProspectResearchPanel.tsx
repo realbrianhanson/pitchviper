@@ -7,6 +7,7 @@ import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from '@/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useProspectResearch, ResearchData } from '@/hooks/useProspectResearch';
+import { DeepDivePanel } from './DeepDivePanel';
 import {
   Building2,
   Globe,
@@ -22,6 +23,7 @@ import {
   Lightbulb,
   UserCircle,
   ExternalLink,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -213,12 +215,16 @@ export function ProspectResearchPanel({
 
             {/* Tabs */}
             <Tabs defaultValue="overview" className="flex-1 flex flex-col overflow-hidden">
-              <TabsList className="grid grid-cols-5 w-full">
+              <TabsList className="grid grid-cols-6 w-full">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="business">Business</TabsTrigger>
                 <TabsTrigger value="pains">Pain Points</TabsTrigger>
                 <TabsTrigger value="talking">Talking Points</TabsTrigger>
                 <TabsTrigger value="contact" disabled={!researchData.contactIntel}>Contact</TabsTrigger>
+                <TabsTrigger value="deepdive" className="flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  Deep Dive
+                </TabsTrigger>
               </TabsList>
 
               <ScrollArea className="flex-1 mt-4">
@@ -434,6 +440,14 @@ export function ProspectResearchPanel({
                       </ViperCardContent>
                     </ViperCard>
                   )}
+                </TabsContent>
+
+                <TabsContent value="deepdive" className="m-0">
+                  <DeepDivePanel
+                    companyName={companyName}
+                    industry={researchData.companyOverview.industry}
+                    contactName={contactName}
+                  />
                 </TabsContent>
               </ScrollArea>
             </Tabs>

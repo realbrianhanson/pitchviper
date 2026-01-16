@@ -44,3 +44,9 @@ verify_jwt = false
 
 [functions.research-prospect]
 verify_jwt = false
+
+[functions.perplexity-research]
+verify_jwt = false
+
+[functions.generate-battlecard]
+verify_jwt = false
