@@ -275,6 +275,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_status: {
+        Row: {
+          created_at: string
+          current_call_started_at: string | null
+          id: string
+          last_activity_at: string
+          status: Database["public"]["Enums"]["user_status_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_call_started_at?: string | null
+          id?: string
+          last_activity_at?: string
+          status?: Database["public"]["Enums"]["user_status_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_call_started_at?: string | null
+          id?: string
+          last_activity_at?: string
+          status?: Database["public"]["Enums"]["user_status_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -300,6 +330,24 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "daily_stats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      get_or_create_user_status: {
+        Args: { p_user_id: string }
+        Returns: {
+          created_at: string
+          current_call_started_at: string | null
+          id: string
+          last_activity_at: string
+          status: Database["public"]["Enums"]["user_status_type"]
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_status"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -336,6 +384,28 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      update_user_status: {
+        Args: {
+          p_call_started_at?: string
+          p_status: Database["public"]["Enums"]["user_status_type"]
+          p_user_id: string
+        }
+        Returns: {
+          created_at: string
+          current_call_started_at: string | null
+          id: string
+          last_activity_at: string
+          status: Database["public"]["Enums"]["user_status_type"]
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_status"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       activity_type:
@@ -355,6 +425,12 @@ export type Database = {
         | "roleplay"
         | "objection_practice"
         | "custom"
+      user_status_type:
+        | "available"
+        | "on_call"
+        | "in_meeting"
+        | "away"
+        | "offline"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -500,6 +576,13 @@ export const Constants = {
         "roleplay",
         "objection_practice",
         "custom",
+      ],
+      user_status_type: [
+        "available",
+        "on_call",
+        "in_meeting",
+        "away",
+        "offline",
       ],
     },
   },
