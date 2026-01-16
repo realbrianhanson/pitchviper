@@ -22,9 +22,11 @@ import {
   Star,
   ChevronLeft,
   ChevronRight,
-  Loader2
+  Loader2,
+  Search
 } from 'lucide-react';
 import { useCallLogging, CallFormData, CallDirection, CallOutcome, CallPurpose } from '@/hooks/useCallLogging';
+import { ResearchButton } from '@/components/research/ResearchButton';
 
 interface LogCallModalProps {
   open: boolean;
@@ -210,6 +212,22 @@ export function LogCallModal({ open, onOpenChange }: LogCallModalProps) {
                   />
                 </div>
               </div>
+
+              {/* Research Button */}
+              {(companyName || contactName) && (
+                <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                  <Search className="h-4 w-4 text-primary" />
+                  <span className="text-sm text-muted-foreground flex-1">
+                    Research this prospect before your call
+                  </span>
+                  <ResearchButton 
+                    companyName={companyName}
+                    contactName={contactName}
+                    variant="default"
+                    size="sm"
+                  />
+                </div>
+              )}
 
               {/* Direction Toggle */}
               <div className="space-y-2">
