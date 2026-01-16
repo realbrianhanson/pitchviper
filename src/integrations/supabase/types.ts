@@ -799,6 +799,42 @@ export type Database = {
           },
         ]
       }
+      prospect_research: {
+        Row: {
+          company_name: string
+          company_url: string | null
+          contact_linkedin_url: string | null
+          contact_name: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          research_data: Json
+          user_id: string
+        }
+        Insert: {
+          company_name: string
+          company_url?: string | null
+          contact_linkedin_url?: string | null
+          contact_name?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          research_data?: Json
+          user_id: string
+        }
+        Update: {
+          company_name?: string
+          company_url?: string | null
+          contact_linkedin_url?: string | null
+          contact_name?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          research_data?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       roleplay_scenarios: {
         Row: {
           created_at: string
