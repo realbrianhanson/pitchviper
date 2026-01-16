@@ -8,7 +8,9 @@ import { ObjectionFilters } from "@/components/objections/ObjectionFilters";
 import { ObjectionCard } from "@/components/objections/ObjectionCard";
 import { AddObjectionModal } from "@/components/objections/AddObjectionModal";
 import { AddResponseModal } from "@/components/objections/AddResponseModal";
-import { Shield, Search, Plus, Loader2, Sparkles } from "lucide-react";
+import { AudioFlashcards } from "@/components/objections/AudioFlashcards";
+import { AudioLeaderboard } from "@/components/objections/AudioLeaderboard";
+import { Shield, Search, Plus, Loader2, Sparkles, Volume2, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function ObjectionVault() {
@@ -33,6 +35,8 @@ export default function ObjectionVault() {
 
   const [isAddObjectionOpen, setIsAddObjectionOpen] = useState(false);
   const [addResponseObjectionId, setAddResponseObjectionId] = useState<string | null>(null);
+  const [isAudioFlashcardsOpen, setIsAudioFlashcardsOpen] = useState(false);
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
   const selectedObjection = addResponseObjectionId 
     ? allObjections.find(o => o.id === addResponseObjectionId)
@@ -71,10 +75,28 @@ export default function ObjectionVault() {
             </p>
           </div>
 
-          <Button onClick={() => setIsAddObjectionOpen(true)} className="shrink-0">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Objection
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsLeaderboardOpen(true)}
+              className="shrink-0"
+            >
+              <Trophy className="h-4 w-4 mr-2" />
+              Leaderboard
+            </Button>
+            <Button 
+              variant="secondary" 
+              onClick={() => setIsAudioFlashcardsOpen(true)}
+              className="shrink-0"
+            >
+              <Volume2 className="h-4 w-4 mr-2" />
+              Practice with Audio
+            </Button>
+            <Button onClick={() => setIsAddObjectionOpen(true)} className="shrink-0">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Objection
+            </Button>
+          </div>
         </div>
 
         {/* Search Bar */}
@@ -163,6 +185,17 @@ export default function ObjectionVault() {
         onClose={() => setAddResponseObjectionId(null)}
         objectionText={selectedObjection?.objection_text}
         onAdd={handleAddResponse}
+      />
+
+      <AudioFlashcards
+        isOpen={isAudioFlashcardsOpen}
+        onClose={() => setIsAudioFlashcardsOpen(false)}
+        objections={allObjections}
+      />
+
+      <AudioLeaderboard
+        isOpen={isLeaderboardOpen}
+        onClose={() => setIsLeaderboardOpen(false)}
       />
     </AppLayout>
   );

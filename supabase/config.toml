@@ -26,3 +26,18 @@ verify_jwt = false
 
 [functions.check-badge-eligibility]
 verify_jwt = false
+
+[functions.generate-daily-gauntlet]
+verify_jwt = false
+
+[functions.evaluate-gauntlet]
+verify_jwt = false
+
+[functions.generate-objection-speech]
+verify_jwt = false
+
+[functions.transcribe-voice-response]
+verify_jwt = false
+
+[functions.score-objection-response]
+verify_jwt = false
