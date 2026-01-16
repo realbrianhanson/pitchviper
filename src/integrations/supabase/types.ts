@@ -49,6 +49,80 @@ export type Database = {
           },
         ]
       }
+      calls: {
+        Row: {
+          appointment_scheduled_at: string | null
+          call_purpose: Database["public"]["Enums"]["call_purpose"] | null
+          callback_scheduled_at: string | null
+          company_name: string | null
+          contact_name: string
+          created_at: string
+          deal_value: number | null
+          direction: Database["public"]["Enums"]["call_direction"]
+          disposition: string | null
+          duration_seconds: number
+          id: string
+          improvement_notes: string | null
+          notes: string | null
+          outcome: Database["public"]["Enums"]["call_outcome"]
+          phone_number: string | null
+          self_rating: number | null
+          struggled_objections: string[] | null
+          team_id: string | null
+          user_id: string
+        }
+        Insert: {
+          appointment_scheduled_at?: string | null
+          call_purpose?: Database["public"]["Enums"]["call_purpose"] | null
+          callback_scheduled_at?: string | null
+          company_name?: string | null
+          contact_name: string
+          created_at?: string
+          deal_value?: number | null
+          direction: Database["public"]["Enums"]["call_direction"]
+          disposition?: string | null
+          duration_seconds?: number
+          id?: string
+          improvement_notes?: string | null
+          notes?: string | null
+          outcome: Database["public"]["Enums"]["call_outcome"]
+          phone_number?: string | null
+          self_rating?: number | null
+          struggled_objections?: string[] | null
+          team_id?: string | null
+          user_id: string
+        }
+        Update: {
+          appointment_scheduled_at?: string | null
+          call_purpose?: Database["public"]["Enums"]["call_purpose"] | null
+          callback_scheduled_at?: string | null
+          company_name?: string | null
+          contact_name?: string
+          created_at?: string
+          deal_value?: number | null
+          direction?: Database["public"]["Enums"]["call_direction"]
+          disposition?: string | null
+          duration_seconds?: number
+          id?: string
+          improvement_notes?: string | null
+          notes?: string | null
+          outcome?: Database["public"]["Enums"]["call_outcome"]
+          phone_number?: string | null
+          self_rating?: number | null
+          struggled_objections?: string[] | null
+          team_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calls_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_challenges: {
         Row: {
           challenge_date: string
@@ -577,6 +651,15 @@ export type Database = {
         | "level_up"
         | "training_completed"
       app_role: "rep" | "manager"
+      call_direction: "inbound" | "outbound"
+      call_outcome: "connected" | "voicemail" | "no_answer" | "wrong_number"
+      call_purpose:
+        | "cold_call"
+        | "follow_up"
+        | "appointment"
+        | "demo"
+        | "closing"
+        | "support"
       challenge_type:
         | "calls"
         | "appointments"
@@ -731,6 +814,16 @@ export const Constants = {
         "training_completed",
       ],
       app_role: ["rep", "manager"],
+      call_direction: ["inbound", "outbound"],
+      call_outcome: ["connected", "voicemail", "no_answer", "wrong_number"],
+      call_purpose: [
+        "cold_call",
+        "follow_up",
+        "appointment",
+        "demo",
+        "closing",
+        "support",
+      ],
       challenge_type: [
         "calls",
         "appointments",

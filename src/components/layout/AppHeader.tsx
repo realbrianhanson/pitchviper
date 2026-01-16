@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Bell, ChevronDown, User, Settings, LogOut } from "lucide-react";
+import { Search, Bell, ChevronDown, User, Settings, LogOut, Phone } from "lucide-react";
 import { ViperInput } from "@/components/ui/viper-input";
+import { ViperButton } from "@/components/ui/viper-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +13,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { LogCallModal } from "@/components/calls/LogCallModal";
 
 interface AppHeaderProps {
   title?: string;
@@ -34,6 +36,7 @@ export function AppHeader({ title }: AppHeaderProps) {
   const notificationCount = 3;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<string>("rep");
+  const [showLogCall, setShowLogCall] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -108,8 +111,19 @@ export function AppHeader({ title }: AppHeaderProps) {
         </div>
       </div>
 
-      {/* Right: Notifications + User */}
+      {/* Right: Log Call + Notifications + User */}
       <div className="flex items-center gap-3">
+        {/* Log Call Button */}
+        <ViperButton
+          variant="outline"
+          size="sm"
+          onClick={() => setShowLogCall(true)}
+          className="hidden sm:flex gap-2"
+        >
+          <Phone className="h-4 w-4" />
+          Log Call
+        </ViperButton>
+        <LogCallModal open={showLogCall} onOpenChange={setShowLogCall} />
         {/* Notifications */}
         <button
           className={cn(
