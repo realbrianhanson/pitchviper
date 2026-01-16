@@ -112,7 +112,7 @@ COMMON STRUGGLED OBJECTIONS:
 ${Object.entries(teamStats.common_objections).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([obj, count]) => `- "${obj}": ${count} occurrences`).join('\n') || 'None recorded'}
 
 DAILY TREND:
-${Object.entries(dailyTrend || {}).map(([date, data]) => `- ${date}: ${data.calls} calls, ${data.deals} deals, $${data.revenue}`).join('\n') || 'No daily data'}
+${Object.entries(dailyTrend || {}).map(([date, data]) => `- ${date}: ${(data as { calls: number; deals: number; revenue: number }).calls} calls, ${(data as { calls: number; deals: number; revenue: number }).deals} deals, $${(data as { calls: number; deals: number; revenue: number }).revenue}`).join('\n') || 'No daily data'}
 
 Provide a JSON response with these exact fields:
 {
