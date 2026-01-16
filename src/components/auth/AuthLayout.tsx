@@ -1,6 +1,5 @@
 import { ReactNode } from "react";
 import { FloatingParticles } from "./FloatingParticles";
-import viperLogo from "@/assets/viper-logo.png";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -24,13 +23,10 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         <div className="bg-card/80 backdrop-blur-xl border border-glass-border rounded-2xl p-8 shadow-2xl shadow-primary/5">
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl overflow-hidden">
-                <img src={viperLogo} alt="PitchViper" className="h-14 w-14 object-contain" />
-              </div>
-              <span className="font-display text-4xl font-black tracking-tight">
-                <span className="text-foreground">Pitch</span>
-                <span className="text-primary">Viper</span>
+            <div className="flex items-center mb-3">
+              <span className="font-display text-4xl tracking-tight text-foreground">
+                <span className="font-normal">Pitch</span>
+                <span className="font-bold">Viper</span>
               </span>
             </div>
             <p className="text-muted-foreground text-sm font-display tracking-wide">
