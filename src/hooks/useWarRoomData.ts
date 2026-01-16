@@ -21,6 +21,7 @@ export interface TeamMemberWithStatus {
   };
   daily_goal_progress: number;
   is_top_performer: boolean;
+  has_pending_sos: boolean;
 }
 
 export interface TeamStats {
@@ -40,6 +41,15 @@ export interface ActivityItem {
   created_at: string;
 }
 
+export interface DealCelebrationData {
+  closerName: string;
+  closerAvatar: string | null;
+  dealValue: number;
+  clientName: string;
+  dealType: string;
+  dealsToday: number;
+}
+
 export function useWarRoomData() {
   const { user } = useAuth();
   const [teamMembers, setTeamMembers] = useState<TeamMemberWithStatus[]>([]);
@@ -53,6 +63,9 @@ export function useWarRoomData() {
   const [isLoading, setIsLoading] = useState(true);
   const [pulsingMembers, setPulsingMembers] = useState<Set<string>>(new Set());
   const [celebratingMembers, setCelebratingMembers] = useState<Set<string>>(new Set());
+  const [celebrationData, setCelebrationData] = useState<DealCelebrationData | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   const fetchWarRoomData = useCallback(async () => {
     if (!user) return;
@@ -93,6 +106,15 @@ export function useWarRoomData() {
         .select("*")
         .eq("date", today)
         .in("user_id", members.map(m => m.user_id));
+
+      // Get pending SOS alerts
+      const { data: pendingAlerts } = await supabase
+        .from("sos_alerts")
+        .select("user_id")
+        .eq("team_id", profile.team_id)
+        .eq("status", "pending");
+
+      const sosUserIds = new Set(pendingAlerts?.map(a => a.user_id) || []);
 
       // Calculate team totals
       let totalCalls = 0;
@@ -147,6 +169,7 @@ export function useWarRoomData() {
           },
           daily_goal_progress: dailyGoalProgress,
           is_top_performer: member.user_id === topPerformerId && revenue > 0,
+          has_pending_sos: sosUserIds.has(member.user_id),
         };
       });
 
@@ -182,6 +205,17 @@ export function useWarRoomData() {
         setActivities(activitiesWithNames);
       }
 
+      // Get user preferences for sound
+      const { data: preferences } = await supabase
+        .from("user_preferences")
+        .select("celebration_sounds_enabled")
+        .eq("user_id", user.id)
+        .single();
+
+      if (preferences) {
+        setSoundEnabled(preferences.celebration_sounds_enabled);
+      }
+
       setIsLoading(false);
     } catch (error) {
       console.error("Error fetching war room data:", error);
@@ -202,20 +236,27 @@ export function useWarRoomData() {
   }, []);
 
   // Trigger celebration animation
-  const triggerCelebration = useCallback((userId: string, userName: string, value: number) => {
+  const triggerCelebration = useCallback((
+    userId: string, 
+    userName: string, 
+    userAvatar: string | null,
+    value: number,
+    clientName: string,
+    dealType: string,
+    dealsToday: number
+  ) => {
     setCelebratingMembers(prev => new Set(prev).add(userId));
     
-    // Fire confetti
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ["#00ff88", "#00f0ff", "#ffaa00"],
+    // Set celebration data for full-screen overlay
+    setCelebrationData({
+      closerName: userName,
+      closerAvatar: userAvatar,
+      dealValue: value,
+      clientName: clientName || "New Client",
+      dealType: dealType || "New Business",
+      dealsToday,
     });
-
-    toast.success(`🎉 ${userName} just closed a deal for $${value.toLocaleString()}!`, {
-      duration: 5000,
-    });
+    setShowCelebration(true);
 
     setTimeout(() => {
       setCelebratingMembers(prev => {
@@ -223,7 +264,12 @@ export function useWarRoomData() {
         next.delete(userId);
         return next;
       });
-    }, 3000);
+    }, 5000);
+  }, []);
+
+  const closeCelebration = useCallback(() => {
+    setShowCelebration(false);
+    setTimeout(() => setCelebrationData(null), 300);
   }, []);
 
   useEffect(() => {
@@ -274,8 +320,20 @@ export function useWarRoomData() {
 
           // Trigger celebration for deals
           if (newActivity.activity_type === "deal_closed" && member) {
-            const value = Number(newActivity.metadata?.value || 0);
-            triggerCelebration(newActivity.user_id, member.full_name, value);
+            const value = Number(newActivity.metadata?.deal_value || newActivity.metadata?.value || 0);
+            const clientName = String(newActivity.metadata?.client_name || "");
+            const dealType = String(newActivity.metadata?.deal_type || "");
+            const dealsToday = (member.today_stats?.deals_closed || 0) + 1;
+            
+            triggerCelebration(
+              newActivity.user_id, 
+              member.full_name, 
+              member.avatar_url,
+              value,
+              clientName,
+              dealType,
+              dealsToday
+            );
           }
 
           // Refresh data to update stats
@@ -299,9 +357,35 @@ export function useWarRoomData() {
       )
       .subscribe();
 
+    const sosChannel = supabase
+      .channel("war-room-sos")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "sos_alerts",
+        },
+        (payload) => {
+          // Show toast for new SOS alerts (for managers)
+          if (payload.eventType === "INSERT") {
+            const alert = payload.new as { user_id: string; alert_type: string };
+            const member = teamMembers.find(m => m.user_id === alert.user_id);
+            if (member) {
+              toast.error(`🆘 ${member.full_name} needs help: ${alert.alert_type}`, {
+                duration: 10000,
+              });
+            }
+          }
+          fetchWarRoomData();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(activitiesChannel);
       supabase.removeChannel(statusChannel);
+      supabase.removeChannel(sosChannel);
     };
   }, [user, teamMembers, fetchWarRoomData, triggerPulse, triggerCelebration]);
 
@@ -312,6 +396,10 @@ export function useWarRoomData() {
     isLoading,
     pulsingMembers,
     celebratingMembers,
+    celebrationData,
+    showCelebration,
+    closeCelebration,
+    soundEnabled,
     refetch: fetchWarRoomData,
   };
 }
