@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleplayScenario } from "@/hooks/useRoleplayData";
+import { RoleplayResults } from "@/components/roleplay/RoleplayResults";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,6 @@ import {
   Circle,
   User,
   Bot,
-  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,11 +43,24 @@ interface Message {
   timestamp: string;
 }
 
-interface AnalysisResult {
+interface ChatAnalysisResult {
   addressed_objection: boolean;
   attempted_close: boolean;
   positive_momentum: boolean;
   win_conditions_achieved: string[];
+}
+
+interface SessionAnalysisResult {
+  outcome: "won" | "lost" | "progress";
+  overall_score: number;
+  categories: Array<{ name: string; score: number; feedback: string }>;
+  strengths: string[];
+  improvements: string[];
+  key_moment: { type: "highlight" | "missed_opportunity"; description: string };
+  xp_earned: number;
+  is_new_best: boolean;
+  is_first_completion: boolean;
+  previous_best: number | null;
 }
 
 const PROSPECT_NAMES: Record<string, { name: string; title: string; company: string }> = {
@@ -76,10 +89,12 @@ export default function RoleplaySession() {
   const [achievedConditions, setAchievedConditions] = useState<Set<string>>(new Set());
   const [showHint, setShowHint] = useState(false);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [sessionState, setSessionState] = useState<"active" | "analyzing" | "results">("active");
+  const [analysisResult, setAnalysisResult] = useState<SessionAnalysisResult | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Initialize session
   useEffect(() => {
@@ -226,7 +241,7 @@ export default function RoleplaySession() {
 
       // Process analysis
       if (data.analysis) {
-        const analysis = data.analysis as AnalysisResult;
+        const analysis = data.analysis as ChatAnalysisResult;
         
         // Update achieved conditions
         if (analysis.win_conditions_achieved?.length > 0) {
@@ -263,27 +278,64 @@ export default function RoleplaySession() {
   };
 
   const endSession = async () => {
-    if (!sessionId) return;
+    if (!sessionId || !session?.access_token || !scenarioId) return;
+
+    // Stop timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    setSessionState("analyzing");
 
     try {
-      await supabase
-        .from("roleplay_sessions")
-        .update({
-          status: "completed",
-          duration_seconds: elapsedSeconds,
-          completed_at: new Date().toISOString(),
-        })
-        .eq("id", sessionId);
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/roleplay-analyze`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            session_id: sessionId,
+            scenario_id: scenarioId,
+            transcript: messages,
+            duration_seconds: elapsedSeconds,
+            hints_used: hintsUsed,
+          }),
+        }
+      );
 
-      toast.success("Session completed!");
-      navigate("/roleplay");
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 429) {
+          toast.error("Rate limit exceeded. Please wait a moment.");
+          setSessionState("active");
+          return;
+        } else if (response.status === 402) {
+          toast.error("AI credits exhausted. Please add credits.");
+          setSessionState("active");
+          return;
+        }
+        throw new Error(errorData.error || "Analysis failed");
+      }
+
+      const result = await response.json();
+      setAnalysisResult(result);
+      setSessionState("results");
     } catch (error) {
-      console.error("Error ending session:", error);
+      console.error("Error analyzing session:", error);
+      toast.error("Failed to analyze session");
+      setSessionState("active");
     }
   };
 
   const abandonSession = async () => {
     if (!sessionId) return;
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
 
     try {
       await supabase
@@ -306,6 +358,34 @@ export default function RoleplaySession() {
     setHintsUsed((prev) => prev + 1);
     toast.info("Hint revealed! This will cost 10 XP from your final score.");
   };
+
+  // Show analyzing screen
+  if (sessionState === "analyzing") {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-background">
+        <div className="text-center animate-fade-in">
+          <div className="relative mb-8">
+            <div className="w-24 h-24 rounded-full bg-primary/20 animate-pulse mx-auto" />
+            <Loader2 className="h-12 w-12 animate-spin text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Analyzing Your Performance...</h2>
+          <p className="text-muted-foreground">Our AI coach is reviewing your conversation</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show results screen
+  if (sessionState === "results" && analysisResult && scenario) {
+    return (
+      <RoleplayResults
+        analysis={analysisResult}
+        scenarioId={scenarioId!}
+        scenarioName={scenario.name}
+        transcript={messages}
+      />
+    );
+  }
 
   if (isLoading || !scenario) {
     return (
