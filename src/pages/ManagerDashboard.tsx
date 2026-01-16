@@ -9,6 +9,7 @@ import { PerformanceSnapshot } from "@/components/manager/PerformanceSnapshot";
 import { TeamTable } from "@/components/manager/TeamTable";
 import { AITeamInsights } from "@/components/manager/AITeamInsights";
 import { ManagerQuickActions } from "@/components/manager/ManagerQuickActions";
+import { ForecastSection } from "@/components/manager/ForecastSection";
 
 export default function ManagerDashboard() {
   const navigate = useNavigate();
@@ -77,6 +78,9 @@ export default function ManagerDashboard() {
         onFire={onFire}
         coachingDue={coachingDue}
       />
+
+      {/* Revenue Forecast */}
+      <ForecastSection />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
