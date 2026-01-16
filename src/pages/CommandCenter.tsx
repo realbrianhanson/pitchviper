@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
-import { ViperStat } from "@/components/ui/viper-stat";
-import { ViperBadge } from "@/components/ui/viper-badge";
-import { DollarSign, Target, TrendingUp, Users, Zap } from "lucide-react";
+import { MetricCard } from "@/components/dashboard/MetricCard";
+import { DailyChallenge } from "@/components/dashboard/DailyChallenge";
+import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import { QuickActions } from "@/components/dashboard/QuickActions";
+import { TeamPulse } from "@/components/dashboard/TeamPulse";
+import { MotivationalQuote } from "@/components/dashboard/MotivationalQuote";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { Phone, Calendar, Target, TrendingUp } from "lucide-react";
 
 interface Profile {
   full_name: string;
@@ -14,28 +17,112 @@ interface Profile {
   xp_points: number;
   current_level: number;
   current_streak: number;
+  team_id: string | null;
 }
+
+interface Team {
+  id: string;
+  name: string;
+}
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+function formatDate(): string {
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+// Mock data - will be replaced with real data later
+const mockActivities = [
+  {
+    id: "1",
+    type: "deal" as const,
+    description: "Closed deal with TechCorp Inc.",
+    timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+    value: "$45,000",
+  },
+  {
+    id: "2",
+    type: "call" as const,
+    description: "Completed discovery call with Acme Corp",
+    timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+  },
+  {
+    id: "3",
+    type: "badge" as const,
+    description: "Earned 'First Blood' badge for closing first deal of the day",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+    value: "+100 XP",
+  },
+  {
+    id: "4",
+    type: "appointment" as const,
+    description: "Scheduled demo with GlobalTech for Friday",
+    timestamp: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+  },
+  {
+    id: "5",
+    type: "call" as const,
+    description: "Follow-up call with DataSmart completed",
+    timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+  },
+];
+
+const mockFollowUps = [
+  { id: "1", company: "Acme Corp", contact: "John Smith", time: "10:30 AM", type: "Follow-up" },
+  { id: "2", company: "TechStart", contact: "Sarah Lee", time: "2:00 PM", type: "Demo" },
+  { id: "3", company: "GlobalTech", contact: "Mike Chen", time: "4:30 PM", type: "Proposal Review" },
+];
+
+const mockTeamMembers = [
+  { id: "1", name: "Sarah Johnson", value: 12, metric: "calls", rank: 1 },
+  { id: "2", name: "Mike Chen", value: 10, metric: "calls", rank: 2 },
+  { id: "3", name: "Alex Rivera", value: 8, metric: "calls", rank: 3 },
+];
 
 export default function CommandCenter() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [team, setTeam] = useState<Team | null>(null);
 
   useEffect(() => {
     if (!user) return;
 
-    const loadProfile = async () => {
-      const { data } = await supabase
+    const loadData = async () => {
+      // Load profile
+      const { data: profileData } = await supabase
         .from("profiles")
-        .select("full_name, avatar_url, title, xp_points, current_level, current_streak")
+        .select("full_name, avatar_url, title, xp_points, current_level, current_streak, team_id")
         .eq("user_id", user.id)
         .single();
 
-      if (data) {
-        setProfile(data);
+      if (profileData) {
+        setProfile(profileData);
+
+        // Load team if exists
+        if (profileData.team_id) {
+          const { data: teamData } = await supabase
+            .from("teams")
+            .select("id, name")
+            .eq("id", profileData.team_id)
+            .single();
+
+          if (teamData) {
+            setTeam(teamData);
+          }
+        }
       }
     };
 
-    loadProfile();
+    loadData();
   }, [user]);
 
   const firstName = profile?.full_name?.split(" ")[0] || "there";
@@ -43,128 +130,84 @@ export default function CommandCenter() {
   return (
     <AppLayout title="Command Center">
       <div className="space-y-6 animate-fade-in">
-        {/* Welcome Banner */}
-        <ViperCard variant="glow" className="relative overflow-hidden">
-          <ViperCardContent className="py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.full_name}
-                    className="h-16 w-16 rounded-full object-cover border-2 border-primary shadow-glow-sm"
-                  />
-                ) : (
-                  <div className="h-16 w-16 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center">
-                    <span className="text-2xl font-display font-bold text-primary">
-                      {firstName.charAt(0)}
-                    </span>
-                  </div>
-                )}
-                <div>
-                  <p className="text-muted-foreground mb-1">Welcome back,</p>
-                  <h2 className="text-3xl font-display font-bold text-foreground">
-                    {firstName}
-                  </h2>
-                  {profile?.title && (
-                    <p className="text-sm text-muted-foreground mt-1">{profile.title}</p>
-                  )}
-                </div>
-              </div>
-              <div className="hidden md:flex items-center gap-3">
-                <ViperBadge variant="default">
-                  Level {profile?.current_level || 1}
-                </ViperBadge>
-                <ViperBadge variant="success" glow>
-                  {profile?.xp_points || 0} XP
-                </ViperBadge>
-                {(profile?.current_streak || 0) > 0 && (
-                  <ViperBadge variant="magenta">
-                    🔥 {profile?.current_streak} day streak
-                  </ViperBadge>
-                )}
-              </div>
-            </div>
-          </ViperCardContent>
-        </ViperCard>
+        {/* Top Section - Greeting */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-display font-bold text-foreground">
+              {getGreeting()}, {firstName}
+            </h1>
+            <p className="text-muted-foreground mt-1">{formatDate()}</p>
+          </div>
+        </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <ViperStat
-            label="Revenue MTD"
-            value="$127,450"
-            change={18.2}
-            changeLabel="vs last month"
-            icon={<DollarSign className="h-5 w-5" />}
-            variant="glow"
+        {/* Daily Challenge & Streak */}
+        <DailyChallenge
+          challenge={{
+            title: "Cold Call Champion",
+            description: "Make 15 cold calls today to earn bonus XP and climb the leaderboard.",
+            reward: 250,
+            progress: 7,
+            goal: 15,
+          }}
+          streak={profile?.current_streak || 0}
+        />
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <MetricCard
+            label="Calls Today"
+            value={23}
+            icon={Phone}
+            comparison={{ value: 15, label: "vs yesterday" }}
+            delay={0}
           />
-          <ViperStat
+          <MetricCard
+            label="Appointments Set"
+            value={5}
+            icon={Calendar}
+            progress={{ current: 5, goal: 8 }}
+            delay={100}
+          />
+          <MetricCard
             label="Deals Closed"
-            value="23"
-            change={12}
-            changeLabel="this month"
-            icon={<Target className="h-5 w-5" />}
+            value={127450}
+            format="currency"
+            icon={Target}
+            comparison={{ value: 23, label: "vs last week" }}
+            delay={200}
           />
-          <ViperStat
-            label="Win Rate"
-            value="68%"
-            change={5.3}
-            changeLabel="improvement"
-            icon={<TrendingUp className="h-5 w-5" />}
-            variant="glass"
-          />
-          <ViperStat
-            label="Active Deals"
-            value="47"
-            change={-2}
-            changeLabel="in pipeline"
-            icon={<Users className="h-5 w-5" />}
+          <MetricCard
+            label="Conversion Rate"
+            value={68}
+            format="percentage"
+            icon={TrendingUp}
+            comparison={{ value: 5, label: "improvement" }}
+            delay={300}
           />
         </div>
 
-        {/* Quick Actions */}
+        {/* Middle Section - Two Columns */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <ViperCard variant="glass" hover="lift" className="lg:col-span-2">
-            <ViperCardHeader>
-              <ViperCardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary" />
-                Today's Priorities
-              </ViperCardTitle>
-            </ViperCardHeader>
-            <ViperCardContent>
-              <div className="space-y-3">
-                {[
-                  { task: "Follow up with Acme Corp", priority: "high", time: "10:00 AM" },
-                  { task: "Demo prep for TechStart", priority: "medium", time: "2:00 PM" },
-                  { task: "Send proposal to GlobalTech", priority: "high", time: "4:00 PM" },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-3 rounded-lg bg-accent/50 border border-border hover:border-primary/30 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`h-2 w-2 rounded-full ${item.priority === "high" ? "bg-magenta" : "bg-warning"}`} />
-                      <span className="text-foreground">{item.task}</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">{item.time}</span>
-                  </div>
-                ))}
-              </div>
-            </ViperCardContent>
-          </ViperCard>
+          {/* Left Column - Activity Feed */}
+          <div className="lg:col-span-2">
+            <RecentActivity activities={mockActivities} />
+          </div>
 
-          <ViperCard variant="default" hover="glow">
-            <ViperCardHeader>
-              <ViperCardTitle>Leaderboard Position</ViperCardTitle>
-            </ViperCardHeader>
-            <ViperCardContent>
-              <div className="text-center">
-                <p className="text-6xl font-display font-bold text-gradient">#3</p>
-                <p className="text-muted-foreground mt-2">Out of 24 reps</p>
-                <p className="text-sm text-success mt-4">↑ 2 positions this week</p>
-              </div>
-            </ViperCardContent>
-          </ViperCard>
+          {/* Right Column - Quick Actions & Follow-ups */}
+          <div>
+            <QuickActions followUps={mockFollowUps} />
+          </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Team Pulse */}
+          <TeamPulse members={mockTeamMembers} teamName={team?.name || null} />
+
+          {/* Motivational Quote */}
+          <div className="flex flex-col justify-center">
+            <MotivationalQuote />
+          </div>
         </div>
       </div>
     </AppLayout>
