@@ -14,8 +14,8 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
-  Zap,
 } from "lucide-react";
+import viperLogo from "@/assets/viper-logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -71,8 +71,8 @@ export function AppSidebar() {
       {/* Logo Header */}
       <SidebarHeader className="p-4 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 border border-primary/30">
-            <Zap className="h-5 w-5 text-primary" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg overflow-hidden">
+            <img src={viperLogo} alt="PitchViper" className="h-10 w-10 object-contain" />
           </div>
           {!isCollapsed && (
             <div className="flex flex-col">

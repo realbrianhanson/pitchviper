@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { FloatingParticles } from "./FloatingParticles";
-import { Zap } from "lucide-react";
+import viperLogo from "@/assets/viper-logo.png";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -25,8 +25,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
             <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 border border-primary/30 shadow-glow-sm">
-                <Zap className="h-6 w-6 text-primary" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl overflow-hidden">
+                <img src={viperLogo} alt="PitchViper" className="h-14 w-14 object-contain" />
               </div>
               <span className="font-display text-3xl font-bold text-gradient">
                 PitchViper
