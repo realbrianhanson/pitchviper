@@ -25,6 +25,7 @@ import TrainingAcademy from "./pages/TrainingAcademy";
 import DealPipeline from "./pages/DealPipeline";
 import TeamSettings from "./pages/TeamSettings";
 import CoachingConsole from "./pages/CoachingConsole";
+import ManagerDashboard from "./pages/ManagerDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/pipeline" element={<ProtectedRoute><DealPipeline /></ProtectedRoute>} />
             <Route path="/team-settings" element={<ProtectedRoute><TeamSettings /></ProtectedRoute>} />
             <Route path="/coaching" element={<ProtectedRoute><CoachingConsole /></ProtectedRoute>} />
+            <Route path="/manager" element={<ProtectedRoute><ManagerDashboard /></ProtectedRoute>} />
             
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
