@@ -15,5 +15,8 @@ verify_jwt = true
 [functions.generate-performance-insights]
 verify_jwt = true
 
+[functions.calculate-leaderboard]
+verify_jwt = false
+
 [functions.check-badge-eligibility]
 verify_jwt = false

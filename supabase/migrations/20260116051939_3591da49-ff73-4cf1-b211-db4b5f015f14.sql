@@ -1,0 +1,3 @@
+-- Seed some sample competitions (using a placeholder UUID that will be replaced when actual users exist)
+-- We'll skip seeding competitions for now as they require real users
+-- Competitions can be created by managers through the UI
