@@ -459,6 +459,42 @@ export type Database = {
         }
         Relationships: []
       }
+      gauntlet_challenges: {
+        Row: {
+          challenge_date: string
+          challenge_type: Database["public"]["Enums"]["gauntlet_challenge_type"]
+          content: Json
+          created_at: string
+          description: string
+          id: string
+          time_limit_seconds: number | null
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          challenge_date: string
+          challenge_type: Database["public"]["Enums"]["gauntlet_challenge_type"]
+          content?: Json
+          created_at?: string
+          description: string
+          id?: string
+          time_limit_seconds?: number | null
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          challenge_date?: string
+          challenge_type?: Database["public"]["Enums"]["gauntlet_challenge_type"]
+          content?: Json
+          created_at?: string
+          description?: string
+          id?: string
+          time_limit_seconds?: number | null
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       learning_paths: {
         Row: {
           created_at: string
@@ -1075,6 +1111,50 @@ export type Database = {
           },
         ]
       }
+      user_gauntlet_completions: {
+        Row: {
+          attempts: number
+          challenge_id: string
+          completed_at: string
+          feedback: Json | null
+          id: string
+          passed: boolean
+          responses: Json | null
+          score: number
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          challenge_id: string
+          completed_at?: string
+          feedback?: Json | null
+          id?: string
+          passed?: boolean
+          responses?: Json | null
+          score?: number
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          challenge_id?: string
+          completed_at?: string
+          feedback?: Json | null
+          id?: string
+          passed?: boolean
+          responses?: Json | null
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_gauntlet_completions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "gauntlet_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_module_progress: {
         Row: {
           completed_at: string | null
@@ -1344,6 +1424,14 @@ export type Database = {
         | "roleplay"
         | "custom"
       competition_status: "upcoming" | "active" | "completed" | "cancelled"
+      gauntlet_challenge_type:
+        | "objection_blast"
+        | "pitch_perfect"
+        | "discovery_questions"
+        | "spot_the_mistake"
+        | "quick_math"
+        | "competitor_quiz"
+        | "scenario_response"
       module_status: "not_started" | "in_progress" | "completed"
       module_type: "video" | "reading" | "quiz" | "roleplay"
       objection_category:
@@ -1547,6 +1635,15 @@ export const Constants = {
         "custom",
       ],
       competition_status: ["upcoming", "active", "completed", "cancelled"],
+      gauntlet_challenge_type: [
+        "objection_blast",
+        "pitch_perfect",
+        "discovery_questions",
+        "spot_the_mistake",
+        "quick_math",
+        "competitor_quiz",
+        "scenario_response",
+      ],
       module_status: ["not_started", "in_progress", "completed"],
       module_type: ["video", "reading", "quiz", "roleplay"],
       objection_category: [
