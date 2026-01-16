@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
 import { ViperButton } from "@/components/ui/viper-button";
 import { Swords, Phone, GitBranch, Trophy, Clock, ArrowRight } from "lucide-react";
+import { LogCallModal } from "@/components/calls/LogCallModal";
 
 interface FollowUp {
   id: string;
@@ -16,6 +18,7 @@ interface QuickActionsProps {
 }
 
 export function QuickActions({ followUps }: QuickActionsProps) {
+  const [showLogCall, setShowLogCall] = useState(false);
   return (
     <div className="space-y-4">
       {/* Quick Action Buttons */}
@@ -30,10 +33,15 @@ export function QuickActions({ followUps }: QuickActionsProps) {
               Start Roleplay
             </ViperButton>
           </Link>
-          <ViperButton variant="outline" className="w-full justify-start gap-2 h-12">
+          <ViperButton 
+            variant="outline" 
+            className="w-full justify-start gap-2 h-12"
+            onClick={() => setShowLogCall(true)}
+          >
             <Phone className="h-4 w-4 text-success" />
             Log a Call
           </ViperButton>
+          <LogCallModal open={showLogCall} onOpenChange={setShowLogCall} />
           <Link to="/pipeline">
             <ViperButton variant="outline" className="w-full justify-start gap-2 h-12">
               <GitBranch className="h-4 w-4 text-warning" />
