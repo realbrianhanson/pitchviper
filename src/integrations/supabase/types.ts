@@ -492,6 +492,115 @@ export type Database = {
         }
         Relationships: []
       }
+      deal_stage_history: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          deal_id: string
+          from_stage: string | null
+          id: string
+          to_stage: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          deal_id: string
+          from_stage?: string | null
+          id?: string
+          to_stage: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          deal_id?: string
+          from_stage?: string | null
+          id?: string
+          to_stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_stage_history_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deals: {
+        Row: {
+          close_reason: string | null
+          closed_at: string | null
+          company_name: string
+          contact_email: string | null
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          deal_type: string
+          deal_value: number
+          expected_close_date: string | null
+          id: string
+          momentum_score: number | null
+          notes: string | null
+          probability: number | null
+          source: string | null
+          stage: string
+          team_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          close_reason?: string | null
+          closed_at?: string | null
+          company_name: string
+          contact_email?: string | null
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          deal_type?: string
+          deal_value?: number
+          expected_close_date?: string | null
+          id?: string
+          momentum_score?: number | null
+          notes?: string | null
+          probability?: number | null
+          source?: string | null
+          stage?: string
+          team_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          close_reason?: string | null
+          closed_at?: string | null
+          company_name?: string
+          contact_email?: string | null
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          deal_type?: string
+          deal_value?: number
+          expected_close_date?: string | null
+          id?: string
+          momentum_score?: number | null
+          notes?: string | null
+          probability?: number | null
+          source?: string | null
+          stage?: string
+          team_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gauntlet_challenges: {
         Row: {
           challenge_date: string
