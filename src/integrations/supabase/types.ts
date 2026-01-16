@@ -14,6 +14,116 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at: string
+          id: string
+          metadata: Json | null
+          team_id: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          team_id?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: Database["public"]["Enums"]["activity_type"]
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          team_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_challenges: {
+        Row: {
+          challenge_date: string
+          challenge_type: Database["public"]["Enums"]["challenge_type"]
+          created_at: string
+          description: string
+          id: string
+          target_value: number
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          challenge_date?: string
+          challenge_type: Database["public"]["Enums"]["challenge_type"]
+          created_at?: string
+          description: string
+          id?: string
+          target_value: number
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          challenge_date?: string
+          challenge_type?: Database["public"]["Enums"]["challenge_type"]
+          created_at?: string
+          description?: string
+          id?: string
+          target_value?: number
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
+      daily_stats: {
+        Row: {
+          appointments_set: number
+          calls_made: number
+          calls_received: number
+          created_at: string
+          date: string
+          deals_closed: number
+          deals_lost: number
+          id: string
+          revenue_closed: number
+          talk_time_minutes: number
+          user_id: string
+        }
+        Insert: {
+          appointments_set?: number
+          calls_made?: number
+          calls_received?: number
+          created_at?: string
+          date?: string
+          deals_closed?: number
+          deals_lost?: number
+          id?: string
+          revenue_closed?: number
+          talk_time_minutes?: number
+          user_id: string
+        }
+        Update: {
+          appointments_set?: number
+          calls_made?: number
+          calls_received?: number
+          created_at?: string
+          date?: string
+          deals_closed?: number
+          deals_lost?: number
+          id?: string
+          revenue_closed?: number
+          talk_time_minutes?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -106,6 +216,44 @@ export type Database = {
         }
         Relationships: []
       }
+      user_challenge_progress: {
+        Row: {
+          challenge_id: string
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          current_progress: number
+          id: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          current_progress?: number
+          id?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          current_progress?: number
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_challenge_progress_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -132,7 +280,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_streak: { Args: { p_user_id: string }; Returns: number }
       generate_team_code: { Args: never; Returns: string }
+      get_or_create_daily_stats: {
+        Args: { p_user_id: string }
+        Returns: {
+          appointments_set: number
+          calls_made: number
+          calls_received: number
+          created_at: string
+          date: string
+          deals_closed: number
+          deals_lost: number
+          id: string
+          revenue_closed: number
+          talk_time_minutes: number
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "daily_stats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -144,9 +315,46 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_activity: {
+        Args: {
+          p_activity_type: Database["public"]["Enums"]["activity_type"]
+          p_metadata?: Json
+          p_user_id: string
+        }
+        Returns: {
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at: string
+          id: string
+          metadata: Json | null
+          team_id: string | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "activities"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
+      activity_type:
+        | "call_made"
+        | "call_received"
+        | "appointment_set"
+        | "deal_closed"
+        | "deal_lost"
+        | "roleplay_completed"
+        | "badge_earned"
+        | "level_up"
+        | "training_completed"
       app_role: "rep" | "manager"
+      challenge_type:
+        | "calls"
+        | "appointments"
+        | "roleplay"
+        | "objection_practice"
+        | "custom"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -274,7 +482,25 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      activity_type: [
+        "call_made",
+        "call_received",
+        "appointment_set",
+        "deal_closed",
+        "deal_lost",
+        "roleplay_completed",
+        "badge_earned",
+        "level_up",
+        "training_completed",
+      ],
       app_role: ["rep", "manager"],
+      challenge_type: [
+        "calls",
+        "appointments",
+        "roleplay",
+        "objection_practice",
+        "custom",
+      ],
     },
   },
 } as const
