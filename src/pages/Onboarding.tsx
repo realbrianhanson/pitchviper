@@ -1,82 +1,190 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { ViperButton } from "@/components/ui/viper-button";
+import { FloatingParticles } from "@/components/auth/FloatingParticles";
+import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
+import { StepProfile } from "@/components/onboarding/StepProfile";
+import { StepTeam } from "@/components/onboarding/StepTeam";
+import { StepComplete } from "@/components/onboarding/StepComplete";
 import { ViperCard, ViperCardContent } from "@/components/ui/viper-card";
-import { Zap, Target, Trophy, Rocket } from "lucide-react";
+import { Zap, Loader2 } from "lucide-react";
+
+type Step = 1 | 2 | 3;
+
+interface ProfileData {
+  avatarUrl: string | null;
+  title: string;
+  hireDate: string;
+}
+
+interface TeamData {
+  teamId: string | null;
+  teamName: string | null;
+  teamCode: string | null;
+}
 
 export default function Onboarding() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  
+  const [step, setStep] = useState<Step>(1);
+  const [loading, setLoading] = useState(true);
+  const [fullName, setFullName] = useState("");
+  const [isManager, setIsManager] = useState(false);
+  
+  const [profileData, setProfileData] = useState<ProfileData>({
+    avatarUrl: null,
+    title: "",
+    hireDate: "",
+  });
+  
+  const [teamData, setTeamData] = useState<TeamData>({
+    teamId: null,
+    teamName: null,
+    teamCode: null,
+  });
 
+  // Load existing profile data
   useEffect(() => {
-    if (!loading && !user) {
+    if (!user) return;
+
+    const loadProfile = async () => {
+      try {
+        // Get profile
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+
+        if (profile) {
+          setFullName(profile.full_name);
+          if (profile.onboarding_completed) {
+            navigate("/");
+            return;
+          }
+        }
+
+        // Check if manager
+        const { data: roles } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id);
+
+        if (roles?.some(r => r.role === "manager")) {
+          setIsManager(true);
+        }
+      } catch (err) {
+        console.error("Error loading profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, [user, navigate]);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
       navigate("/sign-in");
     }
-  }, [user, loading, navigate]);
+  }, [user, authLoading, navigate]);
 
-  if (loading) {
+  const handleProfileComplete = (data: ProfileData) => {
+    setProfileData(data);
+    setStep(2);
+  };
+
+  const handleTeamComplete = (data: TeamData) => {
+    setTeamData(data);
+    setStep(3);
+  };
+
+  const handleFinalComplete = async () => {
+    if (!user) return;
+
+    try {
+      // Update profile with all collected data
+      await supabase
+        .from("profiles")
+        .update({
+          avatar_url: profileData.avatarUrl,
+          title: profileData.title,
+          hire_date: profileData.hireDate || null,
+          team_id: teamData.teamId,
+          onboarding_completed: true,
+        })
+        .eq("user_id", user.id);
+
+      navigate("/");
+    } catch (err) {
+      console.error("Error saving profile:", err);
+    }
+  };
+
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-primary">Loading...</div>
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 text-primary animate-spin" />
+          <p className="text-muted-foreground">Loading your profile...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      {/* Background effects */}
-      <div className="fixed inset-0">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated gradient mesh background */}
+      <div className="fixed inset-0 bg-background">
         <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[150px] animate-pulse" />
         <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-magenta/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-success/5 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "2s" }} />
       </div>
 
-      <div className="relative z-10 max-w-2xl w-full animate-fade-in">
-        <ViperCard variant="glass" className="text-center">
-          <ViperCardContent className="py-12 px-8">
-            {/* Welcome Icon */}
-            <div className="flex justify-center mb-6">
-              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 border border-primary/30 shadow-glow-md animate-glow-pulse">
-                <Zap className="h-10 w-10 text-primary" />
-              </div>
+      <FloatingParticles />
+
+      <div className="relative z-10 w-full max-w-lg">
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 border border-primary/30">
+              <Zap className="h-5 w-5 text-primary" />
             </div>
+            <span className="font-display text-2xl font-bold text-gradient">PitchViper</span>
+          </div>
+        </div>
 
-            {/* Welcome Text */}
-            <h1 className="text-4xl font-display font-bold text-gradient mb-4">
-              Welcome to PitchViper!
-            </h1>
-            <p className="text-lg text-muted-foreground mb-8 max-w-md mx-auto">
-              You're about to unlock your full sales potential. Here's what awaits you:
-            </p>
+        {/* Progress */}
+        <OnboardingProgress currentStep={step} totalSteps={3} />
 
-            {/* Features Preview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-              <div className="p-4 rounded-lg bg-accent/50 border border-border">
-                <Target className="h-8 w-8 text-primary mx-auto mb-2" />
-                <h3 className="font-display font-semibold text-foreground">Track Deals</h3>
-                <p className="text-xs text-muted-foreground mt-1">Visual pipeline management</p>
-              </div>
-              <div className="p-4 rounded-lg bg-accent/50 border border-border">
-                <Trophy className="h-8 w-8 text-warning mx-auto mb-2" />
-                <h3 className="font-display font-semibold text-foreground">Compete</h3>
-                <p className="text-xs text-muted-foreground mt-1">Real-time leaderboards</p>
-              </div>
-              <div className="p-4 rounded-lg bg-accent/50 border border-border">
-                <Rocket className="h-8 w-8 text-success mx-auto mb-2" />
-                <h3 className="font-display font-semibold text-foreground">Level Up</h3>
-                <p className="text-xs text-muted-foreground mt-1">AI-powered coaching</p>
-              </div>
-            </div>
+        {/* Card */}
+        <ViperCard variant="glass" className="overflow-hidden">
+          <ViperCardContent className="p-8">
+            {step === 1 && (
+              <StepProfile
+                fullName={fullName}
+                initialData={profileData}
+                onComplete={handleProfileComplete}
+              />
+            )}
 
-            {/* CTA */}
-            <ViperButton
-              size="xl"
-              onClick={() => navigate("/")}
-              className="font-display"
-            >
-              <Rocket className="h-5 w-5" />
-              Enter Command Center
-            </ViperButton>
+            {step === 2 && (
+              <StepTeam
+                isManager={isManager}
+                onComplete={handleTeamComplete}
+                onBack={() => setStep(1)}
+              />
+            )}
+
+            {step === 3 && (
+              <StepComplete
+                teamName={teamData.teamName}
+                onComplete={handleFinalComplete}
+              />
+            )}
           </ViperCardContent>
         </ViperCard>
       </div>

@@ -18,29 +18,91 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          current_level: number
+          current_streak: number
           full_name: string
+          hire_date: string | null
           id: string
+          longest_streak: number
+          onboarding_completed: boolean
+          phone_extension: string | null
           team_code: string | null
+          team_id: string | null
+          title: string | null
           updated_at: string
           user_id: string
+          xp_points: number
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          current_level?: number
+          current_streak?: number
           full_name: string
+          hire_date?: string | null
           id?: string
+          longest_streak?: number
+          onboarding_completed?: boolean
+          phone_extension?: string | null
           team_code?: string | null
+          team_id?: string | null
+          title?: string | null
           updated_at?: string
           user_id: string
+          xp_points?: number
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          current_level?: number
+          current_streak?: number
           full_name?: string
+          hire_date?: string | null
           id?: string
+          longest_streak?: number
+          onboarding_completed?: boolean
+          phone_extension?: string | null
           team_code?: string | null
+          team_id?: string | null
+          title?: string | null
           updated_at?: string
           user_id?: string
+          xp_points?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          logo_url: string | null
+          name: string
+          team_code: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          team_code: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          team_code?: string
         }
         Relationships: []
       }
@@ -70,6 +132,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_team_code: { Args: never; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
