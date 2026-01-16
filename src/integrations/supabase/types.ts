@@ -189,6 +189,42 @@ export type Database = {
           },
         ]
       }
+      sos_alerts: {
+        Row: {
+          acknowledged_by: string | null
+          alert_type: string
+          created_at: string
+          id: string
+          note: string | null
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["sos_alert_status"]
+          team_id: string | null
+          user_id: string
+        }
+        Insert: {
+          acknowledged_by?: string | null
+          alert_type: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["sos_alert_status"]
+          team_id?: string | null
+          user_id: string
+        }
+        Update: {
+          acknowledged_by?: string | null
+          alert_type?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["sos_alert_status"]
+          team_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       teams: {
         Row: {
           created_at: string
@@ -253,6 +289,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_preferences: {
+        Row: {
+          celebration_sounds_enabled: boolean
+          created_at: string
+          id: string
+          notification_sounds_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          celebration_sounds_enabled?: boolean
+          created_at?: string
+          id?: string
+          notification_sounds_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          celebration_sounds_enabled?: boolean
+          created_at?: string
+          id?: string
+          notification_sounds_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -425,6 +488,7 @@ export type Database = {
         | "roleplay"
         | "objection_practice"
         | "custom"
+      sos_alert_status: "pending" | "acknowledged" | "resolved"
       user_status_type:
         | "available"
         | "on_call"
@@ -577,6 +641,7 @@ export const Constants = {
         "objection_practice",
         "custom",
       ],
+      sos_alert_status: ["pending", "acknowledged", "resolved"],
       user_status_type: [
         "available",
         "on_call",

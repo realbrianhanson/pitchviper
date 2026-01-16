@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Phone, Calendar, Trophy, Crown, Sparkles } from "lucide-react";
+import { Phone, Calendar, Trophy, Crown, Sparkles, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TeamMemberWithStatus } from "@/hooks/useWarRoomData";
 
@@ -112,18 +112,27 @@ export function TeamMemberCard({
         "relative bg-card/80 backdrop-blur-sm rounded-xl border border-border/50 p-4 transition-all duration-300",
         isPulsing && "animate-pulse ring-2 ring-primary ring-opacity-50",
         isCelebrating && "ring-4 ring-success shadow-lg shadow-success/30",
+        member.has_pending_sos && "ring-2 ring-destructive shadow-lg shadow-destructive/30",
         "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
       )}
     >
+      {/* SOS Badge */}
+      {member.has_pending_sos && (
+        <div className="absolute -top-2 -right-2 bg-destructive rounded-full px-2 py-1 shadow-lg shadow-destructive/50 flex items-center gap-1 animate-pulse">
+          <AlertTriangle className="h-3 w-3 text-destructive-foreground" />
+          <span className="text-xs font-bold text-destructive-foreground">SOS</span>
+        </div>
+      )}
+
       {/* Top Performer Badge */}
-      {member.is_top_performer && (
+      {member.is_top_performer && !member.has_pending_sos && (
         <div className="absolute -top-2 -right-2 bg-gradient-to-r from-warning to-amber-400 rounded-full p-1.5 shadow-lg shadow-warning/30">
           <Crown className="h-4 w-4 text-background" />
         </div>
       )}
 
       {/* Rank Badge */}
-      {rank && rank <= 3 && (
+      {rank && rank <= 3 && !member.has_pending_sos && (
         <div
           className={cn(
             "absolute -top-2 -left-2 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg",

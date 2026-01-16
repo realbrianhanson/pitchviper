@@ -1,12 +1,13 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
+import { ViperCard, ViperCardContent } from "@/components/ui/viper-card";
 import { LiveStatsBanner } from "@/components/warroom/LiveStatsBanner";
 import { TeamMemberCard } from "@/components/warroom/TeamMemberCard";
 import { ActivityFeed } from "@/components/warroom/ActivityFeed";
 import { LiveLeaderboard } from "@/components/warroom/LiveLeaderboard";
+import { DealCelebration } from "@/components/warroom/DealCelebration";
+import { SOSButton } from "@/components/warroom/SOSButton";
 import { useWarRoomData } from "@/hooks/useWarRoomData";
 import { Radio, Users, Loader2 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WarRoom() {
   const {
@@ -16,11 +17,18 @@ export default function WarRoom() {
     isLoading,
     pulsingMembers,
     celebratingMembers,
+    celebrationData,
+    showCelebration,
+    closeCelebration,
+    soundEnabled,
   } = useWarRoomData();
 
   // Sort members by activity for display
   const sortedMembers = [...teamMembers].sort((a, b) => {
-    // On call members first
+    // SOS alerts first
+    if (a.has_pending_sos && !b.has_pending_sos) return -1;
+    if (b.has_pending_sos && !a.has_pending_sos) return 1;
+    // On call members next
     if (a.status === "on_call" && b.status !== "on_call") return -1;
     if (b.status === "on_call" && a.status !== "on_call") return 1;
     // Then by calls made
@@ -62,12 +70,28 @@ export default function WarRoom() {
             </ViperCardContent>
           </ViperCard>
         </div>
+        <SOSButton />
       </AppLayout>
     );
   }
 
   return (
     <div className="flex flex-col h-screen">
+      {/* Deal Celebration Overlay */}
+      {celebrationData && (
+        <DealCelebration
+          isOpen={showCelebration}
+          onClose={closeCelebration}
+          closerName={celebrationData.closerName}
+          closerAvatar={celebrationData.closerAvatar}
+          dealValue={celebrationData.dealValue}
+          clientName={celebrationData.clientName}
+          dealType={celebrationData.dealType}
+          dealsToday={celebrationData.dealsToday}
+          soundEnabled={soundEnabled}
+        />
+      )}
+
       {/* Live Stats Banner - Fixed at top */}
       <LiveStatsBanner
         totalCalls={teamStats.total_calls}
@@ -125,6 +149,9 @@ export default function WarRoom() {
           </div>
         </div>
       </div>
+
+      {/* SOS Button */}
+      <SOSButton />
     </div>
   );
 }
