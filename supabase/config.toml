@@ -1,1 +1,7 @@
 project_id = "wqvyjolmttonoqojmnzo"
+
+[functions.get-dashboard-data]
+verify_jwt = true
+
+[functions.roleplay-chat]
+verify_jwt = true

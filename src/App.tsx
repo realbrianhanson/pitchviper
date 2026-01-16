@@ -15,6 +15,7 @@ import Onboarding from "./pages/Onboarding";
 import CommandCenter from "./pages/CommandCenter";
 import WarRoom from "./pages/WarRoom";
 import RoleplayArena from "./pages/RoleplayArena";
+import RoleplaySession from "./pages/RoleplaySession";
 import CallIntelligence from "./pages/CallIntelligence";
 import ObjectionVault from "./pages/ObjectionVault";
 import Leaderboards from "./pages/Leaderboards";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
             <Route path="/war-room" element={<ProtectedRoute><WarRoom /></ProtectedRoute>} />
             <Route path="/roleplay" element={<ProtectedRoute><RoleplayArena /></ProtectedRoute>} />
+            <Route path="/roleplay/:scenarioId" element={<ProtectedRoute><RoleplaySession /></ProtectedRoute>} />
             <Route path="/call-intelligence" element={<ProtectedRoute><CallIntelligence /></ProtectedRoute>} />
             <Route path="/objection-vault" element={<ProtectedRoute><ObjectionVault /></ProtectedRoute>} />
             <Route path="/leaderboards" element={<ProtectedRoute><Leaderboards /></ProtectedRoute>} />
