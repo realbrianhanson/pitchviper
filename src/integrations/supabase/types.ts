@@ -168,6 +168,51 @@ export type Database = {
           },
         ]
       }
+      certifications: {
+        Row: {
+          badge_id: string | null
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          name: string
+          path_id: string
+        }
+        Insert: {
+          badge_id?: string | null
+          created_at?: string
+          description: string
+          icon?: string
+          id?: string
+          name: string
+          path_id: string
+        }
+        Update: {
+          badge_id?: string | null
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          path_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certifications_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certifications_path_id_fkey"
+            columns: ["path_id"]
+            isOneToOne: false
+            referencedRelation: "learning_paths"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coaching_sessions: {
         Row: {
           action_items: string[] | null
@@ -413,6 +458,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      learning_paths: {
+        Row: {
+          created_at: string
+          description: string
+          estimated_hours: number
+          icon: string
+          id: string
+          is_required: boolean
+          name: string
+          sort_order: number
+          team_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          estimated_hours?: number
+          icon?: string
+          id?: string
+          is_required?: boolean
+          name: string
+          sort_order?: number
+          team_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          estimated_hours?: number
+          icon?: string
+          id?: string
+          is_required?: boolean
+          name?: string
+          sort_order?: number
+          team_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_paths_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       levels: {
         Row: {
@@ -840,6 +929,56 @@ export type Database = {
           },
         ]
       }
+      training_modules: {
+        Row: {
+          content: Json
+          created_at: string
+          description: string
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          module_type: Database["public"]["Enums"]["module_type"]
+          path_id: string
+          sort_order: number
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          description: string
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          module_type: Database["public"]["Enums"]["module_type"]
+          path_id: string
+          sort_order?: number
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          description?: string
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          module_type?: Database["public"]["Enums"]["module_type"]
+          path_id?: string
+          sort_order?: number
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_modules_path_id_fkey"
+            columns: ["path_id"]
+            isOneToOne: false
+            referencedRelation: "learning_paths"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_badges: {
         Row: {
           badge_id: string
@@ -865,6 +1004,35 @@ export type Database = {
             columns: ["badge_id"]
             isOneToOne: false
             referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_certifications: {
+        Row: {
+          certification_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          certification_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          certification_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_certifications_certification_id_fkey"
+            columns: ["certification_id"]
+            isOneToOne: false
+            referencedRelation: "certifications"
             referencedColumns: ["id"]
           },
         ]
@@ -903,6 +1071,50 @@ export type Database = {
             columns: ["challenge_id"]
             isOneToOne: false
             referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_module_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          module_id: string
+          progress_data: Json | null
+          score: number | null
+          status: Database["public"]["Enums"]["module_status"]
+          time_spent_seconds: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          module_id: string
+          progress_data?: Json | null
+          score?: number | null
+          status?: Database["public"]["Enums"]["module_status"]
+          time_spent_seconds?: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          module_id?: string
+          progress_data?: Json | null
+          score?: number | null
+          status?: Database["public"]["Enums"]["module_status"]
+          time_spent_seconds?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_module_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "training_modules"
             referencedColumns: ["id"]
           },
         ]
@@ -1132,6 +1344,8 @@ export type Database = {
         | "roleplay"
         | "custom"
       competition_status: "upcoming" | "active" | "completed" | "cancelled"
+      module_status: "not_started" | "in_progress" | "completed"
+      module_type: "video" | "reading" | "quiz" | "roleplay"
       objection_category:
         | "price"
         | "timing"
@@ -1333,6 +1547,8 @@ export const Constants = {
         "custom",
       ],
       competition_status: ["upcoming", "active", "completed", "cancelled"],
+      module_status: ["not_started", "in_progress", "completed"],
+      module_type: ["video", "reading", "quiz", "roleplay"],
       objection_category: [
         "price",
         "timing",
