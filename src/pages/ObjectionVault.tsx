@@ -1,25 +1,169 @@
+import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
-import { Shield } from "lucide-react";
+import { ViperCard, ViperCardContent } from "@/components/ui/viper-card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useObjections } from "@/hooks/useObjections";
+import { ObjectionFilters } from "@/components/objections/ObjectionFilters";
+import { ObjectionCard } from "@/components/objections/ObjectionCard";
+import { AddObjectionModal } from "@/components/objections/AddObjectionModal";
+import { AddResponseModal } from "@/components/objections/AddResponseModal";
+import { Shield, Search, Plus, Loader2, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function ObjectionVault() {
+  const navigate = useNavigate();
+  const {
+    objections,
+    allObjections,
+    isLoading,
+    searchQuery,
+    setSearchQuery,
+    selectedCategories,
+    setSelectedCategories,
+    selectedDifficulties,
+    setSelectedDifficulties,
+    sortBy,
+    setSortBy,
+    addObjection,
+    addResponse,
+    voteResponse,
+    incrementUsage
+  } = useObjections();
+
+  const [isAddObjectionOpen, setIsAddObjectionOpen] = useState(false);
+  const [addResponseObjectionId, setAddResponseObjectionId] = useState<string | null>(null);
+
+  const selectedObjection = addResponseObjectionId 
+    ? allObjections.find(o => o.id === addResponseObjectionId)
+    : null;
+
+  const handleCopy = (text: string) => {
+    // Could track analytics here
+  };
+
+  const handlePractice = (objectionId: string) => {
+    // Navigate to roleplay with this objection
+    navigate(`/roleplay?objection=${objectionId}`);
+  };
+
+  const handleAddResponse = async (data: { response_text: string; approach: any }) => {
+    if (!addResponseObjectionId) return false;
+    return addResponse(addResponseObjectionId, data);
+  };
+
   return (
     <AppLayout title="Objection Vault">
-      <div className="animate-fade-in">
-        <ViperCard variant="glass">
-          <ViperCardHeader>
-            <ViperCardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" />
-              Objection Library
-            </ViperCardTitle>
-          </ViperCardHeader>
-          <ViperCardContent>
-            <div className="flex items-center justify-center h-64 text-muted-foreground">
-              <p className="text-lg">Objection Vault - Battle-tested responses coming soon</p>
+      <div className="animate-fade-in space-y-6">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-lg bg-primary/20">
+                <Shield className="h-6 w-6 text-primary" />
+              </div>
+              <h1 className="text-2xl font-bold text-foreground font-outfit">
+                Objection Vault
+              </h1>
             </div>
-          </ViperCardContent>
-        </ViperCard>
+            <p className="text-muted-foreground">
+              Every objection conquered. Every response battle-tested.
+            </p>
+          </div>
+
+          <Button onClick={() => setIsAddObjectionOpen(true)} className="shrink-0">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Objection
+          </Button>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            placeholder="Search objections, responses, or keywords..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-12 py-6 text-lg bg-card border-border"
+          />
+        </div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Sidebar Filters */}
+          <div className="lg:col-span-1">
+            <ObjectionFilters
+              selectedCategories={selectedCategories}
+              setSelectedCategories={setSelectedCategories}
+              selectedDifficulties={selectedDifficulties}
+              setSelectedDifficulties={setSelectedDifficulties}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+            />
+          </div>
+
+          {/* Objection Cards */}
+          <div className="lg:col-span-3 space-y-4">
+            {isLoading ? (
+              <ViperCard variant="glass">
+                <ViperCardContent className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </ViperCardContent>
+              </ViperCard>
+            ) : objections.length === 0 ? (
+              <ViperCard variant="glass">
+                <ViperCardContent className="flex flex-col items-center justify-center py-12 text-center">
+                  <Sparkles className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
+                    No objections found
+                  </h3>
+                  <p className="text-muted-foreground max-w-md">
+                    {searchQuery || selectedCategories.length > 0 || selectedDifficulties.length > 0
+                      ? "Try adjusting your filters or search terms"
+                      : "Be the first to add an objection to the vault!"}
+                  </p>
+                  {!searchQuery && selectedCategories.length === 0 && selectedDifficulties.length === 0 && (
+                    <Button className="mt-4" onClick={() => setIsAddObjectionOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add First Objection
+                    </Button>
+                  )}
+                </ViperCardContent>
+              </ViperCard>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Showing {objections.length} of {allObjections.length} objections
+                </p>
+                {objections.map(objection => (
+                  <ObjectionCard
+                    key={objection.id}
+                    objection={objection}
+                    onVote={voteResponse}
+                    onCopy={handleCopy}
+                    onPractice={handlePractice}
+                    onAddResponse={(id) => setAddResponseObjectionId(id)}
+                  />
+                ))}
+              </>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Modals */}
+      <AddObjectionModal
+        isOpen={isAddObjectionOpen}
+        onClose={() => setIsAddObjectionOpen(false)}
+        onAdd={addObjection}
+      />
+
+      <AddResponseModal
+        isOpen={!!addResponseObjectionId}
+        onClose={() => setAddResponseObjectionId(null)}
+        objectionText={selectedObjection?.objection_text}
+        onAdd={handleAddResponse}
+      />
     </AppLayout>
   );
 }
