@@ -15,6 +15,9 @@ verify_jwt = true
 [functions.generate-performance-insights]
 verify_jwt = true
 
+[functions.generate-achievement-image]
+verify_jwt = false
+
 [functions.calculate-leaderboard]
 verify_jwt = false
 

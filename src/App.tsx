@@ -20,6 +20,7 @@ import CallIntelligence from "./pages/CallIntelligence";
 import ObjectionVault from "./pages/ObjectionVault";
 import Leaderboards from "./pages/Leaderboards";
 import MyPerformance from "./pages/MyPerformance";
+import Achievements from "./pages/Achievements";
 import TrainingAcademy from "./pages/TrainingAcademy";
 import DealPipeline from "./pages/DealPipeline";
 import TeamSettings from "./pages/TeamSettings";
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/objection-vault" element={<ProtectedRoute><ObjectionVault /></ProtectedRoute>} />
             <Route path="/leaderboards" element={<ProtectedRoute><Leaderboards /></ProtectedRoute>} />
             <Route path="/performance" element={<ProtectedRoute><MyPerformance /></ProtectedRoute>} />
+            <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
             <Route path="/training" element={<ProtectedRoute><TrainingAcademy /></ProtectedRoute>} />
             <Route path="/pipeline" element={<ProtectedRoute><DealPipeline /></ProtectedRoute>} />
             <Route path="/team-settings" element={<ProtectedRoute><TeamSettings /></ProtectedRoute>} />
