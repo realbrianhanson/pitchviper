@@ -168,6 +168,39 @@ export type Database = {
           },
         ]
       }
+      coaching_sessions: {
+        Row: {
+          action_items: string[] | null
+          created_at: string
+          focus_areas: string[] | null
+          id: string
+          manager_id: string
+          next_session_date: string | null
+          notes: string
+          rep_id: string
+        }
+        Insert: {
+          action_items?: string[] | null
+          created_at?: string
+          focus_areas?: string[] | null
+          id?: string
+          manager_id: string
+          next_session_date?: string | null
+          notes: string
+          rep_id: string
+        }
+        Update: {
+          action_items?: string[] | null
+          created_at?: string
+          focus_areas?: string[] | null
+          id?: string
+          manager_id?: string
+          next_session_date?: string | null
+          notes?: string
+          rep_id?: string
+        }
+        Relationships: []
+      }
       daily_challenges: {
         Row: {
           challenge_date: string
@@ -376,6 +409,7 @@ export type Database = {
           full_name: string
           hire_date: string | null
           id: string
+          last_coached_at: string | null
           longest_streak: number
           onboarding_completed: boolean
           phone_extension: string | null
@@ -394,6 +428,7 @@ export type Database = {
           full_name: string
           hire_date?: string | null
           id?: string
+          last_coached_at?: string | null
           longest_streak?: number
           onboarding_completed?: boolean
           phone_extension?: string | null
@@ -412,6 +447,7 @@ export type Database = {
           full_name?: string
           hire_date?: string | null
           id?: string
+          last_coached_at?: string | null
           longest_streak?: number
           onboarding_completed?: boolean
           phone_extension?: string | null
