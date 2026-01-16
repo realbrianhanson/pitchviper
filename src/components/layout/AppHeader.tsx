@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Bell, ChevronDown, User, Settings, LogOut } from "lucide-react";
 import { ViperInput } from "@/components/ui/viper-input";
 import {
@@ -8,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 interface AppHeaderProps {
@@ -15,8 +17,22 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ title }: AppHeaderProps) {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [hasNotifications] = useState(true);
   const notificationCount = 3;
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/sign-in");
+  };
+
+  // Get initials from email or name
+  const getInitials = () => {
+    if (!user) return "??";
+    const email = user.email || "";
+    return email.substring(0, 2).toUpperCase();
+  };
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/80 backdrop-blur-xl px-6">
@@ -68,12 +84,12 @@ export function AppHeader({ title }: AppHeaderProps) {
             <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-all duration-200 hover:bg-accent">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 border border-primary/30">
                 <span className="text-sm font-display font-semibold text-primary">
-                  JD
+                  {getInitials()}
                 </span>
               </div>
               <div className="hidden md:flex flex-col items-start">
                 <span className="text-sm font-medium text-foreground">
-                  John Doe
+                  {user?.email?.split("@")[0] || "User"}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   Sales Rep
@@ -87,8 +103,8 @@ export function AppHeader({ title }: AppHeaderProps) {
             className="w-56 bg-card border-border z-50"
           >
             <div className="px-3 py-2 border-b border-border">
-              <p className="text-sm font-medium text-foreground">John Doe</p>
-              <p className="text-xs text-muted-foreground">john@company.com</p>
+              <p className="text-sm font-medium text-foreground">{user?.email?.split("@")[0]}</p>
+              <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
             <DropdownMenuItem className="gap-2 cursor-pointer">
               <User className="h-4 w-4" />
@@ -99,7 +115,10 @@ export function AppHeader({ title }: AppHeaderProps) {
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 cursor-pointer text-destructive focus:text-destructive">
+            <DropdownMenuItem 
+              className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+              onClick={handleSignOut}
+            >
               <LogOut className="h-4 w-4" />
               <span>Sign Out</span>
             </DropdownMenuItem>
