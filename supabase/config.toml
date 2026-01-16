@@ -18,6 +18,9 @@ verify_jwt = true
 [functions.generate-achievement-image]
 verify_jwt = false
 
+[functions.generate-manager-insights]
+verify_jwt = false
+
 [functions.calculate-leaderboard]
 verify_jwt = false
 
