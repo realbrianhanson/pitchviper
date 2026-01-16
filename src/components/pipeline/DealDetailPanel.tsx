@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { STAGE_CONFIG, type Deal, type DealStageHistoryEntry } from '@/hooks/useDealPipeline';
 import { ResearchButton } from '@/components/research/ResearchButton';
+import { DealCoachPanel } from '@/components/pipeline/DealCoachPanel';
 import { cn } from '@/lib/utils';
 
 interface DealDetailPanelProps {
@@ -204,7 +205,12 @@ export function DealDetailPanel({
 
               {deal.notes && (
                 <>
-                  <Separator />
+              <Separator />
+
+              {/* AI Deal Coach */}
+              <DealCoachPanel dealId={deal.id} />
+
+              <Separator />
                   <div className="space-y-2">
                     <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Notes</h4>
                     <p className="text-sm">{deal.notes}</p>

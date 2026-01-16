@@ -50,3 +50,12 @@ verify_jwt = false
 
 [functions.generate-battlecard]
 verify_jwt = false
+
+[functions.calculate-deal-momentum]
+verify_jwt = false
+
+[functions.analyze-deal]
+verify_jwt = false
+
+[functions.generate-forecast]
+verify_jwt = false
