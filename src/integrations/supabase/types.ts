@@ -49,6 +49,33 @@ export type Database = {
           },
         ]
       }
+      aloware_sync_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload?: Json
+          processed?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed?: boolean | null
+        }
+        Relationships: []
+      }
       audio_training_scores: {
         Row: {
           correct_responses: number
@@ -129,6 +156,9 @@ export type Database = {
       }
       calls: {
         Row: {
+          aloware_call_id: string | null
+          aloware_recording_url: string | null
+          aloware_transcription: string | null
           appointment_scheduled_at: string | null
           call_purpose: Database["public"]["Enums"]["call_purpose"] | null
           callback_scheduled_at: string | null
@@ -141,6 +171,7 @@ export type Database = {
           duration_seconds: number
           id: string
           improvement_notes: string | null
+          is_synced_from_aloware: boolean | null
           notes: string | null
           outcome: Database["public"]["Enums"]["call_outcome"]
           phone_number: string | null
@@ -150,6 +181,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          aloware_call_id?: string | null
+          aloware_recording_url?: string | null
+          aloware_transcription?: string | null
           appointment_scheduled_at?: string | null
           call_purpose?: Database["public"]["Enums"]["call_purpose"] | null
           callback_scheduled_at?: string | null
@@ -162,6 +196,7 @@ export type Database = {
           duration_seconds?: number
           id?: string
           improvement_notes?: string | null
+          is_synced_from_aloware?: boolean | null
           notes?: string | null
           outcome: Database["public"]["Enums"]["call_outcome"]
           phone_number?: string | null
@@ -171,6 +206,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          aloware_call_id?: string | null
+          aloware_recording_url?: string | null
+          aloware_transcription?: string | null
           appointment_scheduled_at?: string | null
           call_purpose?: Database["public"]["Enums"]["call_purpose"] | null
           callback_scheduled_at?: string | null
@@ -183,6 +221,7 @@ export type Database = {
           duration_seconds?: number
           id?: string
           improvement_notes?: string | null
+          is_synced_from_aloware?: boolean | null
           notes?: string | null
           outcome?: Database["public"]["Enums"]["call_outcome"]
           phone_number?: string | null
@@ -1013,6 +1052,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          aloware_user_id: string | null
           avatar_url: string | null
           created_at: string
           current_level: number
@@ -1032,6 +1072,7 @@ export type Database = {
           xp_points: number
         }
         Insert: {
+          aloware_user_id?: string | null
           avatar_url?: string | null
           created_at?: string
           current_level?: number
@@ -1051,6 +1092,7 @@ export type Database = {
           xp_points?: number
         }
         Update: {
+          aloware_user_id?: string | null
           avatar_url?: string | null
           created_at?: string
           current_level?: number
