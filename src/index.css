@@ -8,8 +8,75 @@
    ============================================ */
 
 @layer base {
+  /* Light mode theme */
   :root {
-    /* Force dark mode - no light theme */
+    --background: 210 40% 98%;
+    --foreground: 240 20% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 20% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 20% 10%;
+
+    /* Electric Cyan - Primary accent for CTAs and wins */
+    --primary: 185 100% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Light background tones */
+    --secondary: 210 20% 94%;
+    --secondary-foreground: 240 20% 10%;
+
+    --muted: 210 20% 92%;
+    --muted-foreground: 215 20% 40%;
+
+    --accent: 210 20% 94%;
+    --accent-foreground: 240 20% 10%;
+
+    /* Hot Magenta - Alerts and urgency */
+    --destructive: 330 90% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success Green */
+    --success: 150 80% 35%;
+    --success-foreground: 0 0% 100%;
+
+    /* Amber - Warnings */
+    --warning: 40 90% 45%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Hot Magenta for competitions/urgency */
+    --magenta: 330 90% 45%;
+    --magenta-foreground: 0 0% 100%;
+
+    --border: 210 20% 88%;
+    --input: 210 20% 90%;
+    --ring: 185 100% 40%;
+
+    --radius: 0.75rem;
+
+    /* Glass morphism */
+    --glass-bg: 0 0% 100% / 0.7;
+    --glass-border: 210 20% 85%;
+
+    /* Sidebar */
+    --sidebar-background: 210 25% 96%;
+    --sidebar-foreground: 240 20% 10%;
+    --sidebar-primary: 185 100% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 92%;
+    --sidebar-accent-foreground: 240 20% 10%;
+    --sidebar-border: 210 20% 88%;
+    --sidebar-ring: 185 100% 40%;
+
+    /* Glow effects (softer for light mode) */
+    --glow-cyan: 0 0 15px hsl(185 100% 40% / 0.25);
+    --glow-magenta: 0 0 15px hsl(330 90% 45% / 0.25);
+    --glow-green: 0 0 15px hsl(150 80% 35% / 0.25);
+  }
+
+  /* Dark mode theme */
+  .dark {
     --background: 240 20% 4%;
     --foreground: 210 40% 96%;
 
@@ -53,8 +120,6 @@
     --input: 240 12% 14%;
     --ring: 185 100% 50%;
 
-    --radius: 0.75rem;
-
     /* Glass morphism */
     --glass-bg: 240 15% 8% / 0.7;
     --glass-border: 240 12% 24%;
@@ -83,10 +148,20 @@
 
   body {
     @apply bg-background text-foreground font-body antialiased;
+    background-attachment: fixed;
+  }
+
+  /* Light mode background */
+  :root body {
+    background-image: 
+      linear-gradient(to bottom, hsl(210 40% 98%) 0%, hsl(210 25% 96%) 100%);
+  }
+
+  /* Dark mode background */
+  .dark body {
     background-image: 
       linear-gradient(to bottom, hsl(240 20% 4%) 0%, hsl(240 18% 6%) 100%),
       url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2318181f' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
