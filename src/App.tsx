@@ -62,6 +62,7 @@ const queryClient = new QueryClient({
   },
 });
 
+// Main application component
 const App = () => (
   <ErrorBoundary>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
