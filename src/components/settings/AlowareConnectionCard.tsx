@@ -20,10 +20,16 @@ export function AlowareConnectionCard() {
   } = useAlowareConnection();
 
   const [alowareUserId, setAlowareUserId] = useState('');
+  const [apiNotConfigured, setApiNotConfigured] = useState(false);
 
   const handleTestConnection = async () => {
-    await verifyConnection();
-    refetchStatus();
+    const result = await verifyConnection();
+    if (result.error?.includes('not configured')) {
+      setApiNotConfigured(true);
+    } else {
+      setApiNotConfigured(false);
+      refetchStatus();
+    }
   };
 
   const handleLinkAccount = () => {
@@ -52,6 +58,16 @@ export function AlowareConnectionCard() {
         </ViperCardTitle>
       </ViperCardHeader>
       <ViperCardContent className="space-y-6">
+        {/* API Not Configured Warning */}
+        {apiNotConfigured && (
+          <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+            <p className="text-sm text-muted-foreground">
+              <strong className="text-foreground">Setup Required:</strong> The Aloware API token hasn't been configured yet. 
+              Please contact your manager to set up the integration.
+            </p>
+          </div>
+        )}
+
         {/* Connection Status */}
         <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
           <div className="flex items-center gap-3">
