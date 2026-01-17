@@ -51,10 +51,10 @@ serve(async (req) => {
       );
     }
 
-    // Get user's Aloware ID
+    // Get user's Aloware ID and default line
     const { data: profile } = await supabase
       .from('profiles')
-      .select('aloware_user_id, team_id')
+      .select('aloware_user_id, team_id, default_aloware_line')
       .eq('user_id', user.id)
       .single();
 
@@ -64,6 +64,21 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Determine which line to use - explicit line, user's default, or error
+    const effectiveLineNumber = linePhoneNumber || profile.default_aloware_line;
+    
+    if (!effectiveLineNumber) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'No outbound line configured. Please set your default line in Settings or select a specific line.' 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Initiating call: user=${profile.aloware_user_id}, contact=${contactPhoneNumber}, line=${effectiveLineNumber}`);
 
     // Initiate two-legged call via Aloware API
     const alowareResponse = await fetch('https://app.aloware.com/api/v1/webhook/two-legged-call', {
@@ -75,7 +90,7 @@ serve(async (req) => {
         api_token: alowareToken,
         user_id: profile.aloware_user_id,
         contact_phone_number: contactPhoneNumber,
-        line_phone_number: linePhoneNumber || undefined,
+        line_phone_number: effectiveLineNumber,
       }),
     });
 
