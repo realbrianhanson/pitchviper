@@ -156,54 +156,9 @@ export function VoiceRoleplay({
         throw new Error("No signed URL received");
       }
 
-      // Build the system prompt for overrides
-      let productContext = "";
-      if (companySettings && companySettings.company_name) {
-        productContext = `
-THE SALESPERSON'S COMPANY & PRODUCT:
-Company: ${companySettings.company_name}
-${companySettings.industry ? `Industry: ${companySettings.industry}` : ""}
-${companySettings.product_description ? `What they sell: ${companySettings.product_description}` : ""}
-${companySettings.value_propositions.length > 0 ? `Key value props: ${companySettings.value_propositions.join(", ")}` : ""}
-${companySettings.target_audience ? `Their typical customers: ${companySettings.target_audience}` : ""}
-
-React realistically to their pitch based on your persona. You can show interest if they address your real concerns, or push back if they're not addressing your needs.
-`;
-      }
-
-      const systemPrompt = `You are playing the role of a sales prospect named ${prospectName}, ${prospectTitle} at ${prospectCompany}.
-
-SCENARIO: ${scenario.name}
-YOUR PERSONA: ${scenario.prospect_persona}
-YOUR SITUATION: ${scenario.prospect_situation}
-${productContext}
-BEHAVIOR GUIDELINES:
-1. Stay 100% in character as the prospect - never break character
-2. Be realistic but fair - you have real concerns but can be convinced
-3. Naturally raise these objections during conversation:
-${scenario.objections_to_include.map(obj => `   - "${obj}"`).join("\n")}
-
-4. Respond conversationally in 2-4 sentences
-5. Show positive signals when the salesperson addresses your concerns well
-6. If they're doing really well, show buying signals
-7. Be professional but human
-
-The salesperson is trying to achieve: ${scenario.win_conditions.join(", ")}
-
-Start by greeting the caller briefly, stating your name and that you're a bit busy.`;
-
-      // Start the conversation with dynamic overrides
+      // Start the conversation with default agent settings
       await conversation.startSession({
         signedUrl: data.signed_url,
-        overrides: {
-          agent: {
-            prompt: {
-              prompt: systemPrompt,
-            },
-            firstMessage: `Hi, this is ${prospectName}. I've only got a few minutes - what can I do for you?`,
-            language: "en",
-          },
-        },
       });
     } catch (error) {
       console.error("Failed to start voice conversation:", error);
