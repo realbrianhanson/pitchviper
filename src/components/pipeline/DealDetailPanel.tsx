@@ -19,6 +19,7 @@ import {
   Search,
   History,
   Loader2,
+  Upload,
 } from 'lucide-react';
 import {
   Sheet,
@@ -40,9 +41,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { STAGE_CONFIG, type Deal, type DealStageHistoryEntry } from '@/hooks/useDealPipeline';
 import { ResearchButton } from '@/components/research/ResearchButton';
 import { DealCoachPanel } from '@/components/pipeline/DealCoachPanel';
+import { ClickToDialButton } from '@/components/calls/ClickToDialButton';
+import { SendSMSButton } from '@/components/calls/SendSMSButton';
+import { useAlowareLead } from '@/hooks/useAlowareLead';
 import { cn } from '@/lib/utils';
 
 interface DealDetailPanelProps {
@@ -65,6 +70,20 @@ export function DealDetailPanel({
   const [history, setHistory] = useState<DealStageHistoryEntry[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { isCreating: isPushingToAloware, createLead } = useAlowareLead();
+
+  const handlePushToAloware = async () => {
+    if (!deal) return;
+    await createLead({
+      fullName: deal.contact_name,
+      email: deal.contact_email || undefined,
+      phone: deal.contact_phone || undefined,
+      company: deal.company_name,
+      notes: deal.notes || undefined,
+      dealId: deal.id,
+      assignToUser: true,
+    });
+  };
 
   useEffect(() => {
     if (deal && open) {
@@ -159,6 +178,22 @@ export function DealDetailPanel({
                     <div className="flex items-center gap-2">
                       <Phone className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">{deal.contact_phone}</span>
+                      <div className="flex items-center gap-1 ml-auto">
+                        <ClickToDialButton
+                          phoneNumber={deal.contact_phone}
+                          contactName={deal.contact_name}
+                          companyName={deal.company_name}
+                          dealId={deal.id}
+                          size="sm"
+                        />
+                        <SendSMSButton
+                          phoneNumber={deal.contact_phone}
+                          contactName={deal.contact_name}
+                          companyName={deal.company_name}
+                          dealId={deal.id}
+                          size="sm"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -261,7 +296,6 @@ export function DealDetailPanel({
             </div>
           </ScrollArea>
 
-          {/* Actions */}
           <div className="pt-4 border-t space-y-2">
             <div className="flex gap-2">
               <Button
@@ -277,6 +311,25 @@ export function DealDetailPanel({
                 contactName={deal.contact_name}
                 variant="outline"
               />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePushToAloware}
+                    disabled={isPushingToAloware || (!deal.contact_phone && !deal.contact_email)}
+                  >
+                    {isPushingToAloware ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Upload className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Push contact to Aloware</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
             <Button
               variant="ghost"
