@@ -125,120 +125,63 @@ export function AlowareSyncPanel() {
           Aloware Data Sync
         </CardTitle>
         <CardDescription>
-          Import your team's data from Aloware. This is a read-only sync — nothing will be deleted or modified in Aloware.
+          Sync your team's Aloware user accounts. Call data syncs automatically via webhooks.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Sync All Button */}
+        {/* Users Sync - This actually works */}
         <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-medium text-foreground">Full Sync</h4>
+              <h4 className="font-medium text-foreground">Sync Team Users</h4>
               <p className="text-sm text-muted-foreground">
-                Import all users, call history (last 30 days), and contacts
+                Link Aloware users to team member profiles
               </p>
             </div>
             <Button
-              onClick={() => handleSync("all")}
-              disabled={isSyncing}
-              className="gap-2"
-            >
-              {isSyncing && syncType === "all" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-              Sync All
-            </Button>
-          </div>
-        </div>
-
-        {/* Individual Sync Options */}
-        <div className="grid gap-3">
-          <div className="flex items-center justify-between p-3 rounded-lg border border-border">
-            <div className="flex items-center gap-3">
-              <Users className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">Users/Agents</p>
-                <p className="text-xs text-muted-foreground">Link Aloware users to profiles</p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
               onClick={() => handleSync("users")}
               disabled={isSyncing}
+              className="gap-2"
             >
               {isSyncing && syncType === "users" ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                "Sync"
+                <Users className="h-4 w-4" />
               )}
-            </Button>
-          </div>
-
-          <div className="flex items-center justify-between p-3 rounded-lg border border-border">
-            <div className="flex items-center gap-3">
-              <Phone className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">Call History</p>
-                <p className="text-xs text-muted-foreground">Import calls from the last 30 days</p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSync("calls")}
-              disabled={isSyncing}
-            >
-              {isSyncing && syncType === "calls" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "Sync"
-              )}
-            </Button>
-          </div>
-
-          <div className="flex items-center justify-between p-3 rounded-lg border border-border">
-            <div className="flex items-center gap-3">
-              <UserPlus className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">Contacts/Leads</p>
-                <p className="text-xs text-muted-foreground">Import contacts as pipeline deals</p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSync("contacts")}
-              disabled={isSyncing}
-            >
-              {isSyncing && syncType === "contacts" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "Sync"
-              )}
+              Sync Users
             </Button>
           </div>
         </div>
 
         {/* Last Sync Results */}
-        {lastResults && (
+        {lastResults?.users && (
           <div className="p-4 rounded-lg bg-muted/50 space-y-2">
             <h4 className="text-sm font-medium text-foreground mb-3">Last Sync Results</h4>
             {renderSyncResult("Users", lastResults.users)}
-            {renderSyncResult("Calls", lastResults.calls)}
-            {renderSyncResult("Contacts", lastResults.contacts)}
           </div>
         )}
+
+        {/* Call Data Info */}
+        <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+            <div>
+              <h4 className="font-medium text-foreground">About Call Data</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Aloware's API doesn't support bulk call history exports. Call data syncs automatically 
+                through webhooks as calls happen. Go to the <strong>Webhook</strong> tab to set this up.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Auto-sync info */}
         <div className="flex items-start gap-3 p-3 rounded-lg bg-success/10 border border-success/20">
           <CheckCircle2 className="h-5 w-5 text-success mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-foreground">Daily Auto-Sync Enabled</p>
+            <p className="text-sm font-medium text-foreground">Real-time Sync via Webhooks</p>
             <p className="text-xs text-muted-foreground">
-              New calls and contacts are automatically synced every day at midnight.
+              Once configured, all calls, recordings, and transcriptions sync automatically as they happen.
             </p>
           </div>
         </div>
