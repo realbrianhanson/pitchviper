@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { LogCallModal } from "@/components/calls/LogCallModal";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { ChatPanel } from "@/components/chat/ChatPanel";
 
 interface AppHeaderProps {
   title?: string;
@@ -122,6 +123,9 @@ export function AppHeader({ title }: AppHeaderProps) {
           Log Call
         </ViperButton>
         <LogCallModal open={showLogCall} onOpenChange={setShowLogCall} />
+        
+        {/* Team Chat */}
+        <ChatPanel />
         
         {/* Notifications */}
         <NotificationBell />
