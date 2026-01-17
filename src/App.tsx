@@ -9,6 +9,9 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { OnboardingTourProvider } from "@/components/onboarding/OnboardingTour";
+import { ClickToDialProvider } from "@/contexts/ClickToDialContext";
+import { DialModal } from "@/components/calls/DialModal";
+import { ActiveCallBanner } from "@/components/calls/ActiveCallBanner";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Loading fallback
@@ -61,44 +64,48 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <OnboardingTourProvider>
-          <TooltipProvider>
-            <OfflineIndicator />
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  {/* Public auth routes */}
-                  <Route path="/sign-up" element={<SignUp />} />
-                  <Route path="/sign-in" element={<SignIn />} />
-                  
-                  {/* Protected routes */}
-                  <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-                  <Route path="/" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
-                  <Route path="/war-room" element={<ProtectedRoute><WarRoom /></ProtectedRoute>} />
-                  <Route path="/roleplay" element={<ProtectedRoute><RoleplayArena /></ProtectedRoute>} />
-                  <Route path="/roleplay/:scenarioId" element={<ProtectedRoute><RoleplaySession /></ProtectedRoute>} />
-                  <Route path="/call-intelligence" element={<ProtectedRoute><CallIntelligence /></ProtectedRoute>} />
-                  <Route path="/objection-vault" element={<ProtectedRoute><ObjectionVault /></ProtectedRoute>} />
-                  <Route path="/leaderboards" element={<ProtectedRoute><Leaderboards /></ProtectedRoute>} />
-                  <Route path="/performance" element={<ProtectedRoute><MyPerformance /></ProtectedRoute>} />
-                  <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
-                  <Route path="/training" element={<ProtectedRoute><TrainingAcademy /></ProtectedRoute>} />
-                  <Route path="/pipeline" element={<ProtectedRoute><DealPipeline /></ProtectedRoute>} />
-                  <Route path="/team-settings" element={<ProtectedRoute><TeamSettings /></ProtectedRoute>} />
-                  <Route path="/coaching" element={<ProtectedRoute><CoachingConsole /></ProtectedRoute>} />
-                  <Route path="/manager" element={<ProtectedRoute><ManagerDashboard /></ProtectedRoute>} />
-                  <Route path="/manager/competitions" element={<ProtectedRoute><CompetitionsManager /></ProtectedRoute>} />
-                  <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                  
-                  {/* Catch-all */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </TooltipProvider>
-        </OnboardingTourProvider>
+        <ClickToDialProvider>
+          <OnboardingTourProvider>
+            <TooltipProvider>
+              <OfflineIndicator />
+              <ActiveCallBanner />
+              <DialModal />
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
+                    {/* Public auth routes */}
+                    <Route path="/sign-up" element={<SignUp />} />
+                    <Route path="/sign-in" element={<SignIn />} />
+                    
+                    {/* Protected routes */}
+                    <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+                    <Route path="/" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
+                    <Route path="/war-room" element={<ProtectedRoute><WarRoom /></ProtectedRoute>} />
+                    <Route path="/roleplay" element={<ProtectedRoute><RoleplayArena /></ProtectedRoute>} />
+                    <Route path="/roleplay/:scenarioId" element={<ProtectedRoute><RoleplaySession /></ProtectedRoute>} />
+                    <Route path="/call-intelligence" element={<ProtectedRoute><CallIntelligence /></ProtectedRoute>} />
+                    <Route path="/objection-vault" element={<ProtectedRoute><ObjectionVault /></ProtectedRoute>} />
+                    <Route path="/leaderboards" element={<ProtectedRoute><Leaderboards /></ProtectedRoute>} />
+                    <Route path="/performance" element={<ProtectedRoute><MyPerformance /></ProtectedRoute>} />
+                    <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
+                    <Route path="/training" element={<ProtectedRoute><TrainingAcademy /></ProtectedRoute>} />
+                    <Route path="/pipeline" element={<ProtectedRoute><DealPipeline /></ProtectedRoute>} />
+                    <Route path="/team-settings" element={<ProtectedRoute><TeamSettings /></ProtectedRoute>} />
+                    <Route path="/coaching" element={<ProtectedRoute><CoachingConsole /></ProtectedRoute>} />
+                    <Route path="/manager" element={<ProtectedRoute><ManagerDashboard /></ProtectedRoute>} />
+                    <Route path="/manager/competitions" element={<ProtectedRoute><CompetitionsManager /></ProtectedRoute>} />
+                    <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                    
+                    {/* Catch-all */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </BrowserRouter>
+            </TooltipProvider>
+          </OnboardingTourProvider>
+        </ClickToDialProvider>
       </AuthProvider>
     </QueryClientProvider>
   </ErrorBoundary>

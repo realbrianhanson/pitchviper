@@ -65,3 +65,9 @@ verify_jwt = false
 
 [functions.verify-aloware-connection]
 verify_jwt = false
+
+[functions.initiate-aloware-call]
+verify_jwt = false
+
+[functions.add-to-aloware-powerdialer]
+verify_jwt = false
