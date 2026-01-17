@@ -1,7 +1,8 @@
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
 import { ViperBadge } from "@/components/ui/viper-badge";
-import { Trophy, TrendingUp } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface TeamMember {
   id: string;
@@ -23,6 +24,8 @@ const rankColors = [
   "bg-gradient-to-r from-amber-700 to-amber-800 text-white", // 3rd
 ];
 
+const podiumHeights = [28, 20, 16]; // 1st, 2nd, 3rd
+
 export function TeamPulse({ members, teamName }: TeamPulseProps) {
   if (!teamName) {
     return (
@@ -35,104 +38,151 @@ export function TeamPulse({ members, teamName }: TeamPulseProps) {
     );
   }
 
+  const renderPodiumMember = (member: TeamMember | undefined, index: number, order: number) => {
+    if (!member) return null;
+    
+    const isFirst = index === 0;
+    const height = podiumHeights[index];
+    const avatarSize = isFirst ? "h-16 w-16" : "h-12 w-12";
+    const podiumWidth = isFirst ? "w-20" : "w-16";
+    const rankSize = isFirst ? "text-3xl" : "text-2xl";
+
+    return (
+      <motion.div
+        key={member.id}
+        className="flex flex-col items-center"
+        style={{ marginBottom: isFirst ? -16 : 0 }}
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          type: "spring",
+          stiffness: 300,
+          damping: 24,
+          delay: order * 0.15 + 0.2,
+        }}
+      >
+        <motion.div
+          className="relative mb-2"
+          whileHover={{ scale: 1.1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        >
+          {isFirst && (
+            <motion.div
+              className="absolute -top-3 left-1/2 -translate-x-1/2 z-10"
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6, type: "spring", stiffness: 500 }}
+            >
+              <span className="text-xl">👑</span>
+            </motion.div>
+          )}
+          {member.avatarUrl ? (
+            <img
+              src={member.avatarUrl}
+              alt={member.name}
+              className={cn(
+                avatarSize,
+                "rounded-full object-cover border-2",
+                isFirst ? "border-yellow-400 shadow-glow-sm" : index === 1 ? "border-gray-400" : "border-amber-700"
+              )}
+            />
+          ) : (
+            <div className={cn(
+              avatarSize,
+              "rounded-full flex items-center justify-center font-bold",
+              isFirst 
+                ? "bg-yellow-500/20 text-yellow-500 text-xl" 
+                : index === 1 
+                  ? "bg-gray-500/20 text-gray-400 text-lg" 
+                  : "bg-amber-700/20 text-amber-700 text-lg"
+            )}>
+              {member.name.charAt(0)}
+            </div>
+          )}
+        </motion.div>
+        
+        {/* Animated Podium */}
+        <motion.div
+          className={cn(podiumWidth, "rounded-t-lg flex flex-col items-center justify-start pt-2", rankColors[index])}
+          initial={{ height: 0 }}
+          animate={{ height: height * 4 }}
+          transition={{
+            type: "spring",
+            stiffness: 200,
+            damping: 20,
+            delay: order * 0.15 + 0.3,
+          }}
+        >
+          <motion.span
+            className={cn(rankSize, "font-bold")}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: order * 0.15 + 0.5, type: "spring", stiffness: 500 }}
+          >
+            {index + 1}
+          </motion.span>
+        </motion.div>
+        
+        <motion.p
+          className="text-xs text-muted-foreground mt-2 text-center truncate max-w-[80px]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: order * 0.15 + 0.6 }}
+        >
+          {member.name.split(" ")[0]}
+        </motion.p>
+        <motion.p
+          className="text-xs font-medium text-foreground"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: order * 0.15 + 0.7, type: "spring", stiffness: 400 }}
+        >
+          {member.value}
+        </motion.p>
+      </motion.div>
+    );
+  };
+
   return (
-    <ViperCard variant="glass">
-      <ViperCardHeader>
-        <div className="flex items-center justify-between">
-          <ViperCardTitle className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-warning" />
-            Team Pulse
-          </ViperCardTitle>
-          <ViperBadge variant="glass">{teamName}</ViperBadge>
-        </div>
-      </ViperCardHeader>
-      <ViperCardContent>
-        <div className="flex items-end justify-center gap-4">
-          {/* 2nd Place */}
-          {members[1] && (
-            <div className="flex flex-col items-center">
-              <div className="relative mb-2">
-                {members[1].avatarUrl ? (
-                  <img
-                    src={members[1].avatarUrl}
-                    alt={members[1].name}
-                    className="h-12 w-12 rounded-full object-cover border-2 border-gray-400"
-                  />
-                ) : (
-                  <div className="h-12 w-12 rounded-full bg-gray-500/20 flex items-center justify-center text-lg font-bold text-gray-400">
-                    {members[1].name.charAt(0)}
-                  </div>
-                )}
-              </div>
-              <div className={cn("w-16 h-20 rounded-t-lg flex flex-col items-center justify-start pt-2", rankColors[1])}>
-                <span className="text-2xl font-bold">2</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center truncate max-w-[80px]">
-                {members[1].name.split(" ")[0]}
-              </p>
-              <p className="text-xs font-medium text-foreground">{members[1].value}</p>
-            </div>
-          )}
-
-          {/* 1st Place */}
-          {members[0] && (
-            <div className="flex flex-col items-center -mb-4">
-              <div className="relative mb-2">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="text-xl">👑</span>
-                </div>
-                {members[0].avatarUrl ? (
-                  <img
-                    src={members[0].avatarUrl}
-                    alt={members[0].name}
-                    className="h-16 w-16 rounded-full object-cover border-2 border-yellow-400 shadow-glow-sm"
-                  />
-                ) : (
-                  <div className="h-16 w-16 rounded-full bg-yellow-500/20 flex items-center justify-center text-xl font-bold text-yellow-500">
-                    {members[0].name.charAt(0)}
-                  </div>
-                )}
-              </div>
-              <div className={cn("w-20 h-28 rounded-t-lg flex flex-col items-center justify-start pt-2", rankColors[0])}>
-                <span className="text-3xl font-bold">1</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center truncate max-w-[80px]">
-                {members[0].name.split(" ")[0]}
-              </p>
-              <p className="text-xs font-medium text-foreground">{members[0].value}</p>
-            </div>
-          )}
-
-          {/* 3rd Place */}
-          {members[2] && (
-            <div className="flex flex-col items-center">
-              <div className="relative mb-2">
-                {members[2].avatarUrl ? (
-                  <img
-                    src={members[2].avatarUrl}
-                    alt={members[2].name}
-                    className="h-12 w-12 rounded-full object-cover border-2 border-amber-700"
-                  />
-                ) : (
-                  <div className="h-12 w-12 rounded-full bg-amber-700/20 flex items-center justify-center text-lg font-bold text-amber-700">
-                    {members[2].name.charAt(0)}
-                  </div>
-                )}
-              </div>
-              <div className={cn("w-16 h-16 rounded-t-lg flex flex-col items-center justify-start pt-2", rankColors[2])}>
-                <span className="text-2xl font-bold">3</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center truncate max-w-[80px]">
-                {members[2].name.split(" ")[0]}
-              </p>
-              <p className="text-xs font-medium text-foreground">{members[2].value}</p>
-            </div>
-          )}
-        </div>
-        <p className="text-xs text-center text-muted-foreground mt-4">
-          Today's {members[0]?.metric || "performance"}
-        </p>
-      </ViperCardContent>
-    </ViperCard>
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 24, delay: 0.4 }}
+    >
+      <ViperCard variant="glass">
+        <ViperCardHeader>
+          <div className="flex items-center justify-between">
+            <ViperCardTitle className="flex items-center gap-2">
+              <motion.div
+                animate={{ rotate: [0, 15, -15, 0] }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+              >
+                <Trophy className="h-5 w-5 text-warning" />
+              </motion.div>
+              Team Pulse
+            </ViperCardTitle>
+            <ViperBadge variant="glass">{teamName}</ViperBadge>
+          </div>
+        </ViperCardHeader>
+        <ViperCardContent>
+          <div className="flex items-end justify-center gap-4">
+            {/* 2nd Place */}
+            {renderPodiumMember(members[1], 1, 1)}
+            {/* 1st Place */}
+            {renderPodiumMember(members[0], 0, 0)}
+            {/* 3rd Place */}
+            {renderPodiumMember(members[2], 2, 2)}
+          </div>
+          <motion.p
+            className="text-xs text-center text-muted-foreground mt-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+          >
+            Today's {members[0]?.metric || "performance"}
+          </motion.p>
+        </ViperCardContent>
+      </ViperCard>
+    </motion.div>
   );
 }
