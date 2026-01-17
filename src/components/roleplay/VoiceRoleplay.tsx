@@ -139,7 +139,15 @@ export function VoiceRoleplay({
 
       if (data.error === "no_agent") {
         setAgentNotConfigured(true);
-        toast.error("Voice agent not configured. Please contact support.");
+        toast.error("Voice agent not configured. Please add your ElevenLabs Agent ID in settings.");
+        setIsConnecting(false);
+        return;
+      }
+
+      if (data.error === "api_error") {
+        console.error("ElevenLabs API error:", data);
+        toast.error(data.message || "ElevenLabs API error. Please verify your Agent ID.");
+        setAgentNotConfigured(true);
         setIsConnecting(false);
         return;
       }
