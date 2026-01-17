@@ -200,6 +200,55 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (action === "reset-password") {
+      const { userId, newPassword } = body;
+
+      if (!userId || !newPassword) {
+        return new Response(
+          JSON.stringify({ success: false, error: "User ID and new password are required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Verify the user is on the manager's team
+      const { data: targetProfile } = await supabase
+        .from("profiles")
+        .select("team_id, full_name")
+        .eq("user_id", userId)
+        .single();
+
+      if (!targetProfile || targetProfile.team_id !== managerProfile.team_id) {
+        return new Response(
+          JSON.stringify({ success: false, error: "User not found on your team" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Reset the password using admin API
+      const { error: updateError } = await supabase.auth.admin.updateUserById(
+        userId,
+        { password: newPassword }
+      );
+
+      if (updateError) {
+        console.error("Error resetting password:", updateError);
+        return new Response(
+          JSON.stringify({ success: false, error: updateError.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      console.log(`Reset password for user: ${targetProfile.full_name}`);
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `Successfully reset password for ${targetProfile.full_name}`
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ success: false, error: "Invalid action" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
