@@ -15,8 +15,20 @@ serve(async (req) => {
     const { scenario_id, agent_id } = await req.json();
     
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+    const ELEVENLABS_AGENT_ID = Deno.env.get("ELEVENLABS_AGENT_ID");
+    
     if (!ELEVENLABS_API_KEY) {
       throw new Error("ELEVENLABS_API_KEY is not configured");
+    }
+    
+    if (!ELEVENLABS_AGENT_ID && !agent_id) {
+      return new Response(
+        JSON.stringify({ 
+          error: "no_agent",
+          message: "No ElevenLabs agent configured. Please add ELEVENLABS_AGENT_ID secret.",
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Validate user is authenticated
@@ -49,12 +61,17 @@ Win conditions (salesperson goals): ${scenario.win_conditions.join(", ")}
       }
     }
 
-    // If no custom agent_id is provided, we'll use a signed URL with dynamic context
-    // For now, generate a signed URL that can be used with overrides
+    // Use provided agent_id or fall back to configured secret
+    const effectiveAgentId = agent_id || ELEVENLABS_AGENT_ID;
+    
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${agent_id || "default"}`,
+      `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${effectiveAgentId}`,
       {
         headers: {
+          "xi-api-key": ELEVENLABS_API_KEY,
+        },
+      }
+    );
           "xi-api-key": ELEVENLABS_API_KEY,
         },
       }
