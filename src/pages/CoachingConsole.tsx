@@ -81,17 +81,17 @@ export default function CoachingConsole() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
           {/* Left Sidebar - Rep Selector (hidden on mobile when rep selected) */}
           <div className={cn(
-            "lg:col-span-3 transition-all duration-300",
+            "lg:col-span-3 lg:min-w-[280px] transition-all duration-300",
             selectedRepId ? "hidden lg:block" : "block"
           )}>
-            <ViperCard variant="glass" className="lg:sticky lg:top-4">
-              <ViperCardHeader className="pb-3">
-                <ViperCardTitle className="flex items-center gap-2 text-base md:text-lg">
-                  <Users className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            <ViperCard variant="glass" className="lg:sticky lg:top-4 overflow-hidden">
+              <ViperCardHeader className="p-4 pb-3">
+                <ViperCardTitle className="flex items-center gap-2 text-base">
+                  <Users className="h-4 w-4 text-primary" />
                   Team Members
                 </ViperCardTitle>
               </ViperCardHeader>
-              <ViperCardContent className="pt-0">
+              <ViperCardContent className="p-4 pt-0">
                 <RepSelector
                   members={teamMembers}
                   selectedRepId={selectedRepId}
