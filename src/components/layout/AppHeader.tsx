@@ -89,19 +89,19 @@ export function AppHeader({ title }: AppHeaderProps) {
   const roleLabel = role === "manager" ? "Sales Manager" : "Sales Rep";
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/80 backdrop-blur-xl px-6">
+    <header className="sticky top-0 z-40 flex h-14 md:h-16 items-center justify-between gap-2 md:gap-4 border-b border-border bg-background/80 backdrop-blur-xl px-3 md:px-6">
       {/* Left: Page title */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4 min-w-0">
         {title && (
-          <h1 className="font-display text-xl font-semibold text-foreground">
+          <h1 className="font-display text-base md:text-xl font-semibold text-foreground truncate">
             {title}
           </h1>
         )}
       </div>
 
-      {/* Center: Global Search */}
-      <div className="flex-1 max-w-xl mx-auto">
-        <div className="relative">
+      {/* Center: Global Search - hidden on mobile */}
+      <div className="hidden md:flex flex-1 max-w-xl mx-auto">
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <ViperInput
             variant="glass"
@@ -112,16 +112,16 @@ export function AppHeader({ title }: AppHeaderProps) {
       </div>
 
       {/* Right: Log Call + Notifications + User */}
-      <div className="flex items-center gap-3">
-        {/* Log Call Button */}
+      <div className="flex items-center gap-1.5 md:gap-3">
+        {/* Log Call Button - icon only on mobile */}
         <ViperButton
           variant="outline"
           size="sm"
           onClick={() => setShowLogCall(true)}
-          className="hidden sm:flex gap-2"
+          className="h-8 w-8 p-0 md:h-auto md:w-auto md:px-3 md:py-1.5"
         >
           <Phone className="h-4 w-4" />
-          Log Call
+          <span className="hidden md:inline ml-2">Log Call</span>
         </ViperButton>
         <LogCallModal open={showLogCall} onOpenChange={setShowLogCall} />
         
