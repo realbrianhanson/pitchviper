@@ -1,8 +1,10 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
 import { ClosersToolkit } from "@/components/toolkit/ClosersToolkit";
+import { ManagerFAB } from "@/components/manager/ManagerFAB";
+import { BroadcastModal } from "@/components/manager/BroadcastModal";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -10,6 +12,8 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, title }: AppLayoutProps) {
+  const [showBroadcast, setShowBroadcast] = useState(false);
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full">
@@ -30,6 +34,9 @@ export function AppLayout({ children, title }: AppLayoutProps) {
           </main>
           {/* Floating Toolkit */}
           <ClosersToolkit />
+          {/* Manager FAB */}
+          <ManagerFAB onSendBroadcast={() => setShowBroadcast(true)} />
+          <BroadcastModal open={showBroadcast} onOpenChange={setShowBroadcast} />
         </div>
       </div>
     </SidebarProvider>

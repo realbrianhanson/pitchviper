@@ -1246,6 +1246,41 @@ export type Database = {
         }
         Relationships: []
       }
+      team_broadcasts: {
+        Row: {
+          broadcast_type: string
+          created_at: string
+          id: string
+          message: string
+          sender_id: string
+          team_id: string
+        }
+        Insert: {
+          broadcast_type?: string
+          created_at?: string
+          id?: string
+          message: string
+          sender_id: string
+          team_id: string
+        }
+        Update: {
+          broadcast_type?: string
+          created_at?: string
+          id?: string
+          message?: string
+          sender_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_broadcasts_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teams: {
         Row: {
           created_at: string
@@ -1624,6 +1659,7 @@ export type Database = {
           notification_sounds_enabled: boolean
           updated_at: string
           user_id: string
+          voice_commands_enabled: boolean
         }
         Insert: {
           celebration_sounds_enabled?: boolean
@@ -1632,6 +1668,7 @@ export type Database = {
           notification_sounds_enabled?: boolean
           updated_at?: string
           user_id: string
+          voice_commands_enabled?: boolean
         }
         Update: {
           celebration_sounds_enabled?: boolean
@@ -1640,6 +1677,7 @@ export type Database = {
           notification_sounds_enabled?: boolean
           updated_at?: string
           user_id?: string
+          voice_commands_enabled?: boolean
         }
         Relationships: []
       }
