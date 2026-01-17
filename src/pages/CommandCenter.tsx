@@ -6,6 +6,7 @@ import { QuickActions } from "@/components/dashboard/QuickActions";
 import { TeamPulse } from "@/components/dashboard/TeamPulse";
 import { MotivationalQuote } from "@/components/dashboard/MotivationalQuote";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useUpcomingFollowUps } from "@/hooks/useUpcomingFollowUps";
 import { Phone, Calendar, Target, TrendingUp, Loader2 } from "lucide-react";
 
 function getGreeting(): string {
@@ -29,15 +30,9 @@ function calcChange(today: number, yesterday: number | null | undefined): number
   return Math.round(((today - yesterday) / yesterday) * 100);
 }
 
-// Mock follow-ups for now (will be real data later)
-const mockFollowUps = [
-  { id: "1", company: "Acme Corp", contact: "John Smith", time: "10:30 AM", type: "Follow-up" },
-  { id: "2", company: "TechStart", contact: "Sarah Lee", time: "2:00 PM", type: "Demo" },
-  { id: "3", company: "GlobalTech", contact: "Mike Chen", time: "4:30 PM", type: "Proposal Review" },
-];
-
 export default function CommandCenter() {
   const { data, loading, error } = useDashboardData();
+  const { followUps } = useUpcomingFollowUps();
 
   if (loading) {
     return (
@@ -169,7 +164,7 @@ export default function CommandCenter() {
 
           {/* Right Column - Quick Actions & Follow-ups */}
           <div>
-            <QuickActions followUps={mockFollowUps} />
+            <QuickActions followUps={followUps} />
           </div>
         </div>
 

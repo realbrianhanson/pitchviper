@@ -1,9 +1,11 @@
-import { Trophy, Clock, Gift, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Trophy, Clock, Gift, Plus } from "lucide-react";
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
 import { ViperBadge } from "@/components/ui/viper-badge";
 import { ViperButton } from "@/components/ui/viper-button";
 import { Competition } from "@/hooks/useLeaderboard";
-import { formatDistanceToNow, format, isPast } from "date-fns";
+import { useAuth } from "@/hooks/useAuth";
+import { formatDistanceToNow, format } from "date-fns";
 
 interface CompetitionsPanelProps {
   competitions: Competition[];
@@ -18,6 +20,8 @@ const metricLabels: Record<string, string> = {
 };
 
 export function CompetitionsPanel({ competitions }: CompetitionsPanelProps) {
+  const { isManager } = useAuth();
+
   if (competitions.length === 0) {
     return (
       <ViperCard>
@@ -28,9 +32,22 @@ export function CompetitionsPanel({ competitions }: CompetitionsPanelProps) {
           </ViperCardTitle>
         </ViperCardHeader>
         <ViperCardContent>
-          <p className="text-muted-foreground text-center py-8">
-            No active competitions right now. Check back soon!
-          </p>
+          <div className="flex flex-col items-center text-center py-6">
+            <div className="p-3 rounded-full bg-muted mb-3">
+              <Trophy className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="text-muted-foreground mb-4">
+              No active competitions right now.
+            </p>
+            {isManager && (
+              <Link to="/competitions">
+                <ViperButton size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Competition
+                </ViperButton>
+              </Link>
+            )}
+          </div>
         </ViperCardContent>
       </ViperCard>
     );
@@ -39,17 +56,26 @@ export function CompetitionsPanel({ competitions }: CompetitionsPanelProps) {
   return (
     <ViperCard>
       <ViperCardHeader>
-        <ViperCardTitle className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-primary" />
-          Competitions
-        </ViperCardTitle>
+        <div className="flex items-center justify-between">
+          <ViperCardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-primary" />
+            Competitions
+          </ViperCardTitle>
+          {isManager && (
+            <Link to="/competitions">
+              <ViperButton variant="ghost" size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                Manage
+              </ViperButton>
+            </Link>
+          )}
+        </div>
       </ViperCardHeader>
       <ViperCardContent className="space-y-4">
         {competitions.map((competition) => {
           const endDate = new Date(competition.end_date);
           const startDate = new Date(competition.start_date);
           const isActive = competition.status === 'active';
-          const isUpcoming = competition.status === 'upcoming';
 
           return (
             <div
