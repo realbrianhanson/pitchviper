@@ -7,9 +7,11 @@ import { ViperInput } from "@/components/ui/viper-input";
 import { ViperButton } from "@/components/ui/viper-button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Loader2, User, Mail, Lock, Users, Chrome } from "lucide-react";
+import { Loader2, User, Mail, Lock, Users, Chrome, Ticket } from "lucide-react";
 
 type UserRole = "rep" | "manager";
+
+const VALID_PROMO_CODE = "Viper";
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -19,6 +21,7 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [teamCode, setTeamCode] = useState("");
+  const [promoCode, setPromoCode] = useState("");
   const [role, setRole] = useState<UserRole>("rep");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +31,18 @@ export default function SignUp() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
+    // Validate promo code (case-insensitive)
+    if (promoCode.trim().toLowerCase() !== VALID_PROMO_CODE.toLowerCase()) {
+      setError("Invalid promo code. Please enter a valid code to sign up.");
+      setLoading(false);
+      toast({
+        title: "Invalid Promo Code",
+        description: "You need a valid promo code to create an account.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       // Sign up the user
@@ -157,6 +172,25 @@ export default function SignUp() {
             />
           </div>
           <PasswordStrengthIndicator password={password} />
+        </div>
+
+        {/* Promo Code */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">
+            Promo Code <span className="text-destructive">*</span>
+          </label>
+          <div className="relative">
+            <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <ViperInput
+              type="text"
+              placeholder="Enter your promo code"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value)}
+              className={cn("pl-10", error?.includes("promo") && "border-destructive")}
+              variant="glow"
+              required
+            />
+          </div>
         </div>
 
         {/* Team Code */}
