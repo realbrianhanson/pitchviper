@@ -1,19 +1,19 @@
 project_id = "wqvyjolmttonoqojmnzo"
 
 [functions.get-dashboard-data]
-verify_jwt = true
+verify_jwt = false
 
 [functions.roleplay-chat]
-verify_jwt = true
+verify_jwt = false
 
 [functions.roleplay-analyze]
-verify_jwt = true
+verify_jwt = false
 
 [functions.get-call-analytics]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-performance-insights]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-achievement-image]
 verify_jwt = false
