@@ -64,6 +64,8 @@ Win conditions (salesperson goals): ${scenario.win_conditions.join(", ")}
     // Use provided agent_id or fall back to configured secret
     const effectiveAgentId = agent_id || ELEVENLABS_AGENT_ID;
     
+    console.log("Using agent ID:", effectiveAgentId ? effectiveAgentId.substring(0, 8) + "..." : "none");
+    
     const response = await fetch(
       `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${effectiveAgentId}`,
       {
@@ -74,13 +76,16 @@ Win conditions (salesperson goals): ${scenario.win_conditions.join(", ")}
     );
 
     if (!response.ok) {
-      // If no agent configured, return context for client-side agent creation prompt
-      console.log("No ElevenLabs agent configured, returning scenario context for setup");
+      const errorText = await response.text();
+      console.error("ElevenLabs API error:", response.status, errorText);
+      
+      // Return more specific error info
       return new Response(
         JSON.stringify({ 
-          error: "no_agent",
-          scenario_context: scenarioContext,
-          message: "No ElevenLabs agent configured. Please set up an agent in the ElevenLabs dashboard.",
+          error: "api_error",
+          status: response.status,
+          message: `ElevenLabs API error: ${response.status}. Please verify your Agent ID is correct.`,
+          details: errorText,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
