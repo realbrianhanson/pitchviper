@@ -5,7 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const ALOWARE_API_BASE = "https://app.aloware.com/api/v1";
+// Aloware uses /api/v1/webhook/ endpoints for their API
+const ALOWARE_API_BASE = "https://app.aloware.com/api/v1/webhook";
 
 interface AlowareUser {
   id: number;
@@ -56,16 +57,28 @@ async function fetchAlowareData(endpoint: string, apiToken: string, params: Reco
   
   const response = await fetch(url.toString(), {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Accept": "application/json" },
   });
 
+  const responseText = await response.text();
+  
+  // Check if response is HTML (error page)
+  if (responseText.startsWith('<!DOCTYPE') || responseText.startsWith('<html')) {
+    console.error('Aloware returned HTML instead of JSON');
+    throw new Error('Invalid Aloware API response - check API token');
+  }
+
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`Aloware API error: ${response.status} - ${errorText}`);
+    console.error(`Aloware API error: ${response.status} - ${responseText}`);
     throw new Error(`Aloware API error: ${response.status}`);
   }
 
-  return response.json();
+  try {
+    return JSON.parse(responseText);
+  } catch {
+    console.error('Failed to parse Aloware response:', responseText.substring(0, 200));
+    throw new Error('Invalid JSON response from Aloware');
+  }
 }
 
 async function syncUsers(supabase: any, apiToken: string, teamId: string) {
