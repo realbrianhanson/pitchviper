@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Building2, User, DollarSign, Calendar, Tag, FileText, Loader2 } from 'lucide-react';
+import { Building2, User, DollarSign, Calendar, Tag, FileText, Loader2, Search } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { STAGE_CONFIG, STAGES_ORDER, type DealStage, type CreateDealInput } from '@/hooks/useDealPipeline';
+import { ContactLookupModal } from './ContactLookupModal';
+import type { AlowareContact } from '@/hooks/useContactLookup';
 
 const formSchema = z.object({
   company_name: z.string().min(1, 'Company name is required'),
@@ -51,6 +54,7 @@ interface CreateDealModalProps {
 
 export function CreateDealModal({ open, onOpenChange, onSubmit, initialStage = 'prospecting' }: CreateDealModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLookupOpen, setIsLookupOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -67,6 +71,15 @@ export function CreateDealModal({ open, onOpenChange, onSubmit, initialStage = '
       notes: '',
     },
   });
+
+  const handleContactSelect = (contact: AlowareContact) => {
+    // Auto-fill form fields from Aloware contact
+    if (contact.fullName) form.setValue('contact_name', contact.fullName);
+    if (contact.company) form.setValue('company_name', contact.company);
+    if (contact.email) form.setValue('contact_email', contact.email);
+    if (contact.phone) form.setValue('contact_phone', contact.phone);
+    if (contact.company) form.setValue('source', 'Aloware');
+  };
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
@@ -94,9 +107,28 @@ export function CreateDealModal({ open, onOpenChange, onSubmit, initialStage = '
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-primary" />
-            Create New Deal
+          <DialogTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" />
+              Create New Deal
+            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsLookupOpen(true)}
+                  className="gap-2"
+                >
+                  <Search className="h-4 w-4" />
+                  Lookup Contact
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Search for existing contacts in Aloware</p>
+              </TooltipContent>
+            </Tooltip>
           </DialogTitle>
         </DialogHeader>
 
@@ -303,6 +335,12 @@ export function CreateDealModal({ open, onOpenChange, onSubmit, initialStage = '
           </form>
         </Form>
       </DialogContent>
+
+      <ContactLookupModal
+        open={isLookupOpen}
+        onOpenChange={setIsLookupOpen}
+        onSelectContact={handleContactSelect}
+      />
     </Dialog>
   );
 }
