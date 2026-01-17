@@ -1,10 +1,11 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
-import { Settings, Bell, Phone, Webhook } from "lucide-react";
+import { Settings, Bell, Phone, Webhook, RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NotificationSettings } from "@/components/notifications/NotificationSettings";
 import { AlowareTeamConfig } from "@/components/settings/AlowareTeamConfig";
 import { AlowareWebhookSetup } from "@/components/settings/AlowareWebhookSetup";
+import { AlowareSyncPanel } from "@/components/settings/AlowareSyncPanel";
 
 export default function TeamSettings() {
   return (
@@ -19,6 +20,10 @@ export default function TeamSettings() {
             <TabsTrigger value="aloware" className="gap-2">
               <Phone className="h-4 w-4" />
               Aloware
+            </TabsTrigger>
+            <TabsTrigger value="sync" className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Data Sync
             </TabsTrigger>
             <TabsTrigger value="webhook" className="gap-2">
               <Webhook className="h-4 w-4" />
@@ -36,6 +41,10 @@ export default function TeamSettings() {
 
           <TabsContent value="aloware">
             <AlowareTeamConfig />
+          </TabsContent>
+
+          <TabsContent value="sync">
+            <AlowareSyncPanel />
           </TabsContent>
 
           <TabsContent value="webhook">
