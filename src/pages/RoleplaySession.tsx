@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleplayScenario } from "@/hooks/useRoleplayData";
 import { RoleplayResults } from "@/components/roleplay/RoleplayResults";
+import { VoiceRoleplay } from "@/components/roleplay/VoiceRoleplay";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DifficultyBadge } from "@/components/roleplay/DifficultyBadge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +29,7 @@ import {
   ArrowLeft,
   Send,
   Mic,
+  MessageSquare,
   Loader2,
   Clock,
   Lightbulb,
@@ -91,6 +94,8 @@ export default function RoleplaySession() {
   const [hintsUsed, setHintsUsed] = useState(0);
   const [sessionState, setSessionState] = useState<"active" | "analyzing" | "results">("active");
   const [analysisResult, setAnalysisResult] = useState<SessionAnalysisResult | null>(null);
+  const [inputMode, setInputMode] = useState<"text" | "voice">("text");
+  const [voiceTranscript, setVoiceTranscript] = useState<{ user: string[]; agent: string[] }>({ user: [], agent: [] });
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -359,6 +364,31 @@ export default function RoleplaySession() {
     toast.info("Hint revealed! This will cost 10 XP from your final score.");
   };
 
+  // Handle voice transcript updates
+  const handleVoiceTranscriptUpdate = (userText: string, agentText: string) => {
+    if (userText) {
+      const userMsg: Message = {
+        role: "user",
+        content: userText,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, userMsg]);
+    }
+    if (agentText) {
+      const agentMsg: Message = {
+        role: "assistant",
+        content: agentText,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, agentMsg]);
+    }
+  };
+
+  const handleVoiceSessionEnd = () => {
+    // Voice session ended, trigger analysis
+    endSession();
+  };
+
   // Show analyzing screen
   if (sessionState === "analyzing") {
     return (
@@ -434,6 +464,20 @@ export default function RoleplaySession() {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Input Mode Toggle */}
+            <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as "text" | "voice")}>
+              <TabsList className="h-8">
+                <TabsTrigger value="text" className="h-7 text-xs gap-1 px-2">
+                  <MessageSquare className="h-3 w-3" />
+                  Text
+                </TabsTrigger>
+                <TabsTrigger value="voice" className="h-7 text-xs gap-1 px-2">
+                  <Mic className="h-3 w-3" />
+                  Voice
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-4 w-4" />
               <span className="font-mono text-sm">{formatTime(elapsedSeconds)}</span>
@@ -530,99 +574,134 @@ export default function RoleplaySession() {
 
         {/* Main Chat Panel */}
         <div className="flex-1 flex flex-col">
-          {/* Messages */}
-          <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-            <div className="space-y-4 max-w-3xl mx-auto">
-              {messages.map((message, idx) => (
-                <div
-                  key={idx}
-                  className={cn(
-                    "flex gap-3",
-                    message.role === "user" ? "flex-row-reverse" : "flex-row"
-                  )}
-                >
-                  <Avatar className={cn(
-                    "h-8 w-8 flex-shrink-0",
-                    message.role === "user" ? "bg-primary/20" : "bg-muted"
-                  )}>
-                    <AvatarFallback>
-                      {message.role === "user" ? (
-                        <User className="h-4 w-4 text-primary" />
-                      ) : (
-                        <Bot className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div
-                    className={cn(
-                      "max-w-[70%] rounded-2xl px-4 py-3",
-                      message.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-tr-sm"
-                        : "bg-muted rounded-tl-sm"
-                    )}
-                  >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    <p className={cn(
-                      "text-xs mt-1",
-                      message.role === "user" ? "text-primary-foreground/70" : "text-muted-foreground"
-                    )}>
-                      {new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-
-              {isSending && (
-                <div className="flex gap-3">
-                  <Avatar className="h-8 w-8 bg-muted">
-                    <AvatarFallback>
-                      <Bot className="h-4 w-4 text-muted-foreground" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3">
-                    <div className="flex gap-1">
-                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" />
-                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce delay-100" />
-                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce delay-200" />
+          {inputMode === "voice" ? (
+            /* Voice Mode */
+            <div className="flex-1 flex flex-col items-center justify-center p-6">
+              <VoiceRoleplay
+                scenario={scenario}
+                prospectName={prospect.name}
+                prospectTitle={prospect.title}
+                prospectCompany={prospect.company}
+                onTranscriptUpdate={handleVoiceTranscriptUpdate}
+                onSessionEnd={handleVoiceSessionEnd}
+              />
+              
+              {/* Voice transcript preview */}
+              {messages.length > 1 && (
+                <div className="w-full max-w-md mt-6">
+                  <ScrollArea className="h-40 rounded-lg border border-border/50 bg-card/30 p-3">
+                    <div className="space-y-2">
+                      {messages.slice(-6).map((message, idx) => (
+                        <div
+                          key={idx}
+                          className={cn(
+                            "text-xs p-2 rounded",
+                            message.role === "user" 
+                              ? "bg-primary/10 text-primary ml-4" 
+                              : "bg-muted/50 text-muted-foreground mr-4"
+                          )}
+                        >
+                          <span className="font-medium">
+                            {message.role === "user" ? "You: " : `${prospect.name}: `}
+                          </span>
+                          {message.content.substring(0, 100)}
+                          {message.content.length > 100 && "..."}
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  </ScrollArea>
                 </div>
               )}
             </div>
-          </ScrollArea>
+          ) : (
+            /* Text Mode */
+            <>
+              {/* Messages */}
+              <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+                <div className="space-y-4 max-w-3xl mx-auto">
+                  {messages.map((message, idx) => (
+                    <div
+                      key={idx}
+                      className={cn(
+                        "flex gap-3",
+                        message.role === "user" ? "flex-row-reverse" : "flex-row"
+                      )}
+                    >
+                      <Avatar className={cn(
+                        "h-8 w-8 flex-shrink-0",
+                        message.role === "user" ? "bg-primary/20" : "bg-muted"
+                      )}>
+                        <AvatarFallback>
+                          {message.role === "user" ? (
+                            <User className="h-4 w-4 text-primary" />
+                          ) : (
+                            <Bot className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
 
-          {/* Input */}
-          <div className="border-t border-border/50 p-4 bg-card/30">
-            <div className="max-w-3xl mx-auto flex gap-3">
-              <Input
-                ref={inputRef}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="What do you say next?"
-                disabled={isSending}
-                className="flex-1 bg-background/50"
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled
-                className="text-muted-foreground"
-                title="Voice input coming soon"
-              >
-                <Mic className="h-5 w-5" />
-              </Button>
-              <Button
-                onClick={sendMessage}
-                disabled={!inputValue.trim() || isSending}
-                className="gap-2"
-              >
-                {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                Send
-              </Button>
-            </div>
-          </div>
+                      <div
+                        className={cn(
+                          "max-w-[70%] rounded-2xl px-4 py-3",
+                          message.role === "user"
+                            ? "bg-primary text-primary-foreground rounded-tr-sm"
+                            : "bg-muted rounded-tl-sm"
+                        )}
+                      >
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        <p className={cn(
+                          "text-xs mt-1",
+                          message.role === "user" ? "text-primary-foreground/70" : "text-muted-foreground"
+                        )}>
+                          {new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+
+                  {isSending && (
+                    <div className="flex gap-3">
+                      <Avatar className="h-8 w-8 bg-muted">
+                        <AvatarFallback>
+                          <Bot className="h-4 w-4 text-muted-foreground" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3">
+                        <div className="flex gap-1">
+                          <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" />
+                          <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce delay-100" />
+                          <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce delay-200" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+
+              {/* Input */}
+              <div className="border-t border-border/50 p-4 bg-card/30">
+                <div className="max-w-3xl mx-auto flex gap-3">
+                  <Input
+                    ref={inputRef}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="What do you say next?"
+                    disabled={isSending}
+                    className="flex-1 bg-background/50"
+                  />
+                  <Button
+                    onClick={sendMessage}
+                    disabled={!inputValue.trim() || isSending}
+                    className="gap-2"
+                  >
+                    {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    Send
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
