@@ -64,8 +64,8 @@ export function RecentActivity({
           Recent Activity
         </ViperCardTitle>
       </ViperCardHeader>
-      <ViperCardContent>
-        <ScrollArea className="h-[400px] pr-3">
+      <ViperCardContent className="p-3 md:p-6">
+        <ScrollArea className="h-[350px] md:h-[400px] pr-2 md:pr-3">
           <div className="space-y-6">
             {/* Recent Calls */}
             <div>
