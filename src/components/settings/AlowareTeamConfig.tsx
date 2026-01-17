@@ -35,11 +35,15 @@ export function AlowareTeamConfig() {
   const [matchResults, setMatchResults] = useState<MatchResult[]>([]);
   const [selectedMappings, setSelectedMappings] = useState<Record<string, string>>({});
   const [hasSynced, setHasSynced] = useState(false);
+  const [apiConfigured, setApiConfigured] = useState<boolean | null>(null);
 
   const handleVerifyApi = async () => {
     const result = await verifyConnection();
     if (result.success && result.users) {
       setAlowareUsers(result.users);
+      setApiConfigured(true);
+    } else if (result.error?.includes('not configured')) {
+      setApiConfigured(false);
     }
   };
 
@@ -48,6 +52,7 @@ export function AlowareTeamConfig() {
       const result = await syncTeam();
       if (result.alowareUsers) {
         setAlowareUsers(result.alowareUsers);
+        setApiConfigured(true);
       }
       if (result.matchResults) {
         setMatchResults(result.matchResults);
@@ -63,8 +68,11 @@ export function AlowareTeamConfig() {
         setSelectedMappings(suggested);
       }
       setHasSynced(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sync failed:', error);
+      if (error.message?.includes('not configured')) {
+        setApiConfigured(false);
+      }
     }
   };
 
@@ -74,6 +82,45 @@ export function AlowareTeamConfig() {
       mapUser({ profileId, alowareUserId });
     }
   };
+
+  // Show setup required message if API is not configured
+  if (apiConfigured === false) {
+    return (
+      <ViperCard variant="glass">
+        <ViperCardHeader>
+          <ViperCardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            Aloware Configuration
+          </ViperCardTitle>
+        </ViperCardHeader>
+        <ViperCardContent className="space-y-6">
+          <div className="p-6 rounded-lg bg-amber-500/10 border border-amber-500/20 text-center">
+            <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+            <h3 className="font-semibold text-lg mb-2">API Token Required</h3>
+            <p className="text-muted-foreground mb-4">
+              The Aloware API token has not been configured yet. Please add the 
+              <code className="mx-1 px-2 py-0.5 bg-muted rounded text-sm">ALOWARE_API_TOKEN</code> 
+              secret to your Cloud secrets.
+            </p>
+            <ol className="text-sm text-muted-foreground text-left space-y-2 max-w-md mx-auto">
+              <li>1. Go to your Aloware account → Integrations</li>
+              <li>2. Copy your API token</li>
+              <li>3. Add it as a secret named <code className="px-1 bg-muted rounded">ALOWARE_API_TOKEN</code></li>
+              <li>4. Return here and click "Test Token"</li>
+            </ol>
+          </div>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setApiConfigured(null)}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try Again
+          </Button>
+        </ViperCardContent>
+      </ViperCard>
+    );
+  }
 
   return (
     <ViperCard variant="glass">
