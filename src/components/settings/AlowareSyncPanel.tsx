@@ -129,7 +129,7 @@ export function AlowareSyncPanel() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Users Sync - This actually works */}
+        {/* Users Sync */}
         <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
           <div className="flex items-center justify-between">
             <div>
@@ -153,11 +153,37 @@ export function AlowareSyncPanel() {
           </div>
         </div>
 
+        {/* Contacts Import - Import Aloware contacts as Pipeline Deals */}
+        <div className="p-4 rounded-lg bg-success/10 border border-success/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium text-foreground">Import Contacts as Deals</h4>
+              <p className="text-sm text-muted-foreground">
+                Pull Aloware contacts into your pipeline as new deals
+              </p>
+            </div>
+            <Button
+              onClick={() => handleSync("contacts")}
+              disabled={isSyncing}
+              variant="default"
+              className="gap-2"
+            >
+              {isSyncing && syncType === "contacts" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <UserPlus className="h-4 w-4" />
+              )}
+              Import Contacts
+            </Button>
+          </div>
+        </div>
+
         {/* Last Sync Results */}
-        {lastResults?.users && (
+        {lastResults && (lastResults.users || lastResults.contacts) && (
           <div className="p-4 rounded-lg bg-muted/50 space-y-2">
             <h4 className="text-sm font-medium text-foreground mb-3">Last Sync Results</h4>
             {renderSyncResult("Users", lastResults.users)}
+            {renderSyncResult("Contacts → Deals", lastResults.contacts)}
           </div>
         )}
 
