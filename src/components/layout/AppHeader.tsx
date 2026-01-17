@@ -166,11 +166,11 @@ export function AppHeader({ title }: AppHeaderProps) {
               <p className="text-sm font-medium text-foreground">{displayName}</p>
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
-            <DropdownMenuItem className="gap-2 cursor-pointer">
+            <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => navigate("/performance")}>
               <User className="h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 cursor-pointer">
+            <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => navigate("/settings")}>
               <Settings className="h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
