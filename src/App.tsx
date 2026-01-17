@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
@@ -62,17 +63,18 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ClickToDialProvider>
-          <OnboardingTourProvider>
-            <TooltipProvider>
-              <OfflineIndicator />
-              <ActiveCallBanner />
-              <DialModal />
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <ClickToDialProvider>
+            <OnboardingTourProvider>
+              <TooltipProvider>
+                <OfflineIndicator />
+                <ActiveCallBanner />
+                <DialModal />
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     {/* Public auth routes */}
@@ -108,6 +110,7 @@ const App = () => (
         </ClickToDialProvider>
       </AuthProvider>
     </QueryClientProvider>
+    </ThemeProvider>
   </ErrorBoundary>
 );
 

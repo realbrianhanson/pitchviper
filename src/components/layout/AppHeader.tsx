@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LogCallModal } from "@/components/calls/LogCallModal";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { ChatPanel } from "@/components/chat/ChatPanel";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface AppHeaderProps {
   title?: string;
@@ -126,6 +127,9 @@ export function AppHeader({ title }: AppHeaderProps) {
         
         {/* Team Chat */}
         <ChatPanel />
+        
+        {/* Theme Toggle */}
+        <ThemeToggle />
         
         {/* Notifications */}
         <NotificationBell />
