@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { format, differenceInDays } from 'date-fns';
-import { Building2, User, DollarSign, Calendar, TrendingUp, TrendingDown, Minus, GripVertical, Phone } from 'lucide-react';
+import { Building2, User, DollarSign, Calendar, TrendingUp, TrendingDown, Minus, GripVertical, Phone, MessageSquare } from 'lucide-react';
 import { ViperCard } from '@/components/ui/viper-card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -17,7 +17,7 @@ interface DealCardProps {
 }
 
 export function DealCard({ deal, onClick, isDragging }: DealCardProps) {
-  const { openDialModal } = useClickToDial();
+  const { openDialModal, openSMSModal } = useClickToDial();
 
   const daysInStage = useMemo(() => {
     return differenceInDays(new Date(), new Date(deal.updated_at));
@@ -54,6 +54,18 @@ export function DealCard({ deal, onClick, isDragging }: DealCardProps) {
     }
   };
 
+  const handleClickToSMS = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (deal.contact_phone) {
+      openSMSModal({
+        phoneNumber: deal.contact_phone,
+        contactName: deal.contact_name,
+        companyName: deal.company_name,
+        dealId: deal.id,
+      });
+    }
+  };
+
   return (
     <ViperCard
       variant="glass"
@@ -78,21 +90,38 @@ export function DealCard({ deal, onClick, isDragging }: DealCardProps) {
               <User className="h-3 w-3 text-muted-foreground shrink-0" />
               <span className="text-xs text-muted-foreground truncate">{deal.contact_name}</span>
               {deal.contact_phone && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-5 w-5 text-primary hover:bg-primary/10"
-                      onClick={handleClickToDial}
-                    >
-                      <Phone className="h-3 w-3" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Call {deal.contact_name}</p>
-                  </TooltipContent>
-                </Tooltip>
+                <div className="flex items-center gap-0.5">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 text-primary hover:bg-primary/10"
+                        onClick={handleClickToDial}
+                      >
+                        <Phone className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Call {deal.contact_name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 text-primary hover:bg-primary/10"
+                        onClick={handleClickToSMS}
+                      >
+                        <MessageSquare className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Text {deal.contact_name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               )}
             </div>
           </div>
