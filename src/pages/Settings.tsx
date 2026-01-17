@@ -11,7 +11,8 @@ import {
   Sun,
   Save,
   HelpCircle,
-  Mic
+  Mic,
+  Phone
 } from "lucide-react";
 import { ViperCard } from "@/components/ui/viper-card";
 import { ViperButton } from "@/components/ui/viper-button";
@@ -25,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { NotificationSettings } from "@/components/notifications/NotificationSettings";
+import { AlowareConnectionCard } from "@/components/settings/AlowareConnectionCard";
 import { toast } from "sonner";
 import { PageTransition } from "@/components/ui/page-transition";
 
@@ -143,7 +145,7 @@ export default function Settings() {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-flex">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-flex">
             <TabsTrigger value="profile" className="gap-2">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Profile</span>
@@ -151,6 +153,10 @@ export default function Settings() {
             <TabsTrigger value="notifications" className="gap-2">
               <Bell className="h-4 w-4" />
               <span className="hidden sm:inline">Notifications</span>
+            </TabsTrigger>
+            <TabsTrigger value="phone" className="gap-2">
+              <Phone className="h-4 w-4" />
+              <span className="hidden sm:inline">Phone</span>
             </TabsTrigger>
             <TabsTrigger value="display" className="gap-2">
               <Palette className="h-4 w-4" />
@@ -244,6 +250,11 @@ export default function Settings() {
               <h2 className="text-lg font-semibold mb-6">Notification Preferences</h2>
               <NotificationSettings />
             </ViperCard>
+          </TabsContent>
+
+          {/* Phone System Tab */}
+          <TabsContent value="phone">
+            <AlowareConnectionCard />
           </TabsContent>
 
           {/* Display Tab */}
