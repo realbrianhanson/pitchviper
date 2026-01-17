@@ -426,6 +426,53 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          common_use_cases: string[]
+          company_name: string
+          created_at: string
+          id: string
+          industry: string | null
+          product_description: string
+          target_audience: string | null
+          team_id: string | null
+          updated_at: string
+          value_propositions: string[]
+        }
+        Insert: {
+          common_use_cases?: string[]
+          company_name?: string
+          created_at?: string
+          id?: string
+          industry?: string | null
+          product_description?: string
+          target_audience?: string | null
+          team_id?: string | null
+          updated_at?: string
+          value_propositions?: string[]
+        }
+        Update: {
+          common_use_cases?: string[]
+          company_name?: string
+          created_at?: string
+          id?: string
+          industry?: string | null
+          product_description?: string
+          target_audience?: string | null
+          team_id?: string | null
+          updated_at?: string
+          value_propositions?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_settings_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competition_activity: {
         Row: {
           activity_type: string

@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Mic, MicOff, Phone, PhoneOff, Volume2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 interface VoiceRoleplayProps {
   scenario: RoleplayScenario;
@@ -18,6 +19,15 @@ interface VoiceRoleplayProps {
   onSessionEnd: () => void;
 }
 
+interface CompanySettings {
+  company_name: string;
+  product_description: string;
+  value_propositions: string[];
+  common_use_cases: string[];
+  industry: string | null;
+  target_audience: string | null;
+}
+
 export function VoiceRoleplay({
   scenario,
   prospectName,
@@ -26,9 +36,11 @@ export function VoiceRoleplay({
   onTranscriptUpdate,
   onSessionEnd,
 }: VoiceRoleplayProps) {
+  const { profile } = useAuth();
   const [isConnecting, setIsConnecting] = useState(false);
   const [micPermission, setMicPermission] = useState<"pending" | "granted" | "denied">("pending");
   const [agentNotConfigured, setAgentNotConfigured] = useState(false);
+  const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
 
   const conversation = useConversation({
     onConnect: () => {
@@ -72,7 +84,40 @@ export function VoiceRoleplay({
       });
   }, []);
 
+  // Fetch company settings for product context
+  useEffect(() => {
+    const fetchCompanySettings = async () => {
+      if (!profile?.team_id) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("company_settings")
+          .select("company_name, product_description, value_propositions, common_use_cases, industry, target_audience")
+          .eq("team_id", profile.team_id)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (data) setCompanySettings(data);
+      } catch (error) {
+        console.error("Error fetching company settings:", error);
+      }
+    };
+
+    fetchCompanySettings();
+  }, [profile?.team_id]);
+
   const requestMicrophoneAccess = async (): Promise<boolean> => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      setMicPermission("granted");
+      return true;
+    } catch (error) {
+      console.error("Microphone access denied:", error);
+      setMicPermission("denied");
+      toast.error("Microphone access is required for voice roleplay");
+      return false;
+    }
+  };
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       setMicPermission("granted");
@@ -115,12 +160,26 @@ export function VoiceRoleplay({
       }
 
       // Build the system prompt for overrides
+      let productContext = "";
+      if (companySettings && companySettings.company_name) {
+        productContext = `
+THE SALESPERSON'S COMPANY & PRODUCT:
+Company: ${companySettings.company_name}
+${companySettings.industry ? `Industry: ${companySettings.industry}` : ""}
+${companySettings.product_description ? `What they sell: ${companySettings.product_description}` : ""}
+${companySettings.value_propositions.length > 0 ? `Key value props: ${companySettings.value_propositions.join(", ")}` : ""}
+${companySettings.target_audience ? `Their typical customers: ${companySettings.target_audience}` : ""}
+
+React realistically to their pitch based on your persona. You can show interest if they address your real concerns, or push back if they're not addressing your needs.
+`;
+      }
+
       const systemPrompt = `You are playing the role of a sales prospect named ${prospectName}, ${prospectTitle} at ${prospectCompany}.
 
 SCENARIO: ${scenario.name}
 YOUR PERSONA: ${scenario.prospect_persona}
 YOUR SITUATION: ${scenario.prospect_situation}
-
+${productContext}
 BEHAVIOR GUIDELINES:
 1. Stay 100% in character as the prospect - never break character
 2. Be realistic but fair - you have real concerns but can be convinced
@@ -155,7 +214,7 @@ Start by greeting the caller briefly, stating your name and that you're a bit bu
     } finally {
       setIsConnecting(false);
     }
-  }, [conversation, scenario, prospectName, prospectTitle, prospectCompany]);
+  }, [conversation, scenario, prospectName, prospectTitle, prospectCompany, companySettings, profile?.team_id]);
 
   const stopConversation = useCallback(async () => {
     await conversation.endSession();

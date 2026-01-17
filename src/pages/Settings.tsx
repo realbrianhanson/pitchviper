@@ -12,7 +12,8 @@ import {
   Save,
   HelpCircle,
   Mic,
-  Phone
+  Phone,
+  Building2
 } from "lucide-react";
 import { ViperCard } from "@/components/ui/viper-card";
 import { ViperButton } from "@/components/ui/viper-button";
@@ -27,6 +28,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useOnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { NotificationSettings } from "@/components/notifications/NotificationSettings";
 import { AlowareConnectionCard } from "@/components/settings/AlowareConnectionCard";
+import { CompanyProfileCard } from "@/components/settings/CompanyProfileCard";
 import { toast } from "sonner";
 import { PageTransition } from "@/components/ui/page-transition";
 
@@ -145,10 +147,14 @@ export default function Settings() {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-flex">
+          <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-flex">
             <TabsTrigger value="profile" className="gap-2">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Profile</span>
+            </TabsTrigger>
+            <TabsTrigger value="company" className="gap-2">
+              <Building2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Company</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="gap-2">
               <Bell className="h-4 w-4" />
@@ -242,6 +248,11 @@ export default function Settings() {
                 </ViperButton>
               </div>
             </ViperCard>
+          </TabsContent>
+
+          {/* Company Profile Tab */}
+          <TabsContent value="company">
+            <CompanyProfileCard />
           </TabsContent>
 
           {/* Notifications Tab */}
