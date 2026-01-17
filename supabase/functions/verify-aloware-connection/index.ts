@@ -52,7 +52,7 @@ serve(async (req) => {
       );
     }
 
-    const { action, alowareUserId } = await req.json();
+    const { action, alowareUserId, profileId } = await req.json();
 
     if (action === 'verify') {
       // Call Aloware API to verify the token and get users
@@ -298,8 +298,6 @@ serve(async (req) => {
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-
-      const { profileId } = await req.json();
 
       if (!profileId || !alowareUserId) {
         return new Response(
