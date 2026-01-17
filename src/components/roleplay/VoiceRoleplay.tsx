@@ -118,17 +118,6 @@ export function VoiceRoleplay({
       return false;
     }
   };
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      setMicPermission("granted");
-      return true;
-    } catch (error) {
-      console.error("Microphone access denied:", error);
-      setMicPermission("denied");
-      toast.error("Microphone access is required for voice roleplay");
-      return false;
-    }
-  };
 
   const startConversation = useCallback(async () => {
     setIsConnecting(true);
