@@ -246,6 +246,111 @@ export type Database = {
           },
         ]
       }
+      chat_channels: {
+        Row: {
+          channel_type: Database["public"]["Enums"]["channel_type"]
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          team_id: string
+        }
+        Insert: {
+          channel_type?: Database["public"]["Enums"]["channel_type"]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          team_id: string
+        }
+        Update: {
+          channel_type?: Database["public"]["Enums"]["channel_type"]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_channels_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          channel_id: string
+          content: string
+          created_at: string
+          id: string
+          message_type: Database["public"]["Enums"]["message_type"]
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          content: string
+          created_at?: string
+          id?: string
+          message_type?: Database["public"]["Enums"]["message_type"]
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: Database["public"]["Enums"]["message_type"]
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "chat_channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          reaction: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          reaction: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          reaction?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coaching_sessions: {
         Row: {
           action_items: string[] | null
@@ -1728,6 +1833,7 @@ export type Database = {
         | "roleplay"
         | "objection_practice"
         | "custom"
+      channel_type: "general" | "wins" | "help" | "custom"
       competition_metric_type:
         | "calls"
         | "appointments"
@@ -1744,6 +1850,7 @@ export type Database = {
         | "quick_math"
         | "competitor_quiz"
         | "scenario_response"
+      message_type: "text" | "kudos" | "system"
       module_status: "not_started" | "in_progress" | "completed"
       module_type: "video" | "reading" | "quiz" | "roleplay"
       notification_type:
@@ -1955,6 +2062,7 @@ export const Constants = {
         "objection_practice",
         "custom",
       ],
+      channel_type: ["general", "wins", "help", "custom"],
       competition_metric_type: [
         "calls",
         "appointments",
@@ -1973,6 +2081,7 @@ export const Constants = {
         "competitor_quiz",
         "scenario_response",
       ],
+      message_type: ["text", "kudos", "system"],
       module_status: ["not_started", "in_progress", "completed"],
       module_type: ["video", "reading", "quiz", "roleplay"],
       notification_type: [
