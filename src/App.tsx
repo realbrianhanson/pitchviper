@@ -66,52 +66,52 @@ const App = () => (
   <ErrorBoundary>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <ClickToDialProvider>
-            <OnboardingTourProvider>
-              <TooltipProvider>
-                <OfflineIndicator />
-                <ActiveCallBanner />
-                <DialModal />
-                <SendSMSModal />
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
-                    {/* Public auth routes */}
-                    <Route path="/sign-up" element={<SignUp />} />
-                    <Route path="/sign-in" element={<SignIn />} />
-                    
-                    {/* Protected routes */}
-                    <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-                    <Route path="/" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
-                    <Route path="/war-room" element={<ProtectedRoute><WarRoom /></ProtectedRoute>} />
-                    <Route path="/roleplay" element={<ProtectedRoute><RoleplayArena /></ProtectedRoute>} />
-                    <Route path="/roleplay/:scenarioId" element={<ProtectedRoute><RoleplaySession /></ProtectedRoute>} />
-                    <Route path="/call-intelligence" element={<ProtectedRoute><CallIntelligence /></ProtectedRoute>} />
-                    <Route path="/objection-vault" element={<ProtectedRoute><ObjectionVault /></ProtectedRoute>} />
-                    <Route path="/leaderboards" element={<ProtectedRoute><Leaderboards /></ProtectedRoute>} />
-                    <Route path="/performance" element={<ProtectedRoute><MyPerformance /></ProtectedRoute>} />
-                    <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
-                    <Route path="/training" element={<ProtectedRoute><TrainingAcademy /></ProtectedRoute>} />
-                    <Route path="/pipeline" element={<ProtectedRoute><DealPipeline /></ProtectedRoute>} />
-                    <Route path="/team-settings" element={<ProtectedRoute><TeamSettings /></ProtectedRoute>} />
-                    <Route path="/coaching" element={<ProtectedRoute><CoachingConsole /></ProtectedRoute>} />
-                    <Route path="/manager" element={<ProtectedRoute><ManagerDashboard /></ProtectedRoute>} />
-                    <Route path="/manager/competitions" element={<ProtectedRoute><CompetitionsManager /></ProtectedRoute>} />
-                    <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                    
-                    {/* Catch-all */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-              </BrowserRouter>
-            </TooltipProvider>
-          </OnboardingTourProvider>
-        </ClickToDialProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <ClickToDialProvider>
+              <OnboardingTourProvider>
+                <TooltipProvider>
+                  <OfflineIndicator />
+                  <ActiveCallBanner />
+                  <DialModal />
+                  <SendSMSModal />
+                  <Toaster />
+                  <Sonner />
+                  <Suspense fallback={<PageLoader />}>
+                    <Routes>
+                      {/* Public auth routes */}
+                      <Route path="/sign-up" element={<SignUp />} />
+                      <Route path="/sign-in" element={<SignIn />} />
+                      
+                      {/* Protected routes */}
+                      <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+                      <Route path="/" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
+                      <Route path="/war-room" element={<ProtectedRoute><WarRoom /></ProtectedRoute>} />
+                      <Route path="/roleplay" element={<ProtectedRoute><RoleplayArena /></ProtectedRoute>} />
+                      <Route path="/roleplay/:scenarioId" element={<ProtectedRoute><RoleplaySession /></ProtectedRoute>} />
+                      <Route path="/call-intelligence" element={<ProtectedRoute><CallIntelligence /></ProtectedRoute>} />
+                      <Route path="/objection-vault" element={<ProtectedRoute><ObjectionVault /></ProtectedRoute>} />
+                      <Route path="/leaderboards" element={<ProtectedRoute><Leaderboards /></ProtectedRoute>} />
+                      <Route path="/performance" element={<ProtectedRoute><MyPerformance /></ProtectedRoute>} />
+                      <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
+                      <Route path="/training" element={<ProtectedRoute><TrainingAcademy /></ProtectedRoute>} />
+                      <Route path="/pipeline" element={<ProtectedRoute><DealPipeline /></ProtectedRoute>} />
+                      <Route path="/team-settings" element={<ProtectedRoute><TeamSettings /></ProtectedRoute>} />
+                      <Route path="/coaching" element={<ProtectedRoute><CoachingConsole /></ProtectedRoute>} />
+                      <Route path="/manager" element={<ProtectedRoute><ManagerDashboard /></ProtectedRoute>} />
+                      <Route path="/manager/competitions" element={<ProtectedRoute><CompetitionsManager /></ProtectedRoute>} />
+                      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                      
+                      {/* Catch-all */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
+                </TooltipProvider>
+              </OnboardingTourProvider>
+            </ClickToDialProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
     </ThemeProvider>
   </ErrorBoundary>
 );
