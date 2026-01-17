@@ -59,24 +59,25 @@ export function RepSelector({ members, selectedRepId, onSelectRep, isLoading }: 
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search team members..."
+          placeholder="Search..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
+          className="pl-9 h-9 text-sm"
         />
       </div>
 
-      {/* Quick Filters */}
-      <div className="flex gap-2">
+      {/* Quick Filters - Stack on narrow screens */}
+      <div className="flex flex-wrap gap-2">
         <ViperButton
           size="sm"
           variant={filter === 'all' ? 'default' : 'outline'}
           onClick={() => setFilter('all')}
+          className="text-xs h-8 px-3"
         >
           All ({members.length})
         </ViperButton>
@@ -84,14 +85,15 @@ export function RepSelector({ members, selectedRepId, onSelectRep, isLoading }: 
           size="sm"
           variant={filter === 'needs-coaching' ? 'default' : 'outline'}
           onClick={() => setFilter('needs-coaching')}
+          className="text-xs h-8 px-3"
         >
-          <AlertCircle className="h-3 w-3 mr-1" />
-          Needs Coaching
+          <AlertCircle className="h-3 w-3 mr-1 shrink-0" />
+          <span className="truncate">Needs Coaching</span>
         </ViperButton>
       </div>
 
       {/* Rep List */}
-      <ScrollArea className="h-[50vh] lg:h-[calc(100vh-350px)] pr-3">
+      <ScrollArea className="h-[50vh] lg:h-[calc(100vh-320px)] pr-2">
         <div className="space-y-2 pb-4">
           {filteredMembers.map((member) => {
             const daysSinceCoaching = getDaysSinceCoaching(member.last_coached_at);
@@ -103,54 +105,42 @@ export function RepSelector({ members, selectedRepId, onSelectRep, isLoading }: 
                 key={member.user_id}
                 onClick={() => onSelectRep(member.user_id)}
                 className={cn(
-                  "w-full p-3 rounded-lg border transition-all text-left",
+                  "w-full p-2.5 rounded-lg border transition-all text-left",
                   "hover:border-primary/50 hover:bg-muted/30",
                   isSelected 
                     ? "border-primary bg-primary/10 shadow-glow-sm" 
                     : "border-border bg-background/50"
                 )}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <Avatar className={cn(
-                    "h-10 w-10 border",
+                    "h-9 w-9 shrink-0 border",
                     isSelected ? "border-primary" : "border-border"
                   )}>
                     <AvatarImage src={member.avatar_url || undefined} />
-                    <AvatarFallback className="text-sm">
+                    <AvatarFallback className="text-xs">
                       {member.full_name.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium truncate">{member.full_name}</p>
-                      <ViperBadge size="sm" variant="default">
+                    <p className="font-medium text-sm truncate">{member.full_name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <ViperBadge size="sm" variant="default" className="text-[10px] px-1.5 py-0">
                         Lvl {member.current_level}
                       </ViperBadge>
-                    </div>
-                    {member.title && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {member.title}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="text-right shrink-0">
-                    {needsCoaching ? (
-                      <div className="flex items-center gap-1 text-warning text-xs">
-                        <Clock className="h-3 w-3" />
-                        <span>
-                          {daysSinceCoaching === null 
-                            ? 'Never' 
-                            : `${daysSinceCoaching}d ago`}
+                      {needsCoaching ? (
+                        <span className="text-[10px] text-warning flex items-center gap-0.5">
+                          <Clock className="h-2.5 w-2.5" />
+                          {daysSinceCoaching === null ? 'Never' : `${daysSinceCoaching}d`}
                         </span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 text-muted-foreground text-xs">
-                        <Clock className="h-3 w-3" />
-                        <span>{daysSinceCoaching}d ago</span>
-                      </div>
-                    )}
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                          <Clock className="h-2.5 w-2.5" />
+                          {daysSinceCoaching}d
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </button>
