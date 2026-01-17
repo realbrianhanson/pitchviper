@@ -1060,6 +1060,7 @@ export type Database = {
           created_at: string
           current_level: number
           current_streak: number
+          default_aloware_line: string | null
           full_name: string
           hire_date: string | null
           id: string
@@ -1080,6 +1081,7 @@ export type Database = {
           created_at?: string
           current_level?: number
           current_streak?: number
+          default_aloware_line?: string | null
           full_name: string
           hire_date?: string | null
           id?: string
@@ -1100,6 +1102,7 @@ export type Database = {
           created_at?: string
           current_level?: number
           current_streak?: number
+          default_aloware_line?: string | null
           full_name?: string
           hire_date?: string | null
           id?: string

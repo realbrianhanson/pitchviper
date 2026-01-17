@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Phone, X, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Phone, X, Loader2, Settings } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -8,18 +8,15 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { useClickToDial } from '@/hooks/useClickToDial';
-
-// Mock available lines - in production, these would come from Aloware API
-const AVAILABLE_LINES = [
-  { id: 'default', label: 'Default Line', number: '' },
-  { id: 'line1', label: 'Sales Line 1', number: '+1-555-0100' },
-  { id: 'line2', label: 'Sales Line 2', number: '+1-555-0101' },
-  { id: 'line3', label: 'Support Line', number: '+1-555-0102' },
-];
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 export function DialModal() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { 
     isDialModalOpen, 
     closeDialModal, 
@@ -28,20 +25,50 @@ export function DialModal() {
     initiateCall 
   } = useClickToDial();
   
-  const [selectedLine, setSelectedLine] = useState('default');
+  const [defaultLine, setDefaultLine] = useState<string | null>(null);
+  const [overrideLine, setOverrideLine] = useState('');
+  const [isLoadingLine, setIsLoadingLine] = useState(true);
+
+  useEffect(() => {
+    const loadDefaultLine = async () => {
+      if (!user) return;
+      setIsLoadingLine(true);
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('default_aloware_line')
+          .eq('user_id', user.id)
+          .single();
+        
+        setDefaultLine(data?.default_aloware_line || null);
+      } finally {
+        setIsLoadingLine(false);
+      }
+    };
+    
+    if (isDialModalOpen) {
+      loadDefaultLine();
+      setOverrideLine('');
+    }
+  }, [user, isDialModalOpen]);
 
   const handleDial = async () => {
     if (!pendingDial) return;
 
-    const line = AVAILABLE_LINES.find(l => l.id === selectedLine);
-    
     await initiateCall({
       ...pendingDial,
-      linePhoneNumber: line?.number || undefined,
+      linePhoneNumber: overrideLine.trim() || defaultLine || undefined,
     });
   };
 
+  const goToSettings = () => {
+    closeDialModal();
+    navigate('/settings');
+  };
+
   if (!pendingDial) return null;
+
+  const hasLineConfigured = defaultLine || overrideLine.trim();
 
   return (
     <Dialog open={isDialModalOpen} onOpenChange={(open) => !open && closeDialModal()}>
@@ -67,28 +94,46 @@ export function DialModal() {
             </p>
           </div>
 
-          {/* Line Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="line-select">Outbound Line</Label>
-            <Select value={selectedLine} onValueChange={setSelectedLine}>
-              <SelectTrigger id="line-select">
-                <SelectValue placeholder="Select a line" />
-              </SelectTrigger>
-              <SelectContent>
-                {AVAILABLE_LINES.map((line) => (
-                  <SelectItem key={line.id} value={line.id}>
-                    {line.label}
-                    {line.number && (
-                      <span className="text-muted-foreground ml-2">({line.number})</span>
-                    )}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Select which phone line to use for this call
-            </p>
-          </div>
+          {/* Line Configuration */}
+          {isLoadingLine ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : !defaultLine ? (
+            <div className="space-y-3">
+              <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <p className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-2">
+                  No default outbound line configured
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Please configure your default Aloware line in Settings, or enter a line number below.
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="override-line">Outbound Line Number</Label>
+                <Input
+                  id="override-line"
+                  placeholder="+1XXXXXXXXXX"
+                  value={overrideLine}
+                  onChange={(e) => setOverrideLine(e.target.value)}
+                />
+              </div>
+
+              <Button variant="outline" className="w-full" onClick={goToSettings}>
+                <Settings className="mr-2 h-4 w-4" />
+                Go to Settings
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>Outbound Line</Label>
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                <p className="font-mono text-sm">{defaultLine}</p>
+                <p className="text-xs text-muted-foreground mt-1">Your default Aloware line</p>
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex gap-3">
@@ -104,7 +149,7 @@ export function DialModal() {
             <Button
               className="flex-1 bg-green-600 hover:bg-green-700"
               onClick={handleDial}
-              disabled={isDialing}
+              disabled={isDialing || !hasLineConfigured}
             >
               {isDialing ? (
                 <>

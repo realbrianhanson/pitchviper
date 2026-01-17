@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Phone, CheckCircle2, XCircle, RefreshCw, Link2, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Phone, CheckCircle2, XCircle, RefreshCw, Link2, Loader2, Save } from 'lucide-react';
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from '@/components/ui/viper-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,8 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useAlowareConnection } from '@/hooks/useAlowareConnection';
 import { formatDistanceToNow } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 export function AlowareConnectionCard() {
+  const { user, profile } = useAuth();
   const {
     connectionStatus,
     isLoadingStatus,
@@ -20,7 +24,26 @@ export function AlowareConnectionCard() {
   } = useAlowareConnection();
 
   const [alowareUserId, setAlowareUserId] = useState('');
+  const [defaultLine, setDefaultLine] = useState('');
+  const [isSavingLine, setIsSavingLine] = useState(false);
   const [apiNotConfigured, setApiNotConfigured] = useState(false);
+
+  useEffect(() => {
+    // Load the default line from profile
+    const loadDefaultLine = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('default_aloware_line')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data?.default_aloware_line) {
+        setDefaultLine(data.default_aloware_line);
+      }
+    };
+    loadDefaultLine();
+  }, [user]);
 
   const handleTestConnection = async () => {
     const result = await verifyConnection();
@@ -36,6 +59,26 @@ export function AlowareConnectionCard() {
     if (alowareUserId.trim()) {
       linkUser(alowareUserId.trim());
       setAlowareUserId('');
+    }
+  };
+
+  const handleSaveDefaultLine = async () => {
+    if (!user) return;
+    
+    setIsSavingLine(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ default_aloware_line: defaultLine.trim() || null })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      toast.success('Default outbound line saved!');
+    } catch (error) {
+      console.error('Error saving default line:', error);
+      toast.error('Failed to save default line');
+    } finally {
+      setIsSavingLine(false);
     }
   };
 
@@ -96,6 +139,36 @@ export function AlowareConnectionCard() {
             {connectionStatus?.connected ? 'Active' : 'Inactive'}
           </Badge>
         </div>
+
+        {/* Default Outbound Line */}
+        {connectionStatus?.connected && (
+          <div className="space-y-2 p-4 rounded-lg bg-muted/30 border border-border">
+            <Label htmlFor="default-line" className="font-medium">Default Outbound Line</Label>
+            <div className="flex gap-2">
+              <Input
+                id="default-line"
+                placeholder="+1XXXXXXXXXX"
+                value={defaultLine}
+                onChange={(e) => setDefaultLine(e.target.value)}
+                className="flex-1"
+              />
+              <Button 
+                onClick={handleSaveDefaultLine}
+                disabled={isSavingLine}
+                size="sm"
+              >
+                {isSavingLine ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Enter your Aloware phone number (e.g., +18551234567). This will be used when making calls.
+            </p>
+          </div>
+        )}
 
         {/* Test Connection */}
         <div className="space-y-2">
