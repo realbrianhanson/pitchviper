@@ -105,9 +105,9 @@ export function CoachingNotes({ sessions, isLoading, onSave, isSaving }: Coachin
           Coaching Notes
         </ViperCardTitle>
       </ViperCardHeader>
-      <ViperCardContent className="space-y-6">
+      <ViperCardContent className="space-y-4 md:space-y-6 p-3 md:p-6">
         {/* New Coaching Session Form */}
-        <div className="space-y-4 p-4 rounded-lg bg-muted/30 border border-border">
+        <div className="space-y-3 md:space-y-4 p-3 md:p-4 rounded-lg bg-muted/30 border border-border">
           <div>
             <Label htmlFor="notes">Session Notes</Label>
             <Textarea
@@ -219,8 +219,8 @@ export function CoachingNotes({ sessions, isLoading, onSave, isSaving }: Coachin
 
         {/* Previous Sessions */}
         <div>
-          <h4 className="font-medium mb-3">Previous Sessions</h4>
-          <ScrollArea className="h-[300px] pr-3">
+          <h4 className="font-medium mb-3 text-sm md:text-base">Previous Sessions</h4>
+          <ScrollArea className="h-[250px] md:h-[300px] pr-2 md:pr-3">
             {sessions.length > 0 ? (
               <div className="space-y-2">
                 {sessions.map((session) => (

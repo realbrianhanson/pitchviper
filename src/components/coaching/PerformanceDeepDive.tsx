@@ -176,23 +176,23 @@ export function PerformanceDeepDive({ stats, isLoading }: PerformanceDeepDivePro
         </div>
 
         {/* Key Stats Comparison */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="p-3 rounded-lg bg-muted/30 border border-border text-center">
-            <p className="text-2xl font-bold text-primary">{stats.connect_rate}%</p>
-            <p className="text-xs text-muted-foreground">Connect Rate</p>
-            <p className="text-xs text-muted-foreground">
+        <div className="grid grid-cols-3 gap-2 md:gap-3">
+          <div className="p-2 md:p-3 rounded-lg bg-muted/30 border border-border text-center">
+            <p className="text-lg md:text-2xl font-bold text-primary">{stats.connect_rate}%</p>
+            <p className="text-[10px] md:text-xs text-muted-foreground">Connect Rate</p>
+            <p className="text-[10px] md:text-xs text-muted-foreground hidden sm:block">
               (Team: {stats.team_avg_connect_rate}%)
             </p>
           </div>
-          <div className="p-3 rounded-lg bg-muted/30 border border-border text-center">
-            <p className="text-2xl font-bold text-success">{stats.deals_closed}</p>
-            <p className="text-xs text-muted-foreground">Deals Closed</p>
+          <div className="p-2 md:p-3 rounded-lg bg-muted/30 border border-border text-center">
+            <p className="text-lg md:text-2xl font-bold text-success">{stats.deals_closed}</p>
+            <p className="text-[10px] md:text-xs text-muted-foreground">Deals Closed</p>
           </div>
-          <div className="p-3 rounded-lg bg-muted/30 border border-border text-center">
-            <p className="text-2xl font-bold text-warning">
+          <div className="p-2 md:p-3 rounded-lg bg-muted/30 border border-border text-center">
+            <p className="text-lg md:text-2xl font-bold text-warning">
               {stats.avg_roleplay_score || 'N/A'}
             </p>
-            <p className="text-xs text-muted-foreground">Avg Roleplay</p>
+            <p className="text-[10px] md:text-xs text-muted-foreground">Avg Roleplay</p>
           </div>
         </div>
       </ViperCardContent>

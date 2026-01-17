@@ -91,8 +91,8 @@ export function RepSelector({ members, selectedRepId, onSelectRep, isLoading }: 
       </div>
 
       {/* Rep List */}
-      <ScrollArea className="h-[calc(100vh-350px)] pr-3">
-        <div className="space-y-2">
+      <ScrollArea className="h-[50vh] lg:h-[calc(100vh-350px)] pr-3">
+        <div className="space-y-2 pb-4">
           {filteredMembers.map((member) => {
             const daysSinceCoaching = getDaysSinceCoaching(member.last_coached_at);
             const needsCoaching = daysSinceCoaching === null || daysSinceCoaching >= 7;

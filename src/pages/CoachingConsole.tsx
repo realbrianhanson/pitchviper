@@ -10,7 +10,9 @@ import { AICoachingRecommendations } from "@/components/coaching/AICoachingRecom
 import { PerformanceDeepDive } from "@/components/coaching/PerformanceDeepDive";
 import { RecentActivity } from "@/components/coaching/RecentActivity";
 import { CoachingNotes } from "@/components/coaching/CoachingNotes";
-import { Users, Brain } from "lucide-react";
+import { Users, Brain, ChevronLeft } from "lucide-react";
+import { ViperButton } from "@/components/ui/viper-button";
+import { cn } from "@/lib/utils";
 
 export default function CoachingConsole() {
   const { isManager, loading } = useAuth();
@@ -54,20 +56,42 @@ export default function CoachingConsole() {
     });
   };
 
+  const handleBackToList = () => {
+    setSelectedRepId(null);
+  };
+
   return (
     <AppLayout title="Coaching Console">
-      <div className="animate-fade-in">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Sidebar - Rep Selector */}
-          <div className="lg:col-span-3">
-            <ViperCard variant="glass" className="sticky top-4">
-              <ViperCardHeader>
-                <ViperCardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
+      <div className="animate-fade-in space-y-4 md:space-y-6">
+        {/* Mobile: Back button when rep selected */}
+        {selectedRepId && (
+          <div className="lg:hidden">
+            <ViperButton
+              variant="ghost"
+              size="sm"
+              onClick={handleBackToList}
+              className="gap-2"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Back to Team
+            </ViperButton>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+          {/* Left Sidebar - Rep Selector (hidden on mobile when rep selected) */}
+          <div className={cn(
+            "lg:col-span-3 transition-all duration-300",
+            selectedRepId ? "hidden lg:block" : "block"
+          )}>
+            <ViperCard variant="glass" className="lg:sticky lg:top-4">
+              <ViperCardHeader className="pb-3">
+                <ViperCardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <Users className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                   Team Members
                 </ViperCardTitle>
               </ViperCardHeader>
-              <ViperCardContent>
+              <ViperCardContent className="pt-0">
                 <RepSelector
                   members={teamMembers}
                   selectedRepId={selectedRepId}
@@ -79,57 +103,66 @@ export default function CoachingConsole() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-9">
+          <div className={cn(
+            "lg:col-span-9 transition-all duration-300",
+            !selectedRepId ? "hidden lg:block" : "block"
+          )}>
             {selectedRep ? (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {/* Left Column - Rep Overview */}
-                <div className="space-y-6">
-                  <ViperCard variant="glass">
-                    <ViperCardContent className="p-6">
-                      <RepOverview
-                        rep={selectedRep}
-                        stats={insightsData?.stats || null}
-                        lastSession={lastSession}
-                      />
-                    </ViperCardContent>
-                  </ViperCard>
+              <div className="space-y-4 md:space-y-6">
+                {/* Rep Overview - Always on top on mobile */}
+                <ViperCard variant="glass">
+                  <ViperCardContent className="p-4 md:p-6">
+                    <RepOverview
+                      rep={selectedRep}
+                      stats={insightsData?.stats || null}
+                      lastSession={lastSession}
+                    />
+                  </ViperCardContent>
+                </ViperCard>
 
-                  <PerformanceDeepDive
-                    stats={insightsData?.stats || null}
-                    isLoading={isLoadingInsights}
-                  />
-                </div>
+                {/* Two column layout for larger screens */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
+                  {/* Left Column - Performance */}
+                  <div className="space-y-4 md:space-y-6">
+                    <PerformanceDeepDive
+                      stats={insightsData?.stats || null}
+                      isLoading={isLoadingInsights}
+                    />
+                    
+                    <RecentActivity
+                      calls={recentCalls}
+                      roleplaySessions={roleplaySessions}
+                      badges={recentBadges}
+                      isLoading={isLoadingCalls || isLoadingRoleplays || isLoadingBadges}
+                    />
+                  </div>
 
-                {/* Right Column - Coaching Tools */}
-                <div className="space-y-6">
-                  <AICoachingRecommendations
-                    insights={insightsData?.insights || null}
-                    isLoading={isLoadingInsights}
-                    onRefresh={() => refetchInsights()}
-                  />
+                  {/* Right Column - Coaching Tools */}
+                  <div className="space-y-4 md:space-y-6">
+                    <AICoachingRecommendations
+                      insights={insightsData?.insights || null}
+                      isLoading={isLoadingInsights}
+                      onRefresh={() => refetchInsights()}
+                    />
 
-                  <RecentActivity
-                    calls={recentCalls}
-                    roleplaySessions={roleplaySessions}
-                    badges={recentBadges}
-                    isLoading={isLoadingCalls || isLoadingRoleplays || isLoadingBadges}
-                  />
-
-                  <CoachingNotes
-                    sessions={coachingSessions}
-                    isLoading={isLoadingSessions}
-                    onSave={handleSaveSession}
-                    isSaving={saveCoachingSession.isPending}
-                  />
+                    <CoachingNotes
+                      sessions={coachingSessions}
+                      isLoading={isLoadingSessions}
+                      onSave={handleSaveSession}
+                      isSaving={saveCoachingSession.isPending}
+                    />
+                  </div>
                 </div>
               </div>
             ) : (
               <ViperCard variant="glass">
-                <ViperCardContent className="py-16">
+                <ViperCardContent className="py-12 md:py-16">
                   <div className="text-center text-muted-foreground">
-                    <Brain className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-xl font-semibold mb-2">Select a Team Member</h3>
-                    <p>Choose a rep from the list to view their coaching profile and AI recommendations.</p>
+                    <Brain className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-lg md:text-xl font-semibold mb-2">Select a Team Member</h3>
+                    <p className="text-sm md:text-base max-w-md mx-auto">
+                      Choose a rep from the list to view their coaching profile and AI recommendations.
+                    </p>
                   </div>
                 </ViperCardContent>
               </ViperCard>
