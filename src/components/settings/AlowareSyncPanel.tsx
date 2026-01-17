@@ -153,13 +153,13 @@ export function AlowareSyncPanel() {
           </div>
         </div>
 
-        {/* Contacts Import - Import Aloware contacts as Pipeline Deals */}
+        {/* Contacts Import - Extract contacts from call history */}
         <div className="p-4 rounded-lg bg-success/10 border border-success/20">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-medium text-foreground">Import Contacts as Deals</h4>
+              <h4 className="font-medium text-foreground">Import Contacts from Calls</h4>
               <p className="text-sm text-muted-foreground">
-                Pull Aloware contacts into your pipeline as new deals
+                Extract unique contacts from your last 90 days of Aloware calls and add them as pipeline deals
               </p>
             </div>
             <Button

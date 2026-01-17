@@ -241,20 +241,26 @@ async function syncCalls(supabase: any, apiToken: string, teamId: string, daysBa
   }
 }
 
-async function syncContacts(supabase: any, apiToken: string, teamId: string, userId: string) {
-  console.log("Syncing Aloware contacts as deals...");
+async function syncContacts(supabase: any, apiToken: string, teamId: string, userId: string, daysBack: number = 90) {
+  // Aloware doesn't have a bulk GET /contacts endpoint - only individual lookup by phone
+  // Instead, we extract contacts from synced call data
+  console.log("Extracting contacts from call history as deals...");
   
   try {
-    const contactsData = await fetchAlowareData("/contacts", apiToken, {
+    // First sync calls to ensure we have recent data
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysBack);
+    
+    const callsData = await fetchAlowareData("/calls", apiToken, {
+      start_date: startDate.toISOString().split("T")[0],
+      end_date: new Date().toISOString().split("T")[0],
       per_page: "500",
     });
     
-    const contacts: AlowareContact[] = contactsData.data || contactsData || [];
+    const calls: AlowareCall[] = callsData.data || callsData || [];
+    console.log(`Found ${calls.length} calls to extract contacts from`);
     
-    let synced = 0;
-    let skipped = 0;
-
-    // Get profiles for user mapping
+    // Get all profiles with aloware_user_id for mapping
     const { data: profiles } = await supabase
       .from("profiles")
       .select("user_id, aloware_user_id")
@@ -265,44 +271,63 @@ async function syncContacts(supabase: any, apiToken: string, teamId: string, use
       (profiles || []).map((p: any) => [p.aloware_user_id, p.user_id])
     );
 
-    for (const contact of contacts) {
-      // Check if deal with this phone already exists
-      if (contact.phone_number) {
-        const { data: existingDeal } = await supabase
-          .from("deals")
-          .select("id")
-          .eq("contact_phone", contact.phone_number)
-          .eq("team_id", teamId)
-          .single();
+    // Extract unique contacts from calls
+    const contactMap = new Map<string, {
+      name: string;
+      phone: string;
+      company?: string;
+      alowareUserId?: number;
+    }>();
 
-        if (existingDeal) {
-          skipped++;
-          continue;
-        }
+    for (const call of calls) {
+      if (call.contact_phone_number && !contactMap.has(call.contact_phone_number)) {
+        contactMap.set(call.contact_phone_number, {
+          name: call.contact_name || "Unknown",
+          phone: call.contact_phone_number,
+          company: call.company_name,
+          alowareUserId: call.user_id,
+        });
+      }
+    }
+
+    console.log(`Extracted ${contactMap.size} unique contacts from calls`);
+    
+    let synced = 0;
+    let skipped = 0;
+
+    for (const [phone, contact] of contactMap) {
+      // Check if deal with this phone already exists
+      const { data: existingDeal } = await supabase
+        .from("deals")
+        .select("id")
+        .eq("contact_phone", phone)
+        .eq("team_id", teamId)
+        .single();
+
+      if (existingDeal) {
+        skipped++;
+        continue;
       }
 
       // Determine which user to assign to
-      const assignedUserId = contact.user_id 
-        ? alowareToUserMap.get(contact.user_id.toString()) || userId
+      const assignedUserId = contact.alowareUserId 
+        ? alowareToUserMap.get(contact.alowareUserId.toString()) || userId
         : userId;
 
       const { error } = await supabase.from("deals").insert({
         user_id: assignedUserId,
         team_id: teamId,
-        contact_name: contact.name || "Unknown Contact",
-        contact_phone: contact.phone_number,
-        contact_email: contact.email,
-        company_name: contact.company_name || "Unknown Company",
+        contact_name: contact.name,
+        contact_phone: contact.phone,
+        company_name: contact.company || "Unknown Company",
         stage: "lead",
         deal_value: 0,
         deal_type: "new_business",
         source: "aloware_import",
-        notes: contact.notes,
-        created_at: contact.created_at,
       });
 
       if (error) {
-        console.error(`Error inserting contact ${contact.id}:`, error);
+        console.error(`Error inserting contact ${phone}:`, error);
         skipped++;
       } else {
         synced++;
@@ -310,7 +335,7 @@ async function syncContacts(supabase: any, apiToken: string, teamId: string, use
     }
 
     console.log(`Contacts sync complete: ${synced} synced, ${skipped} skipped`);
-    return { synced, skipped, total: contacts.length };
+    return { synced, skipped, total: contactMap.size };
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error syncing contacts:", error);
