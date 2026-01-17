@@ -77,3 +77,6 @@ verify_jwt = false
 
 [functions.process-aloware-transcription]
 verify_jwt = false
+
+[functions.sync-aloware-data]
+verify_jwt = false
