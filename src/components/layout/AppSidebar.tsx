@@ -69,9 +69,9 @@ export function AppSidebar() {
       } as React.CSSProperties}
     >
       {/* Logo Header */}
-      <SidebarHeader className="p-4 border-b border-border">
+      <SidebarHeader className="p-3 md:p-4 border-b border-border">
         <div className="flex flex-col">
-          <span className="font-display text-lg text-foreground tracking-tight">
+          <span className="font-display text-base md:text-lg text-foreground tracking-tight">
             <span className="font-normal">Pitch</span>
             <span className="font-bold">Viper</span>
           </span>
@@ -83,7 +83,7 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-4">
+      <SidebarContent className="px-2 py-3 md:py-4">
         {/* Main Navigation */}
         <SidebarGroup>
           {!isCollapsed && (
@@ -176,11 +176,11 @@ export function AppSidebar() {
       </SidebarContent>
 
       {/* Collapse Toggle */}
-      <SidebarFooter className="p-4 border-t border-border">
+      <SidebarFooter className="p-3 md:p-4 border-t border-border">
         <button
           onClick={toggleSidebar}
           className={cn(
-            "flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+            "flex items-center gap-3 w-full rounded-lg px-3 py-2 md:py-2.5 text-sm font-medium transition-all duration-200",
             "text-muted-foreground hover:text-foreground hover:bg-accent",
             isCollapsed && "justify-center"
           )}
