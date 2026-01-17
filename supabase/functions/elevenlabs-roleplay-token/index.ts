@@ -72,10 +72,6 @@ Win conditions (salesperson goals): ${scenario.win_conditions.join(", ")}
         },
       }
     );
-          "xi-api-key": ELEVENLABS_API_KEY,
-        },
-      }
-    );
 
     if (!response.ok) {
       // If no agent configured, return context for client-side agent creation prompt
