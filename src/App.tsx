@@ -12,6 +12,7 @@ import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { OnboardingTourProvider } from "@/components/onboarding/OnboardingTour";
 import { ClickToDialProvider } from "@/contexts/ClickToDialContext";
 import { DialModal } from "@/components/calls/DialModal";
+import { SendSMSModal } from "@/components/calls/SendSMSModal";
 import { ActiveCallBanner } from "@/components/calls/ActiveCallBanner";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -72,6 +73,7 @@ const App = () => (
                 <OfflineIndicator />
                 <ActiveCallBanner />
                 <DialModal />
+                <SendSMSModal />
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>

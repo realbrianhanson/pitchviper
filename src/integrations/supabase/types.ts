@@ -158,6 +158,7 @@ export type Database = {
         Row: {
           aloware_call_id: string | null
           aloware_recording_url: string | null
+          aloware_summary: string | null
           aloware_transcription: string | null
           appointment_scheduled_at: string | null
           call_purpose: Database["public"]["Enums"]["call_purpose"] | null
@@ -183,6 +184,7 @@ export type Database = {
         Insert: {
           aloware_call_id?: string | null
           aloware_recording_url?: string | null
+          aloware_summary?: string | null
           aloware_transcription?: string | null
           appointment_scheduled_at?: string | null
           call_purpose?: Database["public"]["Enums"]["call_purpose"] | null
@@ -208,6 +210,7 @@ export type Database = {
         Update: {
           aloware_call_id?: string | null
           aloware_recording_url?: string | null
+          aloware_summary?: string | null
           aloware_transcription?: string | null
           appointment_scheduled_at?: string | null
           call_purpose?: Database["public"]["Enums"]["call_purpose"] | null
@@ -1248,6 +1251,63 @@ export type Database = {
             columns: ["scenario_id"]
             isOneToOne: false
             referencedRelation: "roleplay_scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_messages: {
+        Row: {
+          aloware_message_id: string | null
+          contact_name: string | null
+          contact_phone: string
+          created_at: string
+          deal_id: string | null
+          direction: string
+          id: string
+          message: string
+          status: string | null
+          team_id: string | null
+          user_id: string
+        }
+        Insert: {
+          aloware_message_id?: string | null
+          contact_name?: string | null
+          contact_phone: string
+          created_at?: string
+          deal_id?: string | null
+          direction?: string
+          id?: string
+          message: string
+          status?: string | null
+          team_id?: string | null
+          user_id: string
+        }
+        Update: {
+          aloware_message_id?: string | null
+          contact_name?: string | null
+          contact_phone?: string
+          created_at?: string
+          deal_id?: string | null
+          direction?: string
+          id?: string
+          message?: string
+          status?: string | null
+          team_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_messages_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sms_messages_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]

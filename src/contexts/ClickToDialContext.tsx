@@ -20,6 +20,13 @@ interface DialParams {
   dealId?: string;
 }
 
+interface SMSParams {
+  phoneNumber: string;
+  contactName?: string;
+  companyName?: string;
+  dealId?: string;
+}
+
 interface PowerDialerContact {
   phoneNumber: string;
   name?: string;
@@ -45,6 +52,14 @@ interface ClickToDialContextType {
   
   // Power dialer
   addToPowerDialer: (contacts: PowerDialerContact[], position?: 'top' | 'bottom') => Promise<{ success: boolean; added?: any[]; failed?: any[]; error?: string }>;
+  
+  // SMS
+  isSMSModalOpen: boolean;
+  openSMSModal: (params: SMSParams) => void;
+  closeSMSModal: () => void;
+  pendingSMS: SMSParams | null;
+  isSendingSMS: boolean;
+  sendSMS: (phoneNumber: string, message: string, contactName?: string, dealId?: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const ClickToDialContext = createContext<ClickToDialContextType | undefined>(undefined);
@@ -63,6 +78,11 @@ export function ClickToDialProvider({ children }: { children: React.ReactNode })
     startTime: null,
     notes: '',
   });
+
+  // SMS state
+  const [isSMSModalOpen, setIsSMSModalOpen] = useState(false);
+  const [pendingSMS, setPendingSMS] = useState<SMSParams | null>(null);
+  const [isSendingSMS, setIsSendingSMS] = useState(false);
 
   // Check for active call on mount
   useEffect(() => {
@@ -221,6 +241,59 @@ export function ClickToDialProvider({ children }: { children: React.ReactNode })
     }
   }, [toast]);
 
+  // SMS functions
+  const openSMSModal = useCallback((params: SMSParams) => {
+    setPendingSMS(params);
+    setIsSMSModalOpen(true);
+  }, []);
+
+  const closeSMSModal = useCallback(() => {
+    setIsSMSModalOpen(false);
+    setPendingSMS(null);
+  }, []);
+
+  const sendSMS = useCallback(async (phoneNumber: string, message: string, contactName?: string, dealId?: string) => {
+    setIsSendingSMS(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('send-aloware-sms', {
+        body: {
+          phoneNumber,
+          message,
+          contactName,
+          dealId,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "SMS Sent",
+          description: `Message sent to ${contactName || phoneNumber}`,
+        });
+        closeSMSModal();
+        return { success: true };
+      } else {
+        toast({
+          title: "SMS Failed",
+          description: data.error || "Failed to send SMS",
+          variant: "destructive",
+        });
+        return { success: false, error: data.error };
+      }
+    } catch (error: any) {
+      toast({
+        title: "SMS Error",
+        description: error.message || "Failed to send SMS",
+        variant: "destructive",
+      });
+      return { success: false, error: error.message };
+    } finally {
+      setIsSendingSMS(false);
+    }
+  }, [toast, closeSMSModal]);
+
   return (
     <ClickToDialContext.Provider
       value={{
@@ -234,6 +307,13 @@ export function ClickToDialProvider({ children }: { children: React.ReactNode })
         endCall,
         updateCallNotes,
         addToPowerDialer,
+        // SMS
+        isSMSModalOpen,
+        openSMSModal,
+        closeSMSModal,
+        pendingSMS,
+        isSendingSMS,
+        sendSMS,
       }}
     >
       {children}
