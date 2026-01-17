@@ -56,17 +56,37 @@ serve(async (req) => {
 
     if (action === 'verify') {
       // Call Aloware API to verify the token and get users
-      const alowareResponse = await fetch('https://app.aloware.com/api/v1/users', {
+      // Aloware uses api_token as query parameter, not Bearer token
+      const alowareUrl = new URL('https://app.aloware.com/api/v1/users');
+      alowareUrl.searchParams.append('api_token', alowareToken);
+      
+      const alowareResponse = await fetch(alowareUrl.toString(), {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${alowareToken}`,
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
       });
 
+      const responseText = await alowareResponse.text();
+      
+      // Check if response is HTML (error page)
+      if (responseText.startsWith('<!DOCTYPE') || responseText.startsWith('<html')) {
+        console.error('Aloware returned HTML instead of JSON - likely invalid API token or endpoint');
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'Invalid Aloware API token or the API endpoint has changed. Please verify your token.' 
+          }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
       if (!alowareResponse.ok) {
-        const errorText = await alowareResponse.text();
-        console.error('Aloware API error:', errorText);
+        console.error('Aloware API error:', responseText);
         return new Response(
           JSON.stringify({ 
             success: false, 
@@ -79,7 +99,22 @@ serve(async (req) => {
         );
       }
 
-      const alowareUsers = await alowareResponse.json();
+      let alowareUsers;
+      try {
+        alowareUsers = JSON.parse(responseText);
+      } catch {
+        console.error('Failed to parse Aloware response:', responseText.substring(0, 200));
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'Invalid response from Aloware API' 
+          }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
       
       return new Response(
         JSON.stringify({ 
@@ -173,22 +208,35 @@ serve(async (req) => {
       }
 
       // Get Aloware users
-      const alowareResponse = await fetch('https://app.aloware.com/api/v1/users', {
+      const alowareUrl = new URL('https://app.aloware.com/api/v1/users');
+      alowareUrl.searchParams.append('api_token', alowareToken);
+      
+      const alowareResponse = await fetch(alowareUrl.toString(), {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${alowareToken}`,
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
       });
 
-      if (!alowareResponse.ok) {
+      const responseText = await alowareResponse.text();
+      
+      if (!alowareResponse.ok || responseText.startsWith('<!DOCTYPE')) {
         return new Response(
-          JSON.stringify({ success: false, error: 'Failed to fetch Aloware users' }),
+          JSON.stringify({ success: false, error: 'Failed to fetch Aloware users - check API token' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      const alowareUsers = await alowareResponse.json();
+      let alowareUsers;
+      try {
+        alowareUsers = JSON.parse(responseText);
+      } catch {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Invalid response from Aloware' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       const users = alowareUsers.data || alowareUsers;
 
       // Get all team profiles
