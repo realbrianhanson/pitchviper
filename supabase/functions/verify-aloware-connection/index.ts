@@ -56,14 +56,15 @@ serve(async (req) => {
 
     if (action === 'verify') {
       // Call Aloware API to verify the token and get users
-      // Aloware uses api_token as query parameter, not Bearer token
-      const alowareUrl = new URL('https://app.aloware.com/api/v1/users');
+      // Aloware webhook API uses /api/v1/webhook/users endpoint
+      const alowareUrl = new URL('https://app.aloware.com/api/v1/webhook/users');
       alowareUrl.searchParams.append('api_token', alowareToken);
+      
+      console.log('Calling Aloware API:', alowareUrl.toString().replace(alowareToken, '[REDACTED]'));
       
       const alowareResponse = await fetch(alowareUrl.toString(), {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
       });
@@ -207,14 +208,15 @@ serve(async (req) => {
         );
       }
 
-      // Get Aloware users
-      const alowareUrl = new URL('https://app.aloware.com/api/v1/users');
+      // Get Aloware users using webhook API endpoint
+      const alowareUrl = new URL('https://app.aloware.com/api/v1/webhook/users');
       alowareUrl.searchParams.append('api_token', alowareToken);
+      
+      console.log('Syncing team - calling Aloware API');
       
       const alowareResponse = await fetch(alowareUrl.toString(), {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
       });
