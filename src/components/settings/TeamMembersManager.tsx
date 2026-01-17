@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { UserPlus, Users, Loader2, CheckCircle2, Copy, Eye, EyeOff } from "lucide-react";
+import { UserPlus, Users, Loader2, CheckCircle2, Copy, Eye, EyeOff, KeyRound, MoreHorizontal } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -35,11 +37,17 @@ export function TeamMembersManager() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [alowareUsers, setAlowareUsers] = useState<AlowareUser[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [createdUsers, setCreatedUsers] = useState<CreatedUser[]>([]);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  
+  // Reset password modal state
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [newPassword, setNewPassword] = useState("");
   
   // Form state
   const [email, setEmail] = useState("");
@@ -82,7 +90,66 @@ export function TeamMembersManager() {
     for (let i = 0; i < 12; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    setPassword(result);
+    return result;
+  };
+
+  const handleGeneratePassword = () => {
+    setPassword(generatePassword());
+  };
+
+  const handleGenerateNewPassword = () => {
+    setNewPassword(generatePassword());
+  };
+
+  const handleOpenResetModal = (member: TeamMember) => {
+    setSelectedMember(member);
+    setNewPassword(generatePassword());
+    setResetModalOpen(true);
+  };
+
+  const handleResetPassword = async () => {
+    if (!selectedMember || !newPassword) return;
+
+    setIsResetting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-team-member", {
+        body: {
+          action: "reset-password",
+          userId: selectedMember.user_id,
+          newPassword,
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast({
+          title: "Password Reset!",
+          description: `New password set for ${selectedMember.full_name}`,
+        });
+
+        // Add to created users list so they can see/copy the new password
+        setCreatedUsers(prev => [...prev.filter(u => u.fullName !== selectedMember.full_name), { 
+          email: `${selectedMember.full_name}'s account`, 
+          password: newPassword, 
+          fullName: selectedMember.full_name 
+        }]);
+
+        setResetModalOpen(false);
+        setSelectedMember(null);
+        setNewPassword("");
+      } else {
+        throw new Error(data?.error || "Failed to reset password");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reset password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const handleSelectAlowareUser = (alowareId: string) => {
@@ -249,7 +316,7 @@ export function TeamMembersManager() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter password"
                   />
-                  <Button type="button" variant="outline" onClick={generatePassword}>
+                  <Button type="button" variant="outline" onClick={handleGeneratePassword}>
                     Generate
                   </Button>
                 </div>
@@ -289,6 +356,7 @@ export function TeamMembersManager() {
                     <TableHead>Title</TableHead>
                     <TableHead>Aloware Linked</TableHead>
                     <TableHead>Created</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -308,6 +376,21 @@ export function TeamMembersManager() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {new Date(member.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleOpenResetModal(member)}>
+                              <KeyRound className="mr-2 h-4 w-4" />
+                              Reset Password
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -378,6 +461,59 @@ export function TeamMembersManager() {
           </CardContent>
         </Card>
       )}
+
+      {/* Reset Password Dialog */}
+      <Dialog open={resetModalOpen} onOpenChange={setResetModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-primary" />
+              Reset Password
+            </DialogTitle>
+            <DialogDescription>
+              Set a new password for {selectedMember?.full_name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="newPassword"
+                  type="text"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                />
+                <Button type="button" variant="outline" onClick={handleGenerateNewPassword}>
+                  Generate
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Share this new password with the team member.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleResetPassword} disabled={isResetting || !newPassword}>
+              {isResetting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Resetting...
+                </>
+              ) : (
+                <>
+                  <KeyRound className="mr-2 h-4 w-4" />
+                  Reset Password
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
