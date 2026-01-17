@@ -1,14 +1,13 @@
 import { useMemo } from 'react';
 import { format, differenceInDays } from 'date-fns';
-import { Building2, User, DollarSign, Calendar, TrendingUp, TrendingDown, Minus, GripVertical, Phone, MessageSquare } from 'lucide-react';
+import { Building2, User, DollarSign, Calendar, TrendingUp, TrendingDown, Minus, GripVertical } from 'lucide-react';
 import { ViperCard } from '@/components/ui/viper-card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Deal } from '@/hooks/useDealPipeline';
 import { cn } from '@/lib/utils';
-import { useClickToDial } from '@/hooks/useClickToDial';
+import { ClickToDialButton } from '@/components/calls/ClickToDialButton';
+import { SendSMSButton } from '@/components/calls/SendSMSButton';
 
 interface DealCardProps {
   deal: Deal;
@@ -17,8 +16,6 @@ interface DealCardProps {
 }
 
 export function DealCard({ deal, onClick, isDragging }: DealCardProps) {
-  const { openDialModal, openSMSModal } = useClickToDial();
-
   const daysInStage = useMemo(() => {
     return differenceInDays(new Date(), new Date(deal.updated_at));
   }, [deal.updated_at]);
@@ -40,30 +37,6 @@ export function DealCard({ deal, onClick, isDragging }: DealCardProps) {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
-  };
-
-  const handleClickToDial = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (deal.contact_phone) {
-      openDialModal({
-        phoneNumber: deal.contact_phone,
-        contactName: deal.contact_name,
-        companyName: deal.company_name,
-        dealId: deal.id,
-      });
-    }
-  };
-
-  const handleClickToSMS = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (deal.contact_phone) {
-      openSMSModal({
-        phoneNumber: deal.contact_phone,
-        contactName: deal.contact_name,
-        companyName: deal.company_name,
-        dealId: deal.id,
-      });
-    }
   };
 
   return (
@@ -91,36 +64,22 @@ export function DealCard({ deal, onClick, isDragging }: DealCardProps) {
               <span className="text-xs text-muted-foreground truncate">{deal.contact_name}</span>
               {deal.contact_phone && (
                 <div className="flex items-center gap-0.5">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5 text-primary hover:bg-primary/10"
-                        onClick={handleClickToDial}
-                      >
-                        <Phone className="h-3 w-3" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Call {deal.contact_name}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5 text-primary hover:bg-primary/10"
-                        onClick={handleClickToSMS}
-                      >
-                        <MessageSquare className="h-3 w-3" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Text {deal.contact_name}</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <ClickToDialButton
+                    phoneNumber={deal.contact_phone}
+                    contactName={deal.contact_name}
+                    companyName={deal.company_name}
+                    dealId={deal.id}
+                    size="sm"
+                    className="h-5 w-5"
+                  />
+                  <SendSMSButton
+                    phoneNumber={deal.contact_phone}
+                    contactName={deal.contact_name}
+                    companyName={deal.company_name}
+                    dealId={deal.id}
+                    size="sm"
+                    className="h-5 w-5"
+                  />
                 </div>
               )}
             </div>
