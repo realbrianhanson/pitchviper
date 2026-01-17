@@ -8,6 +8,7 @@ import { MotivationalQuote } from "@/components/dashboard/MotivationalQuote";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUpcomingFollowUps } from "@/hooks/useUpcomingFollowUps";
 import { Phone, Calendar, Target, TrendingUp, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -80,16 +81,33 @@ export default function CommandCenter() {
 
   return (
     <AppLayout title="Command Center">
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-6">
         {/* Top Section - Greeting */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 24 }}
+          className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+        >
           <div>
-            <h1 className="text-3xl font-display font-bold text-foreground">
+            <motion.h1
+              className="text-3xl font-display font-bold text-foreground"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+            >
               {getGreeting()}, {firstName}
-            </h1>
-            <p className="text-muted-foreground mt-1">{formatDate()}</p>
+            </motion.h1>
+            <motion.p
+              className="text-muted-foreground mt-1"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              {formatDate()}
+            </motion.p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Daily Challenge & Streak */}
         <DailyChallenge

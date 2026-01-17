@@ -1,5 +1,6 @@
 import { ViperCard, ViperCardContent } from "@/components/ui/viper-card";
 import { Quote } from "lucide-react";
+import { motion } from "framer-motion";
 
 const quotes = [
   { text: "Every 'no' brings you closer to a 'yes'.", author: "Mark Cuban" },
@@ -23,18 +24,42 @@ export function MotivationalQuote() {
   const quote = quotes[dayOfYear % quotes.length];
 
   return (
-    <ViperCard variant="default" className="bg-gradient-to-r from-card to-card/50">
-      <ViperCardContent className="py-4">
-        <div className="flex items-start gap-4">
-          <Quote className="h-8 w-8 text-primary/30 shrink-0 mt-1" />
-          <div>
-            <p className="text-foreground font-medium italic">
-              "{quote.text}"
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">— {quote.author}</p>
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 24, delay: 0.5 }}
+    >
+      <ViperCard variant="default" className="bg-gradient-to-r from-card to-card/50">
+        <ViperCardContent className="py-4">
+          <div className="flex items-start gap-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0, rotate: -180 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              transition={{ delay: 0.7, type: "spring", stiffness: 300 }}
+            >
+              <Quote className="h-8 w-8 text-primary/30 shrink-0 mt-1" />
+            </motion.div>
+            <div>
+              <motion.p
+                className="text-foreground font-medium italic"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 }}
+              >
+                "{quote.text}"
+              </motion.p>
+              <motion.p
+                className="text-sm text-muted-foreground mt-1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+              >
+                — {quote.author}
+              </motion.p>
+            </div>
           </div>
-        </div>
-      </ViperCardContent>
-    </ViperCard>
+        </ViperCardContent>
+      </ViperCard>
+    </motion.div>
   );
 }
