@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   User, 
   Bell, 
@@ -13,7 +13,9 @@ import {
   HelpCircle,
   Mic,
   Phone,
-  Building2
+  Building2,
+  Camera,
+  Loader2 as LoaderIcon
 } from "lucide-react";
 import { ViperCard } from "@/components/ui/viper-card";
 import { ViperButton } from "@/components/ui/viper-button";
