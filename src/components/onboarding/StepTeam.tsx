@@ -42,7 +42,7 @@ export function StepTeam({ isManager, onComplete, onBack }: StepTeamProps) {
         .from("teams")
         .select("id, name")
         .eq("team_code", teamCode.toUpperCase())
-        .single();
+        .maybeSingle();
 
       if (findError || !team) {
         setError("Team not found. Check the code and try again.");

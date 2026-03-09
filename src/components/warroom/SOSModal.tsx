@@ -69,7 +69,7 @@ export function SOSModal({ isOpen, onClose }: SOSModalProps) {
         .from("profiles")
         .select("team_id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       const { error } = await supabase.from("sos_alerts").insert({
         user_id: user.id,

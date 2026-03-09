@@ -50,7 +50,7 @@ export function useGauntlet() {
         .from('gauntlet_challenges')
         .select('*')
         .eq('challenge_date', today)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error("Error fetching challenge:", error);
@@ -71,7 +71,7 @@ export function useGauntlet() {
         .select('*')
         .eq('user_id', user.id)
         .eq('challenge_id', todayChallenge.id)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error("Error fetching completion:", error);
@@ -195,7 +195,7 @@ export function useGauntlet() {
         .select('id, attempts')
         .eq('user_id', user.id)
         .eq('challenge_id', todayChallenge.id)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         // Update existing attempt
@@ -239,7 +239,7 @@ export function useGauntlet() {
           .from('profiles')
           .select('xp_points')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (profile) {
           await supabase

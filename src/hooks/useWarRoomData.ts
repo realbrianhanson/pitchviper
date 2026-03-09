@@ -76,7 +76,7 @@ export function useWarRoomData() {
         .from("profiles")
         .select("team_id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (!profile?.team_id) {
         setIsLoading(false);
@@ -210,7 +210,7 @@ export function useWarRoomData() {
         .from("user_preferences")
         .select("celebration_sounds_enabled")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (preferences) {
         setSoundEnabled(preferences.celebration_sounds_enabled);

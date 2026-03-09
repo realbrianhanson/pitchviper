@@ -38,7 +38,7 @@ export function DialModal() {
           .from('profiles')
           .select('default_aloware_line')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
         
         setDefaultLine(data?.default_aloware_line || null);
       } finally {

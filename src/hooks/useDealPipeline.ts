@@ -171,7 +171,7 @@ export function useDealPipeline() {
         .from('deals')
         .select('stage')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       const updateData: Record<string, unknown> = { ...updates };
 

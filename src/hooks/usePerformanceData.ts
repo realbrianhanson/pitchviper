@@ -90,7 +90,7 @@ export function usePerformanceData() {
         .from("profiles")
         .select("full_name, avatar_url, xp_points, current_level, current_streak, longest_streak, team_id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
 
