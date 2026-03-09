@@ -33,6 +33,8 @@ const PageLoader = () => (
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import Onboarding from "./pages/Onboarding";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 // Lazy load app pages for better performance
 const CommandCenter = lazy(() => import("./pages/CommandCenter"));
