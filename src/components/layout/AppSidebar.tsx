@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
+import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard,
   Radio,
@@ -52,6 +53,7 @@ const managerNavItems = [
 export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const location = useLocation();
+  const { isManager } = useAuth();
   const isCollapsed = state === "collapsed";
 
   const isActive = (url: string) => {
@@ -128,51 +130,55 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarSeparator className="my-4" />
+        {isManager && (
+          <>
+            <SidebarSeparator className="my-4" />
 
-        {/* Manager Section */}
-        <SidebarGroup>
-          {!isCollapsed && (
-            <SidebarGroupLabel className="text-muted-foreground font-display text-xs uppercase tracking-wider mb-2">
-              Manager
-            </SidebarGroupLabel>
-          )}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {managerNavItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    tooltip={item.title}
-                    isActive={isActive(item.url)}
-                  >
-                    <NavLink
-                      to={item.url}
-                      className={cn(
-                        "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                        "text-muted-foreground hover:text-foreground hover:bg-accent",
-                        isActive(item.url) && [
-                          "text-foreground bg-accent",
-                          "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2",
-                          "before:h-8 before:w-1 before:rounded-r-full before:bg-primary",
-                          "before:shadow-[0_0_12px_hsl(var(--primary))]",
-                        ]
-                      )}
-                    >
-                      <item.icon
-                        className={cn(
-                          "h-5 w-5 shrink-0 transition-colors",
-                          isActive(item.url) && "text-primary"
-                        )}
-                      />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+            {/* Manager Section */}
+            <SidebarGroup>
+              {!isCollapsed && (
+                <SidebarGroupLabel className="text-muted-foreground font-display text-xs uppercase tracking-wider mb-2">
+                  Manager
+                </SidebarGroupLabel>
+              )}
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {managerNavItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        tooltip={item.title}
+                        isActive={isActive(item.url)}
+                      >
+                        <NavLink
+                          to={item.url}
+                          className={cn(
+                            "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                            "text-muted-foreground hover:text-foreground hover:bg-accent",
+                            isActive(item.url) && [
+                              "text-foreground bg-accent",
+                              "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2",
+                              "before:h-8 before:w-1 before:rounded-r-full before:bg-primary",
+                              "before:shadow-[0_0_12px_hsl(var(--primary))]",
+                            ]
+                          )}
+                        >
+                          <item.icon
+                            className={cn(
+                              "h-5 w-5 shrink-0 transition-colors",
+                              isActive(item.url) && "text-primary"
+                            )}
+                          />
+                          {!isCollapsed && <span>{item.title}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
       </SidebarContent>
 
       {/* Collapse Toggle */}
