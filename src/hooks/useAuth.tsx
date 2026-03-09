@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,6 +23,7 @@ interface AuthContextType {
   isLoading: boolean;
   isManager: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,34 +35,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isManager, setIsManager] = useState(false);
 
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-    
-    if (data) {
-      setProfile(data as Profile);
-    }
+  const fetchProfile = useCallback(async (userId: string) => {
+    const [{ data: profileData }, { data: roleData }] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle(),
+      supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle(),
+    ]);
 
-    // Check if user is manager
-    const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .maybeSingle();
-    
+    if (profileData) {
+      setProfile(profileData as Profile);
+    }
     setIsManager(roleData?.role === 'manager');
-  };
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    if (user) {
+      await fetchProfile(user.id);
+    }
+  }, [user, fetchProfile]);
 
   useEffect(() => {
+    let mounted = true;
+
+    // Set up listener FIRST, then get session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (!mounted) return;
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          fetchProfile(session.user.id);
+          // Use setTimeout to avoid Supabase deadlock on auth state change
+          setTimeout(() => {
+            if (mounted) fetchProfile(session.user.id);
+          }, 0);
         } else {
           setProfile(null);
           setIsManager(false);
@@ -70,7 +83,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
+    // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -79,15 +94,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [fetchProfile]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, isLoading: loading, isManager, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, isLoading: loading, isManager, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
