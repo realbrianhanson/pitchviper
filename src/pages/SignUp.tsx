@@ -7,7 +7,7 @@ import { ViperInput } from "@/components/ui/viper-input";
 import { ViperButton } from "@/components/ui/viper-button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Loader2, User, Mail, Lock, Users, Chrome, Ticket } from "lucide-react";
+import { Loader2, User, Mail, Lock, Users, Ticket } from "lucide-react";
 
 type UserRole = "rep" | "manager";
 
