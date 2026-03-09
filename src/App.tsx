@@ -35,6 +35,7 @@ import SignIn from "./pages/SignIn";
 import Onboarding from "./pages/Onboarding";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import VerifyEmail from "./pages/VerifyEmail";
 
 // Lazy load app pages for better performance
 const CommandCenter = lazy(() => import("./pages/CommandCenter"));

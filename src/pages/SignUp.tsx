@@ -92,12 +92,12 @@ export default function SignUp() {
       setSuccess(true);
       toast({
         title: "Welcome to PitchViper!",
-        description: "Your account has been created successfully.",
+        description: "Check your email to verify your account.",
       });
 
-      // Flash green and redirect
+      // Redirect to verify email page
       setTimeout(() => {
-        navigate("/onboarding");
+        navigate("/verify-email");
       }, 1500);
     } catch (err: any) {
       setError(err.message);
