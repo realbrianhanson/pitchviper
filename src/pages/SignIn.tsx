@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { ViperInput } from "@/components/ui/viper-input";
