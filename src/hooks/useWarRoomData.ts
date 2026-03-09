@@ -76,7 +76,7 @@ export function useWarRoomData() {
         .from("profiles")
         .select("team_id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (!profile?.team_id) {
         setIsLoading(false);
