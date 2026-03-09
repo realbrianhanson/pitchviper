@@ -48,7 +48,7 @@ export function VoiceRoleplay({
       toast.success("Voice session started!");
     },
     onDisconnect: () => {
-      console.log("Disconnected from ElevenLabs agent");
+      
     },
     onMessage: (message: any) => {
       console.log("Message from agent:", message);
