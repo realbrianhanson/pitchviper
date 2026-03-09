@@ -106,7 +106,7 @@ export function DealCelebration({
       playTone(4000, now + 0.2, 0.2, 'sine');
       
     } catch (e) {
-      console.log("Audio playback not available");
+      // Audio playback not available in this environment
     }
   }, [soundEnabled]);
 

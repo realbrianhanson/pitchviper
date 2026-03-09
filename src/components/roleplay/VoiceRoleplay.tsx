@@ -51,7 +51,7 @@ export function VoiceRoleplay({
       
     },
     onMessage: (message: any) => {
-      console.log("Message from agent:", message);
+      
       
       // Handle transcripts for logging
       if (message?.type === "user_transcript") {

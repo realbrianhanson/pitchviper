@@ -111,7 +111,7 @@ export function usePerplexityResearch() {
         }
       }
 
-      console.log('Fetching new deep dive:', type);
+      
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/perplexity-research`,
