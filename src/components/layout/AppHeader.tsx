@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, ChevronDown, User, Settings, LogOut, Phone } from "lucide-react";
 import { ViperInput } from "@/components/ui/viper-input";
