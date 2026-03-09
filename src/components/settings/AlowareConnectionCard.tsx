@@ -36,7 +36,7 @@ export function AlowareConnectionCard() {
         .from('profiles')
         .select('default_aloware_line')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       if (data?.default_aloware_line) {
         setDefaultLine(data.default_aloware_line);

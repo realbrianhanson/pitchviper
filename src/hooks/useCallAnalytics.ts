@@ -62,7 +62,7 @@ export const useCallAnalytics = () => {
         .from('profiles')
         .select('team_id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       if (data?.team_id) {
         setTeamId(data.team_id);

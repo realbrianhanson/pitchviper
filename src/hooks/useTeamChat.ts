@@ -301,7 +301,7 @@ export function useTeamChat() {
             .from("profiles")
             .select("full_name, avatar_url")
             .eq("user_id", payload.new.user_id)
-            .single();
+            .maybeSingle();
 
           const newMessage: ChatMessage = {
             id: payload.new.id,
