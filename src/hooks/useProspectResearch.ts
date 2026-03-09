@@ -108,7 +108,7 @@ export function useProspectResearch() {
       if (!forceRefresh) {
         const cached = await checkCachedResearch(companyName);
         if (cached) {
-          console.log('Using cached research for', companyName);
+          
           setResearch(cached);
           return cached.research_data;
         }
