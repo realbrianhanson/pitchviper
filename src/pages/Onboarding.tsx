@@ -58,7 +58,7 @@ export default function Onboarding() {
           .from("profiles")
           .select("*")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         if (profile) {
           setFullName(profile.full_name);
