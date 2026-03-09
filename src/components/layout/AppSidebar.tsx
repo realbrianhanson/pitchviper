@@ -15,6 +15,10 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
+  Award,
+  BarChart3,
+  Gamepad2,
+  Cog,
 } from "lucide-react";
 
 import {
@@ -41,13 +45,20 @@ const mainNavItems = [
   { title: "Objection Vault", url: "/objection-vault", icon: Shield },
   { title: "Leaderboards", url: "/leaderboards", icon: Trophy },
   { title: "My Performance", url: "/performance", icon: TrendingUp },
+  { title: "Achievements", url: "/achievements", icon: Award },
   { title: "Training Academy", url: "/training", icon: GraduationCap },
   { title: "Deal Pipeline", url: "/pipeline", icon: GitBranch },
 ];
 
 const managerNavItems = [
+  { title: "Manager Dashboard", url: "/manager", icon: BarChart3 },
+  { title: "Competitions", url: "/manager/competitions", icon: Gamepad2 },
   { title: "Team Settings", url: "/team-settings", icon: Settings },
   { title: "Coaching Console", url: "/coaching", icon: Users },
+];
+
+const bottomNavItems = [
+  { title: "Settings", url: "/settings", icon: Cog },
 ];
 
 export function AppSidebar() {
