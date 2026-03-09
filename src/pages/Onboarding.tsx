@@ -87,12 +87,6 @@ export default function Onboarding() {
     loadProfile();
   }, [user, navigate]);
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/sign-in");
-    }
-  }, [user, authLoading, navigate]);
 
   const handleProfileComplete = (data: ProfileData) => {
     setProfileData(data);
