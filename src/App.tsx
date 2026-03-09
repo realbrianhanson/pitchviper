@@ -33,6 +33,8 @@ const PageLoader = () => (
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import Onboarding from "./pages/Onboarding";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 // Lazy load app pages for better performance
 const CommandCenter = lazy(() => import("./pages/CommandCenter"));
@@ -83,6 +85,8 @@ const App = () => (
                       {/* Public auth routes */}
                       <Route path="/sign-up" element={<SignUp />} />
                       <Route path="/sign-in" element={<SignIn />} />
+                      <Route path="/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/reset-password" element={<ResetPassword />} />
                       
                       {/* Protected routes */}
                       <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
