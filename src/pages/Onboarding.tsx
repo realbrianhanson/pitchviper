@@ -108,8 +108,7 @@ export default function Onboarding() {
     if (!user) return;
 
     try {
-      // Update profile with all collected data
-      await supabase
+      const { error } = await supabase
         .from("profiles")
         .update({
           avatar_url: profileData.avatarUrl,
@@ -120,9 +119,20 @@ export default function Onboarding() {
         })
         .eq("user_id", user.id);
 
+      if (error) throw error;
+
+      toast({
+        title: "Welcome aboard! 🎉",
+        description: "Your profile is all set. Let's get started!",
+      });
       navigate("/");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error saving profile:", err);
+      toast({
+        title: "Save failed",
+        description: err.message || "Could not save your profile. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
