@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { FloatingParticles } from "@/components/auth/FloatingParticles";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 import { StepProfile } from "@/components/onboarding/StepProfile";
