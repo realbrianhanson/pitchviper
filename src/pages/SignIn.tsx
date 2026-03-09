@@ -95,9 +95,24 @@ export default function SignIn() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-foreground">Password</label>
-            <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+            <button
+              type="button"
+              onClick={async () => {
+                if (!email) {
+                  toast({ title: "Enter your email first", description: "We need your email to send a reset link.", variant: "destructive" });
+                  return;
+                }
+                const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+                if (error) {
+                  toast({ title: "Error", description: error.message, variant: "destructive" });
+                } else {
+                  toast({ title: "Check your email", description: "We've sent a password reset link." });
+                }
+              }}
+              className="text-xs text-primary hover:underline"
+            >
               Forgot password?
-            </Link>
+            </button>
           </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

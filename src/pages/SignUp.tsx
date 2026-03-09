@@ -276,27 +276,6 @@ export default function SignUp() {
           )}
         </ViperButton>
 
-        {/* Divider */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="bg-card px-2 text-muted-foreground">or continue with</span>
-          </div>
-        </div>
-
-        {/* Google Sign In */}
-        <ViperButton
-          type="button"
-          variant="glass"
-          className="w-full"
-          onClick={handleGoogleSignIn}
-        >
-          <Chrome className="h-4 w-4" />
-          Google
-        </ViperButton>
-
         {/* Sign In Link */}
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}

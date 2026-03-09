@@ -93,7 +93,7 @@ export function ClickToDialProvider({ children }: { children: React.ReactNode })
         .from('user_status')
         .select('status, current_call_started_at')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (status?.status === 'on_call' && status.current_call_started_at) {
         setCallState(prev => ({
