@@ -75,7 +75,7 @@ export function MobileCoachingPanel({ teamMembers, onClose }: MobileCoachingPane
         .select("calls_made, appointments_set")
         .eq("user_id", currentRep.user_id)
         .eq("date", today)
-        .single();
+        .maybeSingle();
 
       // Get yesterday's stats for trend
       const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
