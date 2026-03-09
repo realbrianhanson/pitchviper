@@ -26,7 +26,7 @@ interface TeamData {
 }
 
 export default function Onboarding() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
