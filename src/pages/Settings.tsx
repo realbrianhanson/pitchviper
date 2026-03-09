@@ -38,6 +38,8 @@ export default function Settings() {
   const { user, profile, signOut } = useAuth();
   const { startTour } = useOnboardingTour();
   const [isLoading, setIsLoading] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   
   // Profile state
   const [fullName, setFullName] = useState(profile?.full_name || "");
