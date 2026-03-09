@@ -21,51 +21,17 @@ interface AppHeaderProps {
   title?: string;
 }
 
-interface Profile {
-  full_name: string;
-  avatar_url: string | null;
-  title: string | null;
-}
-
-interface UserRole {
-  role: string;
-}
-
 export function AppHeader({ title }: AppHeaderProps) {
-  const { user, signOut } = useAuth();
+  const { user, profile: authProfile, isManager, signOut } = useAuth();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [role, setRole] = useState<string>("rep");
   const [showLogCall, setShowLogCall] = useState(false);
 
-  useEffect(() => {
-    if (!user) return;
-
-    const loadData = async () => {
-      // Load profile
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("full_name, avatar_url, title")
-        .eq("user_id", user.id)
-        .single();
-
-      if (profileData) {
-        setProfile(profileData);
-      }
-
-      // Load role
-      const { data: rolesData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id);
-
-      if (rolesData && rolesData.length > 0) {
-        setRole(rolesData[0].role);
-      }
-    };
-
-    loadData();
-  }, [user]);
+  const profile = authProfile ? {
+    full_name: authProfile.full_name,
+    avatar_url: authProfile.avatar_url,
+    title: authProfile.title,
+  } : null;
+  const role = isManager ? "manager" : "rep";
 
   const handleSignOut = async () => {
     await signOut();
