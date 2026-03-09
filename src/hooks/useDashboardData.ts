@@ -130,7 +130,7 @@ export function useDashboardData() {
             .from("profiles")
             .select("full_name, avatar_url")
             .eq("user_id", newActivity.user_id)
-            .single();
+            .maybeSingle();
 
           // Add to activities list
           const formattedActivity: Activity = {

@@ -63,7 +63,7 @@ export default function Settings() {
         .from("user_preferences")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (data) {
         setCelebrationSounds(data.celebration_sounds_enabled);

@@ -239,7 +239,7 @@ export function useGauntlet() {
           .from('profiles')
           .select('xp_points')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (profile) {
           await supabase

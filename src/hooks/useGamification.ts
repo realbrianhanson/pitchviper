@@ -107,7 +107,7 @@ export function useGamification() {
       .from('profiles')
       .select('xp_points, current_level')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (profile) {
       const currentLevel = levels.find(l => l.level_number === profile.current_level) || levels[0];

@@ -112,7 +112,7 @@ export default function RoleplaySession() {
           .from("roleplay_scenarios")
           .select("*")
           .eq("id", scenarioId)
-          .single();
+          .maybeSingle();
 
         if (scenarioError || !scenarioData) {
           toast.error("Scenario not found");

@@ -129,7 +129,7 @@ export const useCallLogging = () => {
       await supabase
         .from('profiles')
         .update({ 
-          xp_points: (await supabase.from('profiles').select('xp_points').eq('user_id', user.id).single()).data?.xp_points + xpEarned 
+          xp_points: (await supabase.from('profiles').select('xp_points').eq('user_id', user.id).maybeSingle()).data?.xp_points + xpEarned 
         })
         .eq('user_id', user.id);
 

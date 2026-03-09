@@ -210,7 +210,7 @@ export function useWarRoomData() {
         .from("user_preferences")
         .select("celebration_sounds_enabled")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (preferences) {
         setSoundEnabled(preferences.celebration_sounds_enabled);
