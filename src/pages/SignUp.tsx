@@ -11,7 +11,7 @@ import { Loader2, User, Mail, Lock, Users, Ticket } from "lucide-react";
 
 type UserRole = "rep" | "manager";
 
-const VALID_PROMO_CODE = "Viper";
+
 
 export default function SignUp() {
   const navigate = useNavigate();
