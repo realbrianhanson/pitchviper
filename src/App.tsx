@@ -87,6 +87,7 @@ const App = () => (
                       <Route path="/sign-up" element={<SignUp />} />
                       <Route path="/sign-in" element={<SignIn />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/verify-email" element={<VerifyEmail />} />
                       <Route path="/reset-password" element={<ResetPassword />} />
                       
                       {/* Protected routes */}
