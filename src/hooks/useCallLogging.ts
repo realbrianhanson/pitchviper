@@ -58,7 +58,7 @@ export const useCallLogging = () => {
         .from('profiles')
         .select('team_id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       // Insert call record
       const { data: call, error } = await supabase
