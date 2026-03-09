@@ -26,7 +26,7 @@ interface TeamData {
 }
 
 export default function Onboarding() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -114,6 +114,9 @@ export default function Onboarding() {
         .eq("user_id", user.id);
 
       if (error) throw error;
+
+      // Refresh profile in AuthContext so ProtectedRoute sees updated onboarding_completed
+      await refreshProfile();
 
       toast({
         title: "Welcome aboard! 🎉",

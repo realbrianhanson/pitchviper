@@ -100,7 +100,7 @@ export function usePerplexityResearch() {
       if (!forceRefresh) {
         const cached = await checkCache(type, queryKey);
         if (cached) {
-          console.log('Using cached deep dive for', type);
+          
           const result = {
             content: cached.research_data.content,
             citations: cached.citations,
@@ -111,7 +111,7 @@ export function usePerplexityResearch() {
         }
       }
 
-      console.log('Fetching new deep dive:', type);
+      
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/perplexity-research`,

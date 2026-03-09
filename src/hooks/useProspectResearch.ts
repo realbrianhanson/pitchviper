@@ -108,13 +108,13 @@ export function useProspectResearch() {
       if (!forceRefresh) {
         const cached = await checkCachedResearch(companyName);
         if (cached) {
-          console.log('Using cached research for', companyName);
+          
           setResearch(cached);
           return cached.research_data;
         }
       }
 
-      console.log('Fetching new research for', companyName);
+      
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/research-prospect`,

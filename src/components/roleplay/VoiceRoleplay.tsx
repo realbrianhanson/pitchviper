@@ -44,14 +44,14 @@ export function VoiceRoleplay({
 
   const conversation = useConversation({
     onConnect: () => {
-      console.log("Connected to ElevenLabs agent");
+      
       toast.success("Voice session started!");
     },
     onDisconnect: () => {
-      console.log("Disconnected from ElevenLabs agent");
+      
     },
     onMessage: (message: any) => {
-      console.log("Message from agent:", message);
+      
       
       // Handle transcripts for logging
       if (message?.type === "user_transcript") {
