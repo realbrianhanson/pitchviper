@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { FloatingParticles } from "@/components/auth/FloatingParticles";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 import { StepProfile } from "@/components/onboarding/StepProfile";
@@ -27,6 +28,7 @@ interface TeamData {
 export default function Onboarding() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(true);
@@ -56,7 +58,7 @@ export default function Onboarding() {
           .from("profiles")
           .select("*")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         if (profile) {
           setFullName(profile.full_name);
@@ -85,12 +87,6 @@ export default function Onboarding() {
     loadProfile();
   }, [user, navigate]);
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/sign-in");
-    }
-  }, [user, authLoading, navigate]);
 
   const handleProfileComplete = (data: ProfileData) => {
     setProfileData(data);
@@ -106,8 +102,7 @@ export default function Onboarding() {
     if (!user) return;
 
     try {
-      // Update profile with all collected data
-      await supabase
+      const { error } = await supabase
         .from("profiles")
         .update({
           avatar_url: profileData.avatarUrl,
@@ -118,9 +113,20 @@ export default function Onboarding() {
         })
         .eq("user_id", user.id);
 
+      if (error) throw error;
+
+      toast({
+        title: "Welcome aboard! 🎉",
+        description: "Your profile is all set. Let's get started!",
+      });
       navigate("/");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error saving profile:", err);
+      toast({
+        title: "Save failed",
+        description: err.message || "Could not save your profile. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 

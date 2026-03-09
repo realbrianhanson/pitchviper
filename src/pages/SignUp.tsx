@@ -11,7 +11,7 @@ import { Loader2, User, Mail, Lock, Users, Ticket } from "lucide-react";
 
 type UserRole = "rep" | "manager";
 
-const VALID_PROMO_CODE = "Viper";
+
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -32,15 +32,25 @@ export default function SignUp() {
     setError(null);
     setLoading(true);
 
-    // Validate promo code (case-insensitive)
-    if (promoCode.trim().toLowerCase() !== VALID_PROMO_CODE.toLowerCase()) {
-      setError("Invalid promo code. Please enter a valid code to sign up.");
-      setLoading(false);
-      toast({
-        title: "Invalid Promo Code",
-        description: "You need a valid promo code to create an account.",
-        variant: "destructive",
+    // Validate promo code server-side
+    try {
+      const { data: promoResult, error: promoError } = await supabase.functions.invoke('validate-promo-code', {
+        body: { promoCode: promoCode.trim() },
       });
+
+      if (promoError || !promoResult?.valid) {
+        setError("Invalid promo code. Please enter a valid code to sign up.");
+        setLoading(false);
+        toast({
+          title: "Invalid Promo Code",
+          description: "You need a valid promo code to create an account.",
+          variant: "destructive",
+        });
+        return;
+      }
+    } catch {
+      setError("Could not validate promo code. Please try again.");
+      setLoading(false);
       return;
     }
 
