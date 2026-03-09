@@ -195,7 +195,7 @@ export function useGauntlet() {
         .select('id, attempts')
         .eq('user_id', user.id)
         .eq('challenge_id', todayChallenge.id)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         // Update existing attempt
