@@ -15,6 +15,10 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
+  Award,
+  BarChart3,
+  Gamepad2,
+  Cog,
 } from "lucide-react";
 
 import {
@@ -41,13 +45,20 @@ const mainNavItems = [
   { title: "Objection Vault", url: "/objection-vault", icon: Shield },
   { title: "Leaderboards", url: "/leaderboards", icon: Trophy },
   { title: "My Performance", url: "/performance", icon: TrendingUp },
+  { title: "Achievements", url: "/achievements", icon: Award },
   { title: "Training Academy", url: "/training", icon: GraduationCap },
   { title: "Deal Pipeline", url: "/pipeline", icon: GitBranch },
 ];
 
 const managerNavItems = [
+  { title: "Manager Dashboard", url: "/manager", icon: BarChart3 },
+  { title: "Competitions", url: "/manager/competitions", icon: Gamepad2 },
   { title: "Team Settings", url: "/team-settings", icon: Settings },
   { title: "Coaching Console", url: "/coaching", icon: Users },
+];
+
+const bottomNavItems = [
+  { title: "Settings", url: "/settings", icon: Cog },
 ];
 
 export function AppSidebar() {
@@ -179,6 +190,46 @@ export function AppSidebar() {
             </SidebarGroup>
           </>
         )}
+        <SidebarSeparator className="my-4" />
+
+        {/* Settings */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {bottomNavItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.title}
+                    isActive={isActive(item.url)}
+                  >
+                    <NavLink
+                      to={item.url}
+                      className={cn(
+                        "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                        "text-muted-foreground hover:text-foreground hover:bg-accent",
+                        isActive(item.url) && [
+                          "text-foreground bg-accent",
+                          "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2",
+                          "before:h-8 before:w-1 before:rounded-r-full before:bg-primary",
+                          "before:shadow-[0_0_12px_hsl(var(--primary))]",
+                        ]
+                      )}
+                    >
+                      <item.icon
+                        className={cn(
+                          "h-5 w-5 shrink-0 transition-colors",
+                          isActive(item.url) && "text-primary"
+                        )}
+                      />
+                      {!isCollapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       {/* Collapse Toggle */}

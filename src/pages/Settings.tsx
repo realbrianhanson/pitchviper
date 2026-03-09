@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   User, 
   Bell, 
@@ -13,7 +13,9 @@ import {
   HelpCircle,
   Mic,
   Phone,
-  Building2
+  Building2,
+  Camera,
+  Loader2 as LoaderIcon
 } from "lucide-react";
 import { ViperCard } from "@/components/ui/viper-card";
 import { ViperButton } from "@/components/ui/viper-button";
@@ -36,6 +38,8 @@ export default function Settings() {
   const { user, profile, signOut } = useAuth();
   const { startTour } = useOnboardingTour();
   const [isLoading, setIsLoading] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   
   // Profile state
   const [fullName, setFullName] = useState(profile?.full_name || "");
@@ -189,8 +193,48 @@ export default function Settings() {
                     <AvatarImage src={avatarUrl} />
                     <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
                   </Avatar>
-                  <ViperButton variant="outline" size="sm">
-                    Change Photo
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file || !user) return;
+                      setAvatarUploading(true);
+                      try {
+                        const fileExt = file.name.split(".").pop();
+                        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+                        const { error: uploadError } = await supabase.storage
+                          .from("avatars")
+                          .upload(fileName, file, { upsert: true });
+                        if (uploadError) throw uploadError;
+                        const { data: { publicUrl } } = supabase.storage
+                          .from("avatars")
+                          .getPublicUrl(fileName);
+                        setAvatarUrl(publicUrl);
+                        toast.success("Photo uploaded! Click Save to apply.");
+                      } catch (err) {
+                        console.error("Upload error:", err);
+                        toast.error("Failed to upload photo");
+                      } finally {
+                        setAvatarUploading(false);
+                      }
+                    }}
+                  />
+                  <ViperButton
+                    variant="outline"
+                    size="sm"
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={avatarUploading}
+                    className="gap-2"
+                  >
+                    {avatarUploading ? (
+                      <LoaderIcon className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Camera className="h-4 w-4" />
+                    )}
+                    {avatarUploading ? "Uploading..." : "Change Photo"}
                   </ViperButton>
                 </div>
 
