@@ -52,6 +52,7 @@ const managerNavItems = [
 export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const location = useLocation();
+  const { isManager } = useAuth();
   const isCollapsed = state === "collapsed";
 
   const isActive = (url: string) => {
