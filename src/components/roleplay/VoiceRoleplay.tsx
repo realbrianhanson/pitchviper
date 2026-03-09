@@ -44,7 +44,7 @@ export function VoiceRoleplay({
 
   const conversation = useConversation({
     onConnect: () => {
-      console.log("Connected to ElevenLabs agent");
+      
       toast.success("Voice session started!");
     },
     onDisconnect: () => {
