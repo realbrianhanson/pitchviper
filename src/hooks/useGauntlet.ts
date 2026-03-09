@@ -50,7 +50,7 @@ export function useGauntlet() {
         .from('gauntlet_challenges')
         .select('*')
         .eq('challenge_date', today)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error("Error fetching challenge:", error);
