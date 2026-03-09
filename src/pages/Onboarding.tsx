@@ -115,6 +115,9 @@ export default function Onboarding() {
 
       if (error) throw error;
 
+      // Refresh profile in AuthContext so ProtectedRoute sees updated onboarding_completed
+      await refreshProfile();
+
       toast({
         title: "Welcome aboard! 🎉",
         description: "Your profile is all set. Let's get started!",
