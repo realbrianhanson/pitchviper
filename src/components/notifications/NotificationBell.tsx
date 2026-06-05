@@ -33,6 +33,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNotifications, type Notification, type NotificationType } from '@/hooks/useNotifications';
 import { cn } from '@/lib/utils';
+import { EditorialLoading } from '@/components/ui/editorial-skeleton';
+import { EditorialEmpty } from '@/components/ui/editorial-empty';
 
 const NOTIFICATION_ICONS: Record<NotificationType, React.ReactNode> = {
   badge_earned: <Trophy className="h-4 w-4 text-amber-400" />,
