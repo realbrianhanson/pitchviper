@@ -38,10 +38,7 @@ export function DealCoachPanel({ dealId, onAnalyze }: DealCoachPanelProps) {
     return (
       <ViperCard variant="glass" className="border-primary/30">
         <ViperCardContent className="py-8">
-          <div className="flex flex-col items-center justify-center gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">AI Coach analyzing deal...</p>
-          </div>
+          <EditorialLoading label="Analyzing Deal" />
         </ViperCardContent>
       </ViperCard>
     );
