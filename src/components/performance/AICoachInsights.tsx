@@ -1,6 +1,7 @@
-import { Sparkles, Trophy, TrendingUp, Lightbulb, CheckCircle, RefreshCw, Loader2 } from "lucide-react";
+import { Sparkles, Trophy, TrendingUp, Lightbulb, CheckCircle, RefreshCw } from "lucide-react";
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
 import { Button } from "@/components/ui/button";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 import { PerformanceInsights } from "@/hooks/usePerformanceData";
 
 interface AICoachInsightsProps {
@@ -47,9 +48,8 @@ export function AICoachInsights({ insights, loading, onRefresh }: AICoachInsight
           </ViperCardTitle>
         </ViperCardHeader>
         <ViperCardContent>
-          <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
-            <p className="text-muted-foreground">Analyzing your performance...</p>
+          <div className="flex items-center justify-center py-12">
+            <EditorialLoading label="Analyzing Performance" />
           </div>
         </ViperCardContent>
       </ViperCard>

@@ -11,6 +11,7 @@ import { TeamTable } from "@/components/manager/TeamTable";
 import { AITeamInsights } from "@/components/manager/AITeamInsights";
 import { ManagerQuickActions } from "@/components/manager/ManagerQuickActions";
 import { ForecastSection } from "@/components/manager/ForecastSection";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 
 function formatDate(): string {
   return new Date().toLocaleDateString("en-US", {
@@ -43,12 +44,7 @@ export default function ManagerDashboard() {
     return (
       <AppLayout title="Manager Console">
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              Initializing Console
-            </p>
-          </div>
+          <EditorialLoading label="Initializing Console" />
         </div>
       </AppLayout>
     );
