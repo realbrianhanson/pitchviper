@@ -127,31 +127,30 @@ export default function ObjectionVault() {
           {/* Objection Cards */}
           <div className="lg:col-span-3 space-y-4">
             {isLoading ? (
-              <ViperCard variant="glass">
-                <ViperCardContent className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </ViperCardContent>
-              </ViperCard>
+              <EditorialLoading label="Loading Objections" />
             ) : objections.length === 0 ? (
-              <ViperCard variant="glass">
-                <ViperCardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <Sparkles className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    No objections found
-                  </h3>
-                  <p className="text-muted-foreground max-w-md">
-                    {searchQuery || selectedCategories.length > 0 || selectedDifficulties.length > 0
-                      ? "Try adjusting your filters or search terms"
-                      : "Be the first to add an objection to the vault!"}
-                  </p>
-                  {!searchQuery && selectedCategories.length === 0 && selectedDifficulties.length === 0 && (
-                    <Button className="mt-4" onClick={() => setIsAddObjectionOpen(true)}>
+              <EditorialEmpty
+                eyebrow="The Vault"
+                icon={<Sparkles className="h-10 w-10" strokeWidth={1.2} />}
+                title={
+                  searchQuery || selectedCategories.length > 0 || selectedDifficulties.length > 0
+                    ? "Nothing matches your filters."
+                    : "The vault is empty."
+                }
+                description={
+                  searchQuery || selectedCategories.length > 0 || selectedDifficulties.length > 0
+                    ? "Loosen the filters or change the search terms."
+                    : "Add the first objection and build the playbook."
+                }
+                action={
+                  !searchQuery && selectedCategories.length === 0 && selectedDifficulties.length === 0 ? (
+                    <Button onClick={() => setIsAddObjectionOpen(true)} className="rounded-none">
                       <Plus className="h-4 w-4 mr-2" />
                       Add First Objection
                     </Button>
-                  )}
-                </ViperCardContent>
-              </ViperCard>
+                  ) : undefined
+                }
+              />
             ) : (
               <>
                 <p className="text-sm text-muted-foreground">
