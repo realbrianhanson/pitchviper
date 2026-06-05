@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, Flame, MessageSquare, ChevronRight } from "lucide-react";
-import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
+import { AlertTriangle, Flame, MessageSquare, ArrowUpRight } from "lucide-react";
 import { TeamMember } from "@/hooks/useManagerDashboard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,122 +11,111 @@ interface PerformanceSnapshotProps {
   coachingDue: TeamMember[];
 }
 
-type ModalType = 'attention' | 'fire' | 'coaching' | null;
+type ModalType = "attention" | "fire" | "coaching" | null;
 
 export function PerformanceSnapshot({ needsAttention, onFire, coachingDue }: PerformanceSnapshotProps) {
   const [modalType, setModalType] = useState<ModalType>(null);
 
-  const getModalData = () => {
-    switch (modalType) {
-      case 'attention':
-        return { title: 'Needs Attention', members: needsAttention, color: 'text-destructive' };
-      case 'fire':
-        return { title: 'On Fire 🔥', members: onFire, color: 'text-success' };
-      case 'coaching':
-        return { title: 'Coaching Due', members: coachingDue, color: 'text-warning' };
-      default:
-        return null;
-    }
-  };
+  const tiles = [
+    {
+      key: "attention" as ModalType,
+      icon: AlertTriangle,
+      label: "Needs Attention",
+      caption: "below target",
+      count: needsAttention.length,
+      tone: "text-destructive",
+      rule: "bg-destructive",
+    },
+    {
+      key: "fire" as ModalType,
+      icon: Flame,
+      label: "On Fire",
+      caption: "exceeding target",
+      count: onFire.length,
+      tone: "text-success",
+      rule: "bg-success",
+    },
+    {
+      key: "coaching" as ModalType,
+      icon: MessageSquare,
+      label: "Coaching Due",
+      caption: "idle 7+ days",
+      count: coachingDue.length,
+      tone: "text-warning",
+      rule: "bg-warning",
+    },
+  ];
 
-  const modalData = getModalData();
+  const modalData = (() => {
+    switch (modalType) {
+      case "attention": return { title: "Needs Attention", members: needsAttention, tone: "text-destructive" };
+      case "fire": return { title: "On Fire", members: onFire, tone: "text-success" };
+      case "coaching": return { title: "Coaching Due", members: coachingDue, tone: "text-warning" };
+      default: return null;
+    }
+  })();
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Needs Attention */}
-        <button
-          onClick={() => needsAttention.length > 0 && setModalType('attention')}
-          className={cn(
-            "text-left bg-destructive/10 border border-destructive/20 rounded-xl p-4 transition-all",
-            needsAttention.length > 0 && "hover:bg-destructive/15 cursor-pointer"
-          )}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              <span className="font-semibold text-destructive">Needs Attention</span>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-border border border-border">
+        {tiles.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => t.count > 0 && setModalType(t.key)}
+            className="text-left bg-background p-6 hover:bg-card transition-colors group relative"
+          >
+            <div className={cn("absolute left-0 top-0 bottom-0 w-[2px]", t.rule)} />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <t.icon className={cn("h-3.5 w-3.5", t.tone)} strokeWidth={1.5} />
+                <span className={cn("font-mono text-[10px] uppercase tracking-[0.2em]", t.tone)}>
+                  {t.label}
+                </span>
+              </div>
+              {t.count > 0 && (
+                <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" strokeWidth={1.5} />
+              )}
             </div>
-            {needsAttention.length > 0 && <ChevronRight className="h-4 w-4 text-destructive" />}
-          </div>
-          <p className="text-3xl font-display font-bold text-destructive">
-            {needsAttention.length}
-          </p>
-          <p className="text-sm text-destructive/70">reps below target</p>
-        </button>
-
-        {/* On Fire */}
-        <button
-          onClick={() => onFire.length > 0 && setModalType('fire')}
-          className={cn(
-            "text-left bg-success/10 border border-success/20 rounded-xl p-4 transition-all",
-            onFire.length > 0 && "hover:bg-success/15 cursor-pointer"
-          )}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Flame className="h-5 w-5 text-success" />
-              <span className="font-semibold text-success">On Fire</span>
-            </div>
-            {onFire.length > 0 && <ChevronRight className="h-4 w-4 text-success" />}
-          </div>
-          <p className="text-3xl font-display font-bold text-success">
-            {onFire.length}
-          </p>
-          <p className="text-sm text-success/70">reps exceeding target</p>
-        </button>
-
-        {/* Coaching Due */}
-        <button
-          onClick={() => coachingDue.length > 0 && setModalType('coaching')}
-          className={cn(
-            "text-left bg-warning/10 border border-warning/20 rounded-xl p-4 transition-all",
-            coachingDue.length > 0 && "hover:bg-warning/15 cursor-pointer"
-          )}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-warning" />
-              <span className="font-semibold text-warning">Coaching Due</span>
-            </div>
-            {coachingDue.length > 0 && <ChevronRight className="h-4 w-4 text-warning" />}
-          </div>
-          <p className="text-3xl font-display font-bold text-warning">
-            {coachingDue.length}
-          </p>
-          <p className="text-sm text-warning/70">reps not coached in 7+ days</p>
-        </button>
+            <p className={cn("font-display italic text-5xl leading-none tabular-nums", t.tone)}>
+              {t.count}
+            </p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70 mt-3">
+              reps {t.caption}
+            </p>
+          </button>
+        ))}
       </div>
 
-      {/* Detail Modal */}
       <Dialog open={!!modalType} onOpenChange={() => setModalType(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className={modalData?.color}>{modalData?.title}</DialogTitle>
+            <DialogTitle className={cn("font-display italic text-2xl", modalData?.tone)}>
+              {modalData?.title}
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 max-h-[400px] overflow-y-auto">
-            {modalData?.members.map(member => (
+          <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            {modalData?.members.map((member) => (
               <div
                 key={member.user_id}
-                className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border"
+                className="flex items-center gap-3 p-3 bg-muted/30 border border-border"
               >
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={member.avatar_url || undefined} />
                   <AvatarFallback>
-                    {member.full_name.split(' ').map(n => n[0]).join('')}
+                    {member.full_name.split(" ").map((n) => n[0]).join("")}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1">
-                  <p className="font-semibold">{member.full_name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {member.today_calls} calls • {member.today_appointments} appts • ${member.today_revenue.toLocaleString()}
+                <div className="flex-1 min-w-0">
+                  <p className="font-display text-base truncate">{member.full_name}</p>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+                    {member.today_calls} calls · {member.today_appointments} appts · ${member.today_revenue.toLocaleString()}
                   </p>
                 </div>
               </div>
             ))}
             {modalData?.members.length === 0 && (
-              <p className="text-center text-muted-foreground py-4">
-                No team members in this category.
+              <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground py-6">
+                No members in this category
               </p>
             )}
           </div>

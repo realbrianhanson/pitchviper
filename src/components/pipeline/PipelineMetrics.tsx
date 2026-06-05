@@ -1,6 +1,5 @@
-import { GitBranch, DollarSign, TrendingUp, Trophy, XCircle } from 'lucide-react';
-import { ViperCard, ViperCardContent } from '@/components/ui/viper-card';
-import { cn } from '@/lib/utils';
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface PipelineMetricsProps {
   totalDeals: number;
@@ -11,6 +10,12 @@ interface PipelineMetricsProps {
   lostDeals: number;
 }
 
+const formatCurrency = (value: number) => {
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+  return `$${value.toFixed(0)}`;
+};
+
 export function PipelineMetrics({
   totalDeals,
   totalValue,
@@ -19,62 +24,31 @@ export function PipelineMetrics({
   wonValue,
   lostDeals,
 }: PipelineMetricsProps) {
-  const formatCurrency = (value: number) => {
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`;
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(0)}K`;
-    }
-    return `$${value.toFixed(0)}`;
-  };
-
   const metrics = [
-    {
-      label: 'Open Deals',
-      value: totalDeals,
-      icon: GitBranch,
-      color: 'text-primary',
-    },
-    {
-      label: 'Pipeline Value',
-      value: formatCurrency(totalValue),
-      icon: DollarSign,
-      color: 'text-emerald-400',
-    },
-    {
-      label: 'Weighted Value',
-      value: formatCurrency(weightedValue),
-      icon: TrendingUp,
-      color: 'text-cyan-400',
-    },
-    {
-      label: 'Won This Period',
-      value: `${wonDeals} (${formatCurrency(wonValue)})`,
-      icon: Trophy,
-      color: 'text-amber-400',
-    },
-    {
-      label: 'Lost',
-      value: lostDeals,
-      icon: XCircle,
-      color: 'text-red-400',
-    },
+    { label: "Open Deals", value: totalDeals.toString(), tone: "text-foreground" },
+    { label: "Pipeline", value: formatCurrency(totalValue), tone: "text-foreground" },
+    { label: "Weighted", value: formatCurrency(weightedValue), tone: "text-primary" },
+    { label: "Won", value: `${wonDeals} · ${formatCurrency(wonValue)}`, tone: "text-success" },
+    { label: "Lost", value: lostDeals.toString(), tone: "text-destructive" },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-      {metrics.map((metric) => (
-        <ViperCard key={metric.label} variant="glass" className="p-3">
-          <ViperCardContent className="p-0">
-            <div className="flex items-center gap-2">
-              <metric.icon className={cn('h-4 w-4', metric.color)} />
-              <div className="min-w-0">
-                <p className="text-xs text-muted-foreground truncate">{metric.label}</p>
-                <p className="font-bold text-lg truncate">{metric.value}</p>
-              </div>
-            </div>
-          </ViperCardContent>
-        </ViperCard>
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-border border border-border">
+      {metrics.map((m, i) => (
+        <motion.div
+          key={m.label}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
+          className="bg-background p-4 hover:bg-card transition-colors"
+        >
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 mb-2">
+            {m.label}
+          </p>
+          <p className={cn("font-display text-2xl leading-none tabular-nums truncate", m.tone)}>
+            {m.value}
+          </p>
+        </motion.div>
       ))}
     </div>
   );

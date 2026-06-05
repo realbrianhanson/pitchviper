@@ -1,6 +1,5 @@
-import { Users, Phone, Calendar, DollarSign, Activity, Zap } from "lucide-react";
 import { TeamOverview } from "@/hooks/useManagerDashboard";
-import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface TeamOverviewCardsProps {
   overview: TeamOverview | null;
@@ -10,11 +9,11 @@ interface TeamOverviewCardsProps {
 export function TeamOverviewCards({ overview, isLoading }: TeamOverviewCardsProps) {
   if (isLoading || !overview) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-px bg-border border border-border">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-card/50 border border-border rounded-xl p-4 animate-pulse">
-            <div className="h-4 w-20 bg-muted rounded mb-2" />
-            <div className="h-8 w-16 bg-muted rounded" />
+          <div key={i} className="bg-background p-5 animate-pulse">
+            <div className="h-3 w-16 bg-muted mb-3" />
+            <div className="h-9 w-20 bg-muted" />
           </div>
         ))}
       </div>
@@ -22,90 +21,49 @@ export function TeamOverviewCards({ overview, isLoading }: TeamOverviewCardsProp
   }
 
   const metrics = [
-    {
-      label: 'Team Size',
-      value: overview.team_size,
-      icon: Users,
-      color: 'text-primary',
-      bgColor: 'bg-primary/10',
-    },
-    {
-      label: 'Active Now',
-      value: overview.currently_active,
-      icon: Activity,
-      color: 'text-success',
-      bgColor: 'bg-success/10',
-      indicator: true,
-    },
-    {
-      label: 'On Calls',
-      value: overview.on_calls_now,
-      icon: Phone,
-      color: 'text-warning',
-      bgColor: 'bg-warning/10',
-      pulse: overview.on_calls_now > 0,
-    },
-    {
-      label: "Today's Calls",
-      value: overview.today_calls,
-      target: overview.today_calls_target,
-      icon: Phone,
-      color: 'text-primary',
-      bgColor: 'bg-primary/10',
-    },
-    {
-      label: "Today's Appts",
-      value: overview.today_appointments,
-      target: overview.today_appointments_target,
-      icon: Calendar,
-      color: 'text-magenta',
-      bgColor: 'bg-magenta/10',
-    },
-    {
-      label: "Today's Revenue",
-      value: `$${overview.today_revenue.toLocaleString()}`,
-      icon: DollarSign,
-      color: 'text-success',
-      bgColor: 'bg-success/10',
-    },
+    { label: "Team Size", value: overview.team_size },
+    { label: "Active Now", value: overview.currently_active, accent: "success" as const, pulse: true },
+    { label: "On Calls", value: overview.on_calls_now, accent: "warning" as const, pulse: overview.on_calls_now > 0 },
+    { label: "Calls Today", value: overview.today_calls, target: overview.today_calls_target },
+    { label: "Appts Today", value: overview.today_appointments, target: overview.today_appointments_target, accent: "magenta" as const },
+    { label: "Revenue Today", value: `$${overview.today_revenue.toLocaleString()}`, accent: "success" as const },
   ];
 
+  const accentClass = (a?: "success" | "warning" | "magenta") =>
+    a === "success" ? "text-success" : a === "warning" ? "text-warning" : a === "magenta" ? "text-magenta" : "text-foreground";
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      {metrics.map((metric, i) => (
-        <div
-          key={i}
-          className="bg-card/50 border border-border rounded-xl p-4 hover:bg-card/80 transition-colors"
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-px bg-border border border-border">
+      {metrics.map((m, i) => (
+        <motion.div
+          key={m.label}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
+          className="bg-background p-5 group hover:bg-card transition-colors"
         >
-          <div className="flex items-center gap-2 mb-2">
-            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", metric.bgColor)}>
-              <metric.icon className={cn("h-4 w-4", metric.color)} />
-            </div>
-            {metric.indicator && (
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
-              </span>
-            )}
-            {metric.pulse && (
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-warning" />
+          <div className="flex items-center justify-between mb-3">
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              {m.label}
+            </p>
+            {m.pulse && (
+              <span className="flex h-1.5 w-1.5 relative">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${m.accent === "success" ? "bg-success" : "bg-warning"}`} />
+                <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${m.accent === "success" ? "bg-success" : "bg-warning"}`} />
               </span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">{metric.label}</p>
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-display font-bold">
-              {typeof metric.value === 'number' ? metric.value.toLocaleString() : metric.value}
+          <div className="flex items-baseline gap-1.5">
+            <span className={`font-display text-3xl leading-none tabular-nums ${accentClass(m.accent)}`}>
+              {typeof m.value === "number" ? m.value.toLocaleString() : m.value}
             </span>
-            {metric.target && (
-              <span className="text-sm text-muted-foreground">
-                /{metric.target}
+            {m.target !== undefined && (
+              <span className="font-mono text-[11px] text-muted-foreground/60">
+                / {m.target}
               </span>
             )}
           </div>
-        </div>
+        </motion.div>
       ))}
     </div>
   );
