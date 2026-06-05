@@ -21,10 +21,26 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const { rep_id } = await req.json();
 
-    if (!rep_id) {
-      throw new Error('rep_id is required');
+    // Auth
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
+    if (!token) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
+    const { data: userData, error: userErr } = await authClient.auth.getUser();
+    if (userErr || !userData.user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const { rep_id } = await req.json();
+    if (!rep_id) throw new Error('rep_id is required');
+
+    // Caller must be the rep, or a manager on the same team
+    if (rep_id !== userData.user.id) {
+      const { data: isManager } = await authClient.rpc('has_role', { _user_id: userData.user.id, _role: 'manager' });
+      const { data: callerProfile } = await supabase.from('profiles').select('team_id').eq('user_id', userData.user.id).maybeSingle();
+      const { data: repTeam } = await supabase.from('profiles').select('team_id').eq('user_id', rep_id).maybeSingle();
+      if (!isManager || !callerProfile?.team_id || callerProfile.team_id !== repTeam?.team_id) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
     }
 
     // Get rep profile
