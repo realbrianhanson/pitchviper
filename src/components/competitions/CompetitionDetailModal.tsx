@@ -13,6 +13,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Competition, CompetitionParticipant, CompetitionActivity, useCompetitions } from "@/hooks/useCompetitions";
 import { formatDistanceToNow, differenceInSeconds, format } from "date-fns";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
+import { EditorialEmpty } from "@/components/ui/editorial-empty";
 
 interface CompetitionDetailModalProps {
   competition: Competition | null;
@@ -265,14 +267,15 @@ export function CompetitionDetailModal({
             <ScrollArea className="h-[350px] pr-4">
               <div className="space-y-2">
                 {isLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <p className="text-muted-foreground">Loading standings...</p>
-                  </div>
+                  <EditorialLoading label="Compiling Standings" />
                 ) : standings.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No participants yet</p>
-                  </div>
+                  <EditorialEmpty
+                    eyebrow="Competition"
+                    title="No participants yet"
+                    icon={<Users className="h-8 w-8" strokeWidth={1.25} />}
+                    size="sm"
+                    className="border-none"
+                  />
                 ) : (
                   standings.map((participant, index) => (
                     <LeaderboardRow
@@ -291,10 +294,13 @@ export function CompetitionDetailModal({
           <TabsContent value="activity" className="mt-4">
             <ScrollArea className="h-[350px] pr-4">
               {activity.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <Clock className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No activity yet</p>
-                </div>
+                <EditorialEmpty
+                  eyebrow="Activity"
+                  title="No activity yet"
+                  icon={<Clock className="h-8 w-8" strokeWidth={1.25} />}
+                  size="sm"
+                  className="border-none"
+                />
               ) : (
                 <div className="divide-y divide-border">
                   {activity.map((item) => (

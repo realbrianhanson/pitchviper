@@ -93,8 +93,8 @@ export function PipelineColumn({
           ))}
           
           {deals.length === 0 && (
-            <div className="text-center text-xs text-muted-foreground py-8 px-4">
-              {isClosedStage ? 'No deals yet' : 'Drop deals here or add new'}
+            <div className="text-center font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground/60 py-10 px-4 border border-dashed border-border/50">
+              {isClosedStage ? '— No deals —' : '— Drop here —'}
             </div>
           )}
         </div>

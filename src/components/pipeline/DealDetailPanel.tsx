@@ -290,7 +290,7 @@ export function DealDetailPanel({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No history yet</p>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground/70 py-2">— No history —</p>
                 )}
               </div>
             </div>
