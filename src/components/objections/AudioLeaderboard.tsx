@@ -7,6 +7,8 @@ import { useAudioTraining, TrainingMode } from '@/hooks/useAudioTraining';
 import { supabase } from '@/integrations/supabase/client';
 import { Trophy, Medal, Award, Timer, Target, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { EditorialLoading } from '@/components/ui/editorial-skeleton';
+import { EditorialEmpty } from '@/components/ui/editorial-empty';
 
 interface AudioLeaderboardProps {
   isOpen: boolean;
@@ -140,14 +142,13 @@ export function AudioLeaderboard({ isOpen, onClose }: AudioLeaderboardProps) {
 
           <TabsContent value={activeTab} className="mt-4">
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-              </div>
+              <EditorialLoading label="Compiling Rankings" />
             ) : entries.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No scores yet. Be the first!</p>
-              </div>
+              <EditorialEmpty
+                eyebrow="Leaderboard"
+                title="No scores yet — be first"
+                icon={<Trophy className="h-10 w-10" strokeWidth={1.25} />}
+              />
             ) : (
               <div className="space-y-2">
                 {entries.map((entry, index) => (

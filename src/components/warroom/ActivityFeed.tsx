@@ -124,7 +124,7 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-3">
           {filteredActivities.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No activities yet</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground/70 text-center py-10">— No activity yet —</p>
           ) : (
             filteredActivities.map((activity) => (
               <div
