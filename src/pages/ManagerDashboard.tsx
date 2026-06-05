@@ -41,26 +41,30 @@ export default function ManagerDashboard() {
 
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            Initializing Console
-          </p>
+      <AppLayout title="Manager Console">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              Initializing Console
+            </p>
+          </div>
         </div>
-      </div>
+      </AppLayout>
     );
   }
 
   if (!isManager) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-        <Shield className="h-12 w-12 text-muted-foreground mb-6" strokeWidth={1.5} />
-        <h2 className="font-display italic text-3xl mb-2">Access Denied</h2>
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-          Manager credentials required
-        </p>
-      </div>
+      <AppLayout title="Manager Console">
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+          <Shield className="h-12 w-12 text-muted-foreground mb-6" strokeWidth={1.5} />
+          <h2 className="font-display italic text-3xl mb-2">Access Denied</h2>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            Manager credentials required
+          </p>
+        </div>
+      </AppLayout>
     );
   }
 
@@ -69,6 +73,7 @@ export default function ManagerDashboard() {
   const totalReps = overview?.team_size ?? 0;
 
   return (
+    <AppLayout title="Manager Console">
     <div className="max-w-7xl mx-auto w-full space-y-8">
       {/* Hero */}
       <motion.div
@@ -148,5 +153,6 @@ export default function ManagerDashboard() {
         </div>
       </div>
     </div>
+    </AppLayout>
   );
 }
