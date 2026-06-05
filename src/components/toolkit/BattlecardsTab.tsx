@@ -238,14 +238,18 @@ export function BattlecardsTab({ items, onRefresh }: BattlecardsTabProps) {
       ) : null}
 
       {items.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground space-y-3">
-          <Swords className="h-10 w-10 mx-auto opacity-50" />
-          <p>No battlecards yet</p>
-          <Button onClick={() => setIsGeneratorOpen(true)} variant="outline">
-            <Plus className="h-4 w-4 mr-2" />
-            Generate First Battlecard
-          </Button>
-        </div>
+        <EditorialEmpty
+          eyebrow="Battlecards"
+          title="No battlecards drafted"
+          description="Generate your first card to capture the play."
+          icon={<Swords className="h-10 w-10" strokeWidth={1.25} />}
+          action={
+            <Button onClick={() => setIsGeneratorOpen(true)} variant="outline" className="rounded-none font-mono text-[10px] uppercase tracking-[0.2em]">
+              <Plus className="h-3.5 w-3.5 mr-2" />
+              Generate Battlecard
+            </Button>
+          }
+        />
       )}
 
       <BattlecardGenerator

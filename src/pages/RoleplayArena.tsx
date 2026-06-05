@@ -5,6 +5,7 @@ import { RoleplayStats } from "@/components/roleplay/RoleplayStats";
 import { useRoleplayData } from "@/hooks/useRoleplayData";
 import { Gamepad2, Swords } from "lucide-react";
 import { EditorialLoading } from "@/components/ui/editorial-skeleton";
+import { EditorialEmpty } from "@/components/ui/editorial-empty";
 
 export default function RoleplayArena() {
   const { scenarios, userStats, isLoading } = useRoleplayData();
@@ -76,19 +77,12 @@ export default function RoleplayArena() {
 
         {/* Empty State */}
         {scenarios.length === 0 && (
-          <ViperCard variant="glass">
-            <ViperCardContent className="py-16">
-              <div className="text-center">
-                <Gamepad2 className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h2 className="text-xl font-semibold text-foreground mb-2">
-                  No Scenarios Available
-                </h2>
-                <p className="text-muted-foreground">
-                  Check back soon for new roleplay challenges!
-                </p>
-              </div>
-            </ViperCardContent>
-          </ViperCard>
+          <EditorialEmpty
+            eyebrow="The Arena"
+            title="No scenarios in the chamber"
+            description="Check back soon — fresh roleplay drills drop weekly."
+            icon={<Gamepad2 className="h-10 w-10" strokeWidth={1.25} />}
+          />
         )}
       </div>
     </AppLayout>
