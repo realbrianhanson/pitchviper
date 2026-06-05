@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Outfit", "system-ui", "sans-serif"],
-        body: ["IBM Plex Sans", "system-ui", "sans-serif"],
+        display: ['"Instrument Serif"', "Georgia", "serif"],
+        body: ['"Work Sans"', "system-ui", "sans-serif"],
+        mono: ['"JetBrains Mono"', "ui-monospace", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",

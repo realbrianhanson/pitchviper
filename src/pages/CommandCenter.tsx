@@ -22,10 +22,9 @@ function formatDate(): string {
     weekday: "long",
     month: "long",
     day: "numeric",
-  });
+  }).toUpperCase();
 }
 
-// Calculate percentage change
 function calcChange(today: number, yesterday: number | null | undefined): number {
   if (!yesterday || yesterday === 0) return today > 0 ? 100 : 0;
   return Math.round(((today - yesterday) / yesterday) * 100);
@@ -40,8 +39,10 @@ export default function CommandCenter() {
       <AppLayout title="Command Center">
         <div className="flex items-center justify-center h-[60vh]">
           <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-10 w-10 text-primary animate-spin" />
-            <p className="text-muted-foreground">Loading your dashboard...</p>
+            <Loader2 className="h-6 w-6 text-primary animate-spin" strokeWidth={1.5} />
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              Initializing Command Surface
+            </p>
           </div>
         </div>
       </AppLayout>
@@ -53,63 +54,56 @@ export default function CommandCenter() {
       <AppLayout title="Command Center">
         <div className="flex items-center justify-center h-[60vh]">
           <div className="text-center">
-            <p className="text-destructive mb-2">Failed to load dashboard</p>
-            <p className="text-sm text-muted-foreground">{error}</p>
+            <p className="font-display text-2xl text-destructive mb-2">Transmission Failed</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{error}</p>
           </div>
         </div>
       </AppLayout>
     );
   }
 
-  const firstName = data?.profile?.full_name?.split(" ")[0] || "there";
+  const firstName = data?.profile?.full_name?.split(" ")[0] || "Operator";
   const todayStats = data?.todayStats;
   const yesterdayStats = data?.yesterdayStats;
   const challenge = data?.challenge;
   const activities = data?.activities || [];
   const teamLeaderboard = data?.teamLeaderboard;
 
-  // Calculate conversion rate
   const totalCalls = (todayStats?.calls_made || 0) + (todayStats?.calls_received || 0);
   const conversions = todayStats?.appointments_set || 0;
   const conversionRate = totalCalls > 0 ? Math.round((conversions / totalCalls) * 100) : 0;
-
   const yesterdayTotalCalls = (yesterdayStats?.calls_made || 0) + (yesterdayStats?.calls_received || 0);
-  const yesterdayConversions = yesterdayStats?.appointments_set || 0;
-  const yesterdayConversionRate = yesterdayTotalCalls > 0 
-    ? Math.round((yesterdayConversions / yesterdayTotalCalls) * 100) 
+  const yesterdayConversionRate = yesterdayTotalCalls > 0
+    ? Math.round(((yesterdayStats?.appointments_set || 0) / yesterdayTotalCalls) * 100)
     : 0;
 
   return (
     <AppLayout title="Command Center">
-      <div className="space-y-6">
-        {/* Top Section - Greeting */}
+      <div className="max-w-7xl mx-auto w-full space-y-8">
+        {/* Hero greeting + streak rule */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 24 }}
-          className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 pb-2"
         >
           <div>
-            <motion.h1
-              className="text-3xl font-display font-bold text-foreground"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              {getGreeting()}, {firstName}
-            </motion.h1>
-            <motion.p
-              className="text-muted-foreground mt-1"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              {formatDate()}
-            </motion.p>
+            <h1 className="font-display text-5xl md:text-6xl leading-[1.05]">
+              {getGreeting()}, <span className="italic">{firstName}.</span>
+            </h1>
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70 mt-3">
+              <span className="text-success">●</span> System Status: Active · {formatDate()}
+            </p>
+          </div>
+          <div className="md:border-l md:border-border md:pl-10 flex md:flex-col items-baseline md:items-start gap-3 md:gap-1">
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Day Streak</span>
+            <span className="font-display italic text-5xl md:text-6xl leading-none text-primary tabular-nums">
+              {data?.profile?.current_streak || 0}
+            </span>
           </div>
         </motion.div>
 
-        {/* Daily Challenge & Streak */}
+        {/* Mission + Streak meta bento */}
         <DailyChallenge
           challenge={challenge ? {
             title: challenge.title,
@@ -118,8 +112,8 @@ export default function CommandCenter() {
             progress: challenge.progress,
             goal: challenge.target,
           } : {
-            title: "No Challenge Today",
-            description: "Check back tomorrow for a new challenge!",
+            title: "No Active Mission",
+            description: "Today's briefing is clear. Use the silence to drill objections or audit the pipeline before tomorrow's slate drops.",
             reward: 0,
             progress: 0,
             goal: 1,
@@ -127,82 +121,78 @@ export default function CommandCenter() {
           streak={data?.profile?.current_streak || 0}
         />
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* KPI strip — 4 hairline tiles */}
+        <div className="bento-grid grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Calls Today"
             value={todayStats?.calls_made || 0}
             icon={Phone}
-            comparison={{ 
-              value: calcChange(todayStats?.calls_made || 0, yesterdayStats?.calls_made), 
-              label: "vs yesterday" 
+            comparison={{
+              value: calcChange(todayStats?.calls_made || 0, yesterdayStats?.calls_made),
+              label: "vs yest",
             }}
             delay={0}
           />
           <MetricCard
-            label="Appointments Set"
+            label="Appts Set"
             value={todayStats?.appointments_set || 0}
             icon={Calendar}
             progress={{ current: todayStats?.appointments_set || 0, goal: 8 }}
-            delay={100}
+            delay={80}
           />
           <MetricCard
-            label="Revenue Closed"
+            label="Revenue"
             value={Math.round(todayStats?.revenue_closed || 0)}
             format="currency"
             icon={Target}
-            comparison={{ 
+            comparison={{
               value: calcChange(
-                Math.round(todayStats?.revenue_closed || 0), 
+                Math.round(todayStats?.revenue_closed || 0),
                 yesterdayStats?.revenue_closed ? Math.round(yesterdayStats.revenue_closed) : null
-              ), 
-              label: "vs yesterday" 
+              ),
+              label: "today",
             }}
-            delay={200}
+            delay={160}
           />
           <MetricCard
-            label="Conversion Rate"
+            label="Conversion"
             value={conversionRate}
             format="percentage"
             icon={TrendingUp}
-            comparison={{ 
-              value: conversionRate - yesterdayConversionRate, 
-              label: "vs yesterday" 
+            comparison={{
+              value: conversionRate - yesterdayConversionRate,
+              label: "delta",
             }}
-            delay={300}
+            delay={240}
           />
         </div>
 
-        {/* Middle Section - Two Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Activity Feed */}
-          <div className="lg:col-span-2">
+        {/* Activity + Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-border border border-border">
+          <div className="lg:col-span-8 bg-background">
             <RecentActivity activities={activities} />
           </div>
-
-          {/* Right Column - Quick Actions & Follow-ups */}
-          <div>
+          <div className="lg:col-span-4 bg-background">
             <QuickActions followUps={followUps} />
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Team Pulse */}
-          <TeamPulse 
-            members={teamLeaderboard?.map(m => ({
-              id: m.user_id,
-              name: m.name,
-              avatarUrl: m.avatar_url || undefined,
-              value: m.calls_made,
-              metric: "calls",
-              rank: m.rank,
-            })) || []} 
-            teamName={data?.profile?.team?.name || null} 
-          />
-
-          {/* Motivational Quote */}
-          <div className="flex flex-col justify-center">
+        {/* Team Pulse + Quote */}
+        <div className="bento-grid grid-cols-1 lg:grid-cols-12">
+          <div className="lg:col-span-7">
+            <TeamPulse
+              members={teamLeaderboard?.map(m => ({
+                id: m.user_id,
+                name: m.name,
+                avatarUrl: m.avatar_url || undefined,
+                value: m.calls_made,
+                metric: "calls",
+                rank: m.rank,
+              })) || []}
+              teamName={data?.profile?.team?.name || null}
+            />
+          </div>
+          <div className="lg:col-span-5">
             <MotivationalQuote />
           </div>
         </div>

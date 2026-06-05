@@ -54,55 +54,51 @@ export function AppHeader({ title }: AppHeaderProps) {
   const roleLabel = role === "manager" ? "Sales Manager" : "Sales Rep";
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 md:h-16 items-center justify-between gap-2 md:gap-4 border-b border-border bg-background/80 backdrop-blur-xl px-3 md:px-6">
-      {/* Left: Page title */}
-      <div className="flex items-center gap-2 md:gap-4 min-w-0">
-        {title && (
-          <h1 className="font-display text-base md:text-xl font-semibold text-foreground truncate">
-            {title}
-          </h1>
-        )}
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/90 backdrop-blur-xl px-4 md:px-8">
+      {/* Left: Terminal breadcrumb */}
+      <div className="flex items-center gap-3 min-w-0 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+        <span className="text-primary hidden sm:inline">Terminal v1.0</span>
+        <span className="opacity-30 hidden sm:inline">/</span>
+        <span className="truncate text-foreground">{title || "Dashboard"}</span>
       </div>
 
-      {/* Center: Global Search - hidden on mobile */}
-      <div className="hidden md:flex flex-1 max-w-xl mx-auto">
+      {/* Center: Search (compact) */}
+      <div className="hidden lg:flex flex-1 max-w-md mx-auto">
         <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <ViperInput
-            variant="glass"
-            placeholder="Search deals, contacts, or commands..."
-            className="pl-10 pr-4"
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <input
+            placeholder="Search..."
+            className="w-full bg-transparent border-b border-border focus:border-primary outline-none pl-9 pr-3 py-2 text-sm font-body placeholder:text-muted-foreground/50 transition-colors"
           />
         </div>
       </div>
 
-      {/* Right: Log Call + Notifications + User */}
-      <div className="flex items-center gap-1.5 md:gap-3">
-        {/* Log Call Button - icon only on mobile */}
-        <ViperButton
-          variant="outline"
-          size="sm"
+      {/* Right: Actions */}
+      <div className="flex items-center gap-2 md:gap-4">
+        <button
           onClick={() => setShowLogCall(true)}
-          className="h-8 w-8 p-0 md:h-auto md:w-auto md:px-3 md:py-1.5"
+          className="hidden md:inline-flex items-center gap-2 px-4 py-1.5 border border-primary/60 text-primary text-[10px] font-mono uppercase tracking-[0.2em] font-bold hover:bg-primary hover:text-primary-foreground transition-all"
         >
-          <Phone className="h-4 w-4" />
-          <span className="hidden md:inline ml-2">Log Call</span>
-        </ViperButton>
+          <Phone className="h-3 w-3" />
+          Log Session
+        </button>
+        <button
+          onClick={() => setShowLogCall(true)}
+          className="md:hidden inline-flex h-8 w-8 items-center justify-center border border-primary/60 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+        >
+          <Phone className="h-3.5 w-3.5" />
+        </button>
         <LogCallModal open={showLogCall} onOpenChange={setShowLogCall} />
-        
-        {/* Team Chat */}
-        <ChatPanel />
-        
-        {/* Theme Toggle */}
-        <ThemeToggle />
-        
-        {/* Notifications */}
-        <NotificationBell />
 
-        {/* User Dropdown */}
+        <div className="flex items-center gap-1 text-muted-foreground">
+          <ChatPanel />
+          <ThemeToggle />
+          <NotificationBell />
+        </div>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-all duration-200 hover:bg-accent">
+            <button className="flex items-center gap-3 px-2 py-1 transition-colors hover:text-primary border-l border-border pl-4 ml-2">
               {profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
@@ -110,42 +106,35 @@ export function AppHeader({ title }: AppHeaderProps) {
                   className="h-8 w-8 rounded-full object-cover border border-primary/30"
                 />
               ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 border border-primary/30">
-                  <span className="text-sm font-display font-semibold text-primary">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent border border-primary/30">
+                  <span className="text-[10px] font-mono font-bold text-primary">
                     {getInitials()}
                   </span>
                 </div>
               )}
               <div className="hidden md:flex flex-col items-start">
-                <span className="text-sm font-medium text-foreground">
-                  {displayName}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {roleLabel}
-                </span>
+                <span className="text-xs font-semibold text-foreground leading-tight">{displayName}</span>
+                <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground leading-tight mt-0.5">{roleLabel}</span>
               </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              <ChevronDown className="h-3 w-3 text-muted-foreground hidden md:block" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="w-56 bg-card border-border z-50"
-          >
+          <DropdownMenuContent align="end" className="w-56 bg-card border-border z-50 rounded-none">
             <div className="px-3 py-2 border-b border-border">
               <p className="text-sm font-medium text-foreground">{displayName}</p>
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
-            <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => navigate("/performance")}>
+            <DropdownMenuItem className="gap-2 cursor-pointer rounded-none" onClick={() => navigate("/performance")}>
               <User className="h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => navigate("/settings")}>
+            <DropdownMenuItem className="gap-2 cursor-pointer rounded-none" onClick={() => navigate("/settings")}>
               <Settings className="h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer text-destructive focus:text-destructive rounded-none"
               onClick={handleSignOut}
             >
               <LogOut className="h-4 w-4" />
