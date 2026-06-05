@@ -10,13 +10,30 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      position="bottom-right"
       toastOptions={{
+        unstyled: false,
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
-          description: "group-[.toast]:text-muted-foreground",
-          actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
-          cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+            "group toast relative !rounded-none !border !border-border !bg-background !text-foreground !shadow-none before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-primary !p-4 !gap-2",
+          title:
+            "!font-display !text-base !leading-tight !text-foreground",
+          description:
+            "!font-body !text-xs !text-muted-foreground !mt-1",
+          actionButton:
+            "!font-mono !text-[10px] !uppercase !tracking-[0.2em] !rounded-none !bg-primary !text-primary-foreground !px-3 !py-1.5",
+          cancelButton:
+            "!font-mono !text-[10px] !uppercase !tracking-[0.2em] !rounded-none !bg-muted !text-muted-foreground !px-3 !py-1.5",
+          success:
+            "before:!bg-success [&_[data-icon]]:!text-success",
+          error:
+            "before:!bg-destructive [&_[data-icon]]:!text-destructive",
+          warning:
+            "before:!bg-warning [&_[data-icon]]:!text-warning",
+          info:
+            "before:!bg-primary [&_[data-icon]]:!text-primary",
+          closeButton:
+            "!rounded-none !border-border !bg-background hover:!bg-muted",
         },
       }}
       {...props}
