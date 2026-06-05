@@ -393,7 +393,8 @@ export default function Settings() {
           {/* Help Tab */}
           <TabsContent value="help">
             <ViperCard className="p-6">
-              <h2 className="text-lg font-semibold mb-6">Help & Support</h2>
+              <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-1">— Assistance</p>
+              <h2 className="font-display italic text-xl mb-6">Help &amp; Support</h2>
               
               <div className="space-y-4">
                 <ViperButton
