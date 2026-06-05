@@ -7,12 +7,13 @@ import {
   Shield,
   ArrowRight,
   RefreshCw,
-  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from '@/components/ui/viper-card';
 import { useDealCoaching, type DealCoaching } from '@/hooks/useDealCoaching';
 import { cn } from '@/lib/utils';
+import { EditorialLoading } from '@/components/ui/editorial-skeleton';
+import { EditorialEmpty } from '@/components/ui/editorial-empty';
 
 interface DealCoachPanelProps {
   dealId: string;
