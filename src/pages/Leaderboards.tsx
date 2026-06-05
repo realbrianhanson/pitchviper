@@ -77,14 +77,7 @@ export default function Leaderboards() {
         />
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-24">
-            <div className="flex flex-col items-center gap-4">
-              <Loader2 className="h-6 w-6 text-primary animate-spin" strokeWidth={1.5} />
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                Compiling Rankings
-              </p>
-            </div>
-          </div>
+          <EditorialLoading label="Compiling Rankings" />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-border border border-border">
             <div className="lg:col-span-2 bg-background p-6 space-y-8">
