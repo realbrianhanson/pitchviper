@@ -4,6 +4,7 @@ import { Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useManagerDashboard } from "@/hooks/useManagerDashboard";
+import { AppLayout } from "@/components/layout/AppLayout";
 import { TeamOverviewCards } from "@/components/manager/TeamOverviewCards";
 import { PerformanceSnapshot } from "@/components/manager/PerformanceSnapshot";
 import { TeamTable } from "@/components/manager/TeamTable";
