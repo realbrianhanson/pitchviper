@@ -9,7 +9,7 @@ import { StepProfile } from "@/components/onboarding/StepProfile";
 import { StepTeam } from "@/components/onboarding/StepTeam";
 import { StepComplete } from "@/components/onboarding/StepComplete";
 import { ViperCard, ViperCardContent } from "@/components/ui/viper-card";
-import { Loader2 } from "lucide-react";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 
 type Step = 1 | 2 | 3;
 

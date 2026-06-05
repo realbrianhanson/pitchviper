@@ -425,7 +425,7 @@ export default function RoleplaySession() {
   if (isLoading || !scenario) {
     return (
       <div className="h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <EditorialLoading label="Loading Scenario" />
       </div>
     );
   }

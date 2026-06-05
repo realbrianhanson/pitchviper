@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, User, Building2, Phone, Mail, Loader2, X, ExternalLink } from 'lucide-react';
+import { Search, User, Building2, Phone, Mail, Loader2, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useContactLookup, AlowareContact } from '@/hooks/useContactLookup';
 import { cn } from '@/lib/utils';
+import { EditorialEmpty } from '@/components/ui/editorial-empty';
 
 interface ContactLookupModalProps {
   open: boolean;
