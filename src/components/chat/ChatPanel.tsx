@@ -10,6 +10,7 @@ import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { GiveKudosModal } from "./GiveKudosModal";
 import { useAuth } from "@/hooks/useAuth";
+import { EditorialEmpty } from "@/components/ui/editorial-empty";
 
 const CHANNEL_ICONS = {
   general: Hash,
@@ -53,28 +54,28 @@ export function ChatPanel({ trigger }: ChatPanelProps) {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           {trigger || (
-            <button className="relative p-2 rounded-lg hover:bg-accent transition-colors">
-              <MessageCircle className="h-5 w-5 text-muted-foreground" />
+            <button className="relative p-2 hover:text-primary transition-colors rounded-none" aria-label="Open team chat">
+              <MessageCircle className="h-4 w-4" strokeWidth={1.5} />
             </button>
           )}
         </SheetTrigger>
-        <SheetContent side="right" className="w-full sm:w-[440px] p-0 flex flex-col">
-          <SheetHeader className="px-4 py-3 border-b border-border">
-            <SheetTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
+        <SheetContent side="right" className="w-full sm:w-[440px] p-0 flex flex-col rounded-none border-l border-border">
+          <SheetHeader className="px-5 py-4 border-b border-border space-y-1">
+            <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground text-left">— The Floor</p>
+            <SheetTitle className="font-display italic text-2xl leading-none text-left flex items-center gap-2">
               Team Chat
             </SheetTitle>
           </SheetHeader>
 
           {hasNoTeam ? (
             <div className="flex-1 flex items-center justify-center p-6">
-              <div className="text-center space-y-3">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto" />
-                <h3 className="font-semibold text-lg">No Team Yet</h3>
-                <p className="text-sm text-muted-foreground">
-                  Join or create a team to start chatting with your colleagues.
-                </p>
-              </div>
+              <EditorialEmpty
+                eyebrow="The Floor"
+                title="No team yet"
+                description="Join or create a team to start chatting with your colleagues."
+                icon={<Users className="h-10 w-10" strokeWidth={1.25} />}
+                className="border-none"
+              />
             </div>
           ) : isLoading ? (
             <div className="flex-1 p-4 space-y-4">
@@ -91,27 +92,27 @@ export function ChatPanel({ trigger }: ChatPanelProps) {
           ) : (
             <>
               {/* Channel tabs */}
-              <div className="flex border-b border-border overflow-x-auto">
+              <div className="flex border-b border-border overflow-x-auto bg-background">
                 {channels.map((channel) => {
                   const Icon = CHANNEL_ICONS[channel.channel_type] || Hash;
                   const isActive = activeChannel?.id === channel.id;
-                  
+
                   return (
                     <button
                       key={channel.id}
                       onClick={() => setActiveChannel(channel)}
                       className={cn(
-                        "flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap",
+                        "flex items-center gap-1.5 px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.2em] transition-colors whitespace-nowrap border-b-2",
                         isActive
-                          ? "text-primary border-b-2 border-primary"
-                          : "text-muted-foreground hover:text-foreground"
+                          ? "text-primary border-primary"
+                          : "text-muted-foreground hover:text-foreground border-transparent"
                       )}
                     >
                       <Icon className={cn(
-                        "h-4 w-4",
+                        "h-3.5 w-3.5",
                         channel.channel_type === "wins" && "text-amber-500",
                         channel.channel_type === "help" && "text-blue-500"
-                      )} />
+                      )} strokeWidth={1.5} />
                       #{channel.name}
                     </button>
                   );
@@ -122,12 +123,14 @@ export function ChatPanel({ trigger }: ChatPanelProps) {
               <ScrollArea className="flex-1">
                 <div className="p-2">
                   {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <MessageCircle className="h-10 w-10 text-muted-foreground mb-3" />
-                      <p className="text-muted-foreground text-sm">
-                        No messages yet. Start the conversation!
-                      </p>
-                    </div>
+                    <EditorialEmpty
+                      eyebrow={activeChannel ? `#${activeChannel.name}` : "Channel"}
+                      title="Break the silence"
+                      description="No messages yet — say something."
+                      icon={<MessageCircle className="h-8 w-8" strokeWidth={1.25} />}
+                      size="sm"
+                      className="border-none"
+                    />
                   ) : (
                     <>
                       {messages.map((message) => (
