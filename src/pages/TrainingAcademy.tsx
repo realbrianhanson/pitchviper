@@ -10,7 +10,8 @@ import { ReadingModule } from "@/components/training/ReadingModule";
 import { QuizModule } from "@/components/training/QuizModule";
 import { RoleplayModule } from "@/components/training/RoleplayModule";
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
-import { Award } from "lucide-react";
+import { Award, GraduationCap } from "lucide-react";
+import { EditorialEmpty } from "@/components/ui/editorial-empty";
 
 type ViewState = 
   | { type: 'paths' }
@@ -155,13 +156,12 @@ export default function TrainingAcademy() {
           <h2 className="text-xl font-bold">Learning Paths</h2>
           
           {learningPaths.length === 0 ? (
-            <ViperCard variant="glass">
-              <ViperCardContent className="py-12 text-center">
-                <p className="text-muted-foreground">
-                  No learning paths available yet. Check back soon!
-                </p>
-              </ViperCardContent>
-            </ViperCard>
+            <EditorialEmpty
+              eyebrow="The Academy"
+              title="Curriculum in development"
+              description="No learning paths available yet. Check back soon."
+              icon={GraduationCap}
+            />
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {learningPaths.map((path) => {
