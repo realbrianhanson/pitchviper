@@ -7,7 +7,9 @@ import { TeamPulse } from "@/components/dashboard/TeamPulse";
 import { MotivationalQuote } from "@/components/dashboard/MotivationalQuote";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUpcomingFollowUps } from "@/hooks/useUpcomingFollowUps";
-import { Phone, Calendar, Target, TrendingUp, Loader2 } from "lucide-react";
+import { Phone, Calendar, Target, TrendingUp } from "lucide-react";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
+import { EditorialEmpty } from "@/components/ui/editorial-empty";
 import { motion } from "framer-motion";
 
 function getGreeting(): string {
@@ -37,14 +39,7 @@ export default function CommandCenter() {
   if (loading) {
     return (
       <AppLayout title="Command Center">
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-6 w-6 text-primary animate-spin" strokeWidth={1.5} />
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              Initializing Command Surface
-            </p>
-          </div>
-        </div>
+        <EditorialLoading label="Initializing Command Surface" className="h-[60vh]" />
       </AppLayout>
     );
   }
@@ -52,12 +47,12 @@ export default function CommandCenter() {
   if (error) {
     return (
       <AppLayout title="Command Center">
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="text-center">
-            <p className="font-display text-2xl text-destructive mb-2">Transmission Failed</p>
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{error}</p>
-          </div>
-        </div>
+        <EditorialEmpty
+          eyebrow="The Wire"
+          title="Transmission Failed"
+          description={error}
+          className="h-[60vh]"
+        />
       </AppLayout>
     );
   }

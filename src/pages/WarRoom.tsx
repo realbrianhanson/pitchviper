@@ -7,7 +7,8 @@ import { LiveLeaderboard } from "@/components/warroom/LiveLeaderboard";
 import { DealCelebration } from "@/components/warroom/DealCelebration";
 import { SOSButton } from "@/components/warroom/SOSButton";
 import { useWarRoomData } from "@/hooks/useWarRoomData";
-import { Radio, Users, Loader2 } from "lucide-react";
+import { Radio, Users } from "lucide-react";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 
 export default function WarRoom() {
   const {
@@ -44,9 +45,7 @@ export default function WarRoom() {
   if (isLoading) {
     return (
       <AppLayout title="War Room">
-        <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+        <EditorialLoading label="Tuning Frequencies" className="h-[60vh]" />
       </AppLayout>
     );
   }

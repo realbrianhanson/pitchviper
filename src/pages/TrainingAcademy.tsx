@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Loader2 } from "lucide-react";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 import { useTraining, LearningPath, TrainingModule } from "@/hooks/useTraining";
 import { TrainingStats } from "@/components/training/TrainingStats";
 import { LearningPathCard } from "@/components/training/LearningPathCard";
@@ -65,12 +65,7 @@ export default function TrainingAcademy() {
   if (isLoading) {
     return (
       <AppLayout title="Training Academy">
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-10 w-10 text-primary animate-spin" />
-            <p className="text-muted-foreground">Loading training content...</p>
-          </div>
-        </div>
+        <EditorialLoading label="Loading Curriculum" className="h-[60vh]" />
       </AppLayout>
     );
   }

@@ -3,7 +3,8 @@ import { ViperCard, ViperCardContent } from "@/components/ui/viper-card";
 import { ScenarioCard } from "@/components/roleplay/ScenarioCard";
 import { RoleplayStats } from "@/components/roleplay/RoleplayStats";
 import { useRoleplayData } from "@/hooks/useRoleplayData";
-import { Gamepad2, Loader2, Swords } from "lucide-react";
+import { Gamepad2, Swords } from "lucide-react";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 
 export default function RoleplayArena() {
   const { scenarios, userStats, isLoading } = useRoleplayData();
@@ -11,9 +12,7 @@ export default function RoleplayArena() {
   if (isLoading) {
     return (
       <AppLayout title="Roleplay Arena">
-        <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+        <EditorialLoading label="Loading Arena" className="h-[60vh]" />
       </AppLayout>
     );
   }
