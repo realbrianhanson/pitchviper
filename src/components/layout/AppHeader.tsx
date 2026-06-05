@@ -18,9 +18,10 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface AppHeaderProps {
   title?: string;
+  onOpenPalette?: () => void;
 }
 
-export function AppHeader({ title }: AppHeaderProps) {
+export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
   const { user, profile: authProfile, isManager, signOut } = useAuth();
   const navigate = useNavigate();
   const [showLogCall, setShowLogCall] = useState(false);
@@ -62,15 +63,22 @@ export function AppHeader({ title }: AppHeaderProps) {
         <span className="truncate text-foreground">{title || "Dashboard"}</span>
       </div>
 
-      {/* Center: Search (compact) */}
+      {/* Center: Command palette trigger */}
       <div className="hidden lg:flex flex-1 max-w-md mx-auto">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <input
-            placeholder="Search..."
-            className="w-full bg-transparent border-b border-border focus:border-primary outline-none pl-9 pr-3 py-2 text-sm font-body placeholder:text-muted-foreground/50 transition-colors"
-          />
-        </div>
+        <button
+          onClick={onOpenPalette}
+          className="group w-full flex items-center justify-between gap-2 border border-border hover:border-primary/60 transition-colors px-3 py-1.5 text-left"
+        >
+          <span className="flex items-center gap-2 text-muted-foreground">
+            <Search className="h-3.5 w-3.5" strokeWidth={1.5} />
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em]">
+              Jump to anything
+            </span>
+          </span>
+          <kbd className="font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground/70 border border-border px-1.5 py-0.5">
+            ⌘K
+          </kbd>
+        </button>
       </div>
 
       {/* Right: Actions */}
