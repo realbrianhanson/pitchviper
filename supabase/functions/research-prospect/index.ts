@@ -11,6 +11,11 @@ serve(async (req) => {
   }
 
   try {
+    const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
+    if (!token) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const userResp = await fetch(`${Deno.env.get('SUPABASE_URL')}/auth/v1/user`, { headers: { apikey: Deno.env.get('SUPABASE_ANON_KEY')!, Authorization: `Bearer ${token}` } });
+    if (!userResp.ok) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
     const { company_name, company_url, contact_name, contact_linkedin_url } = await req.json();
 
     const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
