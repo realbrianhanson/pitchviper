@@ -1,5 +1,3 @@
-import { ViperCard, ViperCardContent } from "@/components/ui/viper-card";
-import { Quote } from "lucide-react";
 import { motion } from "framer-motion";
 
 const quotes = [
@@ -16,50 +14,29 @@ const quotes = [
 ];
 
 export function MotivationalQuote() {
-  // Get quote based on day of year for consistency
   const dayOfYear = Math.floor(
-    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) /
-      (1000 * 60 * 60 * 24)
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24)
   );
   const quote = quotes[dayOfYear % quotes.length];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 24, delay: 0.5 }}
+      transition={{ duration: 0.5, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className="bento-tile min-h-[140px] flex flex-col justify-center"
     >
-      <ViperCard variant="default" className="bg-gradient-to-r from-card to-card/50">
-        <ViperCardContent className="py-4">
-          <div className="flex items-start gap-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0, rotate: -180 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              transition={{ delay: 0.7, type: "spring", stiffness: 300 }}
-            >
-              <Quote className="h-8 w-8 text-primary/30 shrink-0 mt-1" />
-            </motion.div>
-            <div>
-              <motion.p
-                className="text-foreground font-medium italic"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                "{quote.text}"
-              </motion.p>
-              <motion.p
-                className="text-sm text-muted-foreground mt-1"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-              >
-                — {quote.author}
-              </motion.p>
-            </div>
-          </div>
-        </ViperCardContent>
-      </ViperCard>
+      <div className="flex gap-5 items-start">
+        <span className="font-display text-5xl leading-none italic text-primary -mt-2">"</span>
+        <div className="flex-1">
+          <p className="font-display italic text-xl md:text-2xl leading-snug text-foreground/90 mb-4">
+            {quote.text}
+          </p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 font-bold">
+            — {quote.author}
+          </p>
+        </div>
+      </div>
     </motion.div>
   );
 }

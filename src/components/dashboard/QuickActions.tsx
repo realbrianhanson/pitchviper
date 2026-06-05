@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
-import { ViperButton } from "@/components/ui/viper-button";
-import { Swords, Phone, GitBranch, Trophy, Clock, ArrowRight } from "lucide-react";
+import { Swords, Phone, GitBranch, Trophy } from "lucide-react";
 import { LogCallModal } from "@/components/calls/LogCallModal";
 import { motion } from "framer-motion";
 
@@ -19,127 +17,77 @@ interface QuickActionsProps {
 }
 
 const quickActionButtons = [
-  { to: "/roleplay", icon: Swords, label: "Start Roleplay", color: "text-primary" },
-  { to: null, icon: Phone, label: "Log a Call", color: "text-success", action: "logCall" },
-  { to: "/pipeline", icon: GitBranch, label: "View Pipeline", color: "text-warning" },
-  { to: "/leaderboards", icon: Trophy, label: "Leaderboard", color: "text-magenta" },
+  { to: "/roleplay", icon: Swords, label: "Roleplay Arena", verb: "Start", hotkey: "⌘R" },
+  { to: null, icon: Phone, label: "Log Session", verb: "Open", action: "logCall", hotkey: "⌘L" },
+  { to: "/pipeline", icon: GitBranch, label: "Pipeline Map", verb: "View", hotkey: "⌘P" },
+  { to: "/leaderboards", icon: Trophy, label: "Leaderboard", verb: "Open", hotkey: "⌘B" },
 ];
 
 export function QuickActions({ followUps }: QuickActionsProps) {
   const [showLogCall, setShowLogCall] = useState(false);
-  
+
   return (
     <motion.div
-      className="space-y-4"
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 24, delay: 0.35 }}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      className="space-y-px bg-border border border-border"
     >
-      {/* Quick Action Buttons */}
-      <ViperCard variant="glass">
-        <ViperCardHeader>
-          <ViperCardTitle>Quick Actions</ViperCardTitle>
-        </ViperCardHeader>
-        <ViperCardContent className="grid grid-cols-2 gap-3">
-          {quickActionButtons.map((button, index) => {
-            const Icon = button.icon;
-            const ButtonContent = (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + index * 0.1 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+      {/* Quick Actions */}
+      <div className="bento-tile bg-background">
+        <div className="eyebrow font-bold mb-6">Quick Actions</div>
+        <div className="space-y-px">
+          {quickActionButtons.map((b) => {
+            const Inner = (
+              <button
+                onClick={b.action === "logCall" ? () => setShowLogCall(true) : undefined}
+                className="w-full flex justify-between items-center py-3 border-b border-border last:border-b-0 hover:text-primary transition-colors group"
               >
-                <ViperButton 
-                  variant="outline" 
-                  className="w-full justify-start gap-2 h-12"
-                  onClick={button.action === "logCall" ? () => setShowLogCall(true) : undefined}
-                >
-                  <motion.div
-                    whileHover={{ rotate: [0, -10, 10, 0] }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Icon className={`h-4 w-4 ${button.color}`} />
-                  </motion.div>
-                  {button.label}
-                </ViperButton>
-              </motion.div>
+                <span className="flex items-center gap-3 text-sm">
+                  <span className="font-mono text-[10px] text-primary uppercase tracking-[0.15em] group-hover:translate-x-1 transition-transform">
+                    → {b.verb}
+                  </span>
+                  {b.label}
+                </span>
+                <span className="font-mono text-[10px] text-muted-foreground/40">{b.hotkey}</span>
+              </button>
             );
-            
-            if (button.to) {
-              return (
-                <Link key={button.label} to={button.to}>
-                  {ButtonContent}
-                </Link>
-              );
-            }
-            return <div key={button.label}>{ButtonContent}</div>;
+            return b.to ? (
+              <Link key={b.label} to={b.to} className="block">{Inner}</Link>
+            ) : (
+              <div key={b.label}>{Inner}</div>
+            );
           })}
-          <LogCallModal open={showLogCall} onOpenChange={setShowLogCall} />
-        </ViperCardContent>
-      </ViperCard>
+        </div>
+        <LogCallModal open={showLogCall} onOpenChange={setShowLogCall} />
+      </div>
 
-      {/* Upcoming Follow-ups */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-      >
-        <ViperCard variant="default">
-          <ViperCardHeader>
-            <div className="flex items-center justify-between">
-              <ViperCardTitle className="flex items-center gap-2">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                >
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                </motion.div>
-                Upcoming Follow-ups
-              </ViperCardTitle>
-            </div>
-          </ViperCardHeader>
-          <ViperCardContent>
-            <div className="space-y-3">
-              {followUps.slice(0, 3).map((followUp, index) => (
-                <motion.div
-                  key={followUp.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.7 + index * 0.1 }}
-                  whileHover={{ 
-                    x: 4,
-                    transition: { type: "spring", stiffness: 400, damping: 25 }
-                  }}
-                  className="flex items-center justify-between p-3 rounded-lg bg-accent/50 border border-border hover:border-primary/30 transition-colors cursor-pointer group"
-                >
-                  <div>
-                    <p className="font-medium text-foreground text-sm">
-                      {followUp.company}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {followUp.contact} • {followUp.type}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-primary font-medium">
-                      {followUp.time}
-                    </span>
-                    <motion.div
-                      initial={{ opacity: 0, x: -10 }}
-                      whileHover={{ opacity: 1, x: 0 }}
-                      className="opacity-0 group-hover:opacity-100"
-                    >
-                      <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                    </motion.div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </ViperCardContent>
-        </ViperCard>
-      </motion.div>
+      {/* Follow-ups */}
+      <div className="bento-tile">
+        <div className="eyebrow font-bold mb-6">Urgent Follow-ups</div>
+        {followUps.length === 0 ? (
+          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 py-4">
+            No scheduled follow-ups
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {followUps.slice(0, 3).map((f, i) => (
+              <div key={f.id} className="group cursor-pointer">
+                <div className={`font-mono text-[10px] uppercase tracking-[0.15em] mb-1 ${i === 0 ? "text-destructive italic" : "text-muted-foreground/50"}`}>
+                  {i === 0 ? "Next Up" : `In ${(i + 1) * 45} min`}
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-sm group-hover:text-primary transition-colors">{f.company}</div>
+                  <div className="font-mono text-xs text-primary tabular-nums">{f.time}</div>
+                </div>
+                <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50 mt-1">
+                  {f.contact} • {f.type}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 }
