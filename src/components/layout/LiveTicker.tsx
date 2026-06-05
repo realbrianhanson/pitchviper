@@ -48,7 +48,7 @@ export function LiveTicker() {
       </div>
 
       {/* Marquee track */}
-      <div className="flex items-center h-full animate-marquee whitespace-nowrap pl-48 will-change-transform">
+      <div className="flex items-center h-full animate-marquee whitespace-nowrap pl-24 md:pl-48 will-change-transform">
         {loop.map((item, i) => (
           <div key={i} className="flex items-center gap-2 px-6">
             <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground/60">
