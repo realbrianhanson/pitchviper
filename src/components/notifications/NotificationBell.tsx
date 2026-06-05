@@ -86,40 +86,44 @@ export function NotificationBell() {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="relative rounded-none">
+          <Bell className="h-4 w-4" strokeWidth={1.5} />
           {unreadCount > 0 && (
-            <Badge
-              variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
-            >
+            <span className="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] px-1 flex items-center justify-center font-mono text-[9px] tabular-nums bg-primary text-primary-foreground rounded-none border border-background">
               {unreadCount > 9 ? '9+' : unreadCount}
-            </Badge>
+            </span>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-96 p-0" align="end">
-        <div className="p-4 border-b flex items-center justify-between">
-          <h3 className="font-semibold">Notifications</h3>
+      <PopoverContent className="w-96 p-0 rounded-none border-border shadow-none" align="end">
+        <div className="px-4 py-3 border-b border-border flex items-center justify-between bg-background">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">— Signals</span>
+            <h3 className="font-display italic text-lg leading-none">Notifications</h3>
+          </div>
           {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs"
+            <button
               onClick={() => markAllAsRead.mutate()}
+              className="font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
             >
-              <Check className="h-3 w-3 mr-1" />
+              <Check className="h-3 w-3" />
               Mark all read
-            </Button>
+            </button>
           )}
         </div>
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as 'all' | 'unread')}>
-          <TabsList className="w-full rounded-none border-b">
-            <TabsTrigger value="all" className="flex-1">
+          <TabsList className="w-full rounded-none border-b border-border bg-transparent h-auto p-0">
+            <TabsTrigger
+              value="all"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none font-mono text-[10px] uppercase tracking-[0.2em] py-2.5"
+            >
               All
             </TabsTrigger>
-            <TabsTrigger value="unread" className="flex-1">
+            <TabsTrigger
+              value="unread"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none font-mono text-[10px] uppercase tracking-[0.2em] py-2.5"
+            >
               Unread ({unreadCount})
             </TabsTrigger>
           </TabsList>
@@ -127,16 +131,15 @@ export function NotificationBell() {
           <TabsContent value={tab} className="m-0">
             <ScrollArea className="h-[400px]">
               {isLoading ? (
-                <div className="flex items-center justify-center h-32">
-                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
-                </div>
+                <EditorialLoading label="Loading Signals" className="py-12" />
               ) : filteredNotifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-                  <Bell className="h-8 w-8 mb-2 opacity-50" />
-                  <p className="text-sm">
-                    {tab === 'unread' ? 'No unread notifications' : 'No notifications yet'}
-                  </p>
-                </div>
+                <EditorialEmpty
+                  eyebrow="Inbox"
+                  title={tab === 'unread' ? 'All caught up' : 'No signals yet'}
+                  icon={<Bell className="h-8 w-8" strokeWidth={1.25} />}
+                  size="sm"
+                  className="border-none"
+                />
               ) : (
                 <div className="divide-y">
                   {filteredNotifications.map((notification) => (
