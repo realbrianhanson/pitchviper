@@ -13,6 +13,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Competition, CompetitionParticipant, CompetitionActivity, useCompetitions } from "@/hooks/useCompetitions";
 import { formatDistanceToNow, differenceInSeconds, format } from "date-fns";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
+import { EditorialEmpty } from "@/components/ui/editorial-empty";
 
 interface CompetitionDetailModalProps {
   competition: Competition | null;
