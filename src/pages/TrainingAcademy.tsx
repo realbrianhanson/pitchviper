@@ -160,7 +160,7 @@ export default function TrainingAcademy() {
               eyebrow="The Academy"
               title="Curriculum in development"
               description="No learning paths available yet. Check back soon."
-              icon={GraduationCap}
+              icon={<GraduationCap className="h-8 w-8" strokeWidth={1.5} />}
             />
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
