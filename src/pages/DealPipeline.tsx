@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 import { motion } from "framer-motion";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ViperButton } from "@/components/ui/viper-button";
@@ -98,14 +99,7 @@ export default function DealPipeline() {
   if (isLoading) {
     return (
       <AppLayout title="Deal Pipeline">
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" strokeWidth={1.5} />
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              Loading Pipeline
-            </p>
-          </div>
-        </div>
+        <EditorialLoading label="Loading Pipeline" className="h-[60vh]" />
       </AppLayout>
     );
   }
