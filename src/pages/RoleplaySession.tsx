@@ -39,6 +39,7 @@ import {
   Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 
 interface Message {
   role: "user" | "assistant";
