@@ -11,6 +11,7 @@ import { TeamTable } from "@/components/manager/TeamTable";
 import { AITeamInsights } from "@/components/manager/AITeamInsights";
 import { ManagerQuickActions } from "@/components/manager/ManagerQuickActions";
 import { ForecastSection } from "@/components/manager/ForecastSection";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 
 function formatDate(): string {
   return new Date().toLocaleDateString("en-US", {
