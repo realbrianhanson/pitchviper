@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ToolkitItem } from "@/hooks/useToolkit";
 import { BattlecardGenerator } from "./BattlecardGenerator";
 import { Shield, Target, MessageSquare, HelpCircle, ChevronRight, Plus, Swords } from "lucide-react";
+import { EditorialEmpty } from "@/components/ui/editorial-empty";
 
 interface BattlecardsTabProps {
   items: ToolkitItem[];

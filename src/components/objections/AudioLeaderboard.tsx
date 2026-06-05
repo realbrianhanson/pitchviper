@@ -7,6 +7,8 @@ import { useAudioTraining, TrainingMode } from '@/hooks/useAudioTraining';
 import { supabase } from '@/integrations/supabase/client';
 import { Trophy, Medal, Award, Timer, Target, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { EditorialLoading } from '@/components/ui/editorial-skeleton';
+import { EditorialEmpty } from '@/components/ui/editorial-empty';
 
 interface AudioLeaderboardProps {
   isOpen: boolean;
