@@ -48,9 +48,9 @@ export default function CommandCenter() {
     return (
       <AppLayout title="Command Center">
         <EditorialEmpty
-          eyebrow="— The Wire"
-          headline="Transmission Failed"
-          body={error}
+          eyebrow="The Wire"
+          title="Transmission Failed"
+          description={error}
           className="h-[60vh]"
         />
       </AppLayout>
