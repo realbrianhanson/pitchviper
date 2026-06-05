@@ -185,7 +185,8 @@ export default function Settings() {
           {/* Profile Tab */}
           <TabsContent value="profile">
             <ViperCard className="p-6">
-              <h2 className="text-lg font-semibold mb-6">Profile Information</h2>
+              <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-1">— Identity</p>
+              <h2 className="font-display italic text-xl mb-6">Profile Information</h2>
               
               <div className="flex flex-col sm:flex-row gap-6 mb-6">
                 <div className="flex flex-col items-center gap-3">
@@ -302,7 +303,8 @@ export default function Settings() {
           {/* Notifications Tab */}
           <TabsContent value="notifications">
             <ViperCard className="p-6">
-              <h2 className="text-lg font-semibold mb-6">Notification Preferences</h2>
+              <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-1">— Signals</p>
+              <h2 className="font-display italic text-xl mb-6">Notification Preferences</h2>
               <NotificationSettings />
             </ViperCard>
           </TabsContent>
@@ -315,7 +317,8 @@ export default function Settings() {
           {/* Display Tab */}
           <TabsContent value="display">
             <ViperCard className="p-6">
-              <h2 className="text-lg font-semibold mb-6">Display Settings</h2>
+              <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-1">— Appearance</p>
+              <h2 className="font-display italic text-xl mb-6">Display Settings</h2>
               
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -355,7 +358,8 @@ export default function Settings() {
           {/* Sounds Tab */}
           <TabsContent value="sounds">
             <ViperCard className="p-6">
-              <h2 className="text-lg font-semibold mb-6">Sound Settings</h2>
+              <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-1">— Audio</p>
+              <h2 className="font-display italic text-xl mb-6">Sound Settings</h2>
               
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -389,7 +393,8 @@ export default function Settings() {
           {/* Help Tab */}
           <TabsContent value="help">
             <ViperCard className="p-6">
-              <h2 className="text-lg font-semibold mb-6">Help & Support</h2>
+              <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-1">— Assistance</p>
+              <h2 className="font-display italic text-xl mb-6">Help &amp; Support</h2>
               
               <div className="space-y-4">
                 <ViperButton

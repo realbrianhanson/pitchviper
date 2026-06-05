@@ -7,12 +7,13 @@ import {
   Shield,
   ArrowRight,
   RefreshCw,
-  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from '@/components/ui/viper-card';
 import { useDealCoaching, type DealCoaching } from '@/hooks/useDealCoaching';
 import { cn } from '@/lib/utils';
+import { EditorialLoading } from '@/components/ui/editorial-skeleton';
+import { EditorialEmpty } from '@/components/ui/editorial-empty';
 
 interface DealCoachPanelProps {
   dealId: string;
@@ -37,10 +38,7 @@ export function DealCoachPanel({ dealId, onAnalyze }: DealCoachPanelProps) {
     return (
       <ViperCard variant="glass" className="border-primary/30">
         <ViperCardContent className="py-8">
-          <div className="flex flex-col items-center justify-center gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">AI Coach analyzing deal...</p>
-          </div>
+          <EditorialLoading label="Analyzing Deal" />
         </ViperCardContent>
       </ViperCard>
     );
@@ -67,14 +65,19 @@ export function DealCoachPanel({ dealId, onAnalyze }: DealCoachPanelProps) {
     return (
       <ViperCard variant="glass">
         <ViperCardContent className="py-6">
-          <div className="flex flex-col items-center justify-center gap-3">
-            <Brain className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Click to get AI coaching</p>
-            <Button onClick={handleRefresh}>
-              <Brain className="h-4 w-4 mr-2" />
-              Analyze Deal
-            </Button>
-          </div>
+          <EditorialEmpty
+            eyebrow="Deal Coach"
+            title="Ready when you are"
+            description="Run AI analysis to surface risks, next steps, and objections to prepare for."
+            icon={<Brain className="h-8 w-8" strokeWidth={1.25} />}
+            size="sm"
+            action={
+              <Button onClick={handleRefresh} className="rounded-none gap-2">
+                <Brain className="h-4 w-4" strokeWidth={1.5} />
+                Analyze Deal
+              </Button>
+            }
+          />
         </ViperCardContent>
       </ViperCard>
     );

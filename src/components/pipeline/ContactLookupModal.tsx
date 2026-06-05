@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, User, Building2, Phone, Mail, Loader2, X, ExternalLink } from 'lucide-react';
+import { Search, User, Building2, Phone, Mail, Loader2, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useContactLookup, AlowareContact } from '@/hooks/useContactLookup';
 import { cn } from '@/lib/utils';
+import { EditorialEmpty } from '@/components/ui/editorial-empty';
 
 interface ContactLookupModalProps {
   open: boolean;
@@ -166,11 +167,14 @@ export function ContactLookupModal({ open, onOpenChange, onSelectContact }: Cont
 
           {/* Empty state */}
           {!isSearching && contacts.length === 0 && searchQuery && (
-            <div className="text-center py-8 text-muted-foreground">
-              <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>Search for contacts in Aloware</p>
-              <p className="text-sm">by phone, name, or email</p>
-            </div>
+            <EditorialEmpty
+              eyebrow="Aloware"
+              title="No contacts found"
+              description="Try adjusting your search terms or switching the search type."
+              icon={<User className="h-8 w-8" strokeWidth={1.25} />}
+              size="sm"
+              className="border-none"
+            />
           )}
         </div>
       </DialogContent>

@@ -9,7 +9,7 @@ import { StepProfile } from "@/components/onboarding/StepProfile";
 import { StepTeam } from "@/components/onboarding/StepTeam";
 import { StepComplete } from "@/components/onboarding/StepComplete";
 import { ViperCard, ViperCardContent } from "@/components/ui/viper-card";
-import { Loader2 } from "lucide-react";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 
 type Step = 1 | 2 | 3;
 
@@ -136,10 +136,7 @@ export default function Onboarding() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 text-primary animate-spin" />
-          <p className="text-muted-foreground">Loading your profile...</p>
-        </div>
+        <EditorialLoading label="Loading Profile" />
       </div>
     );
   }

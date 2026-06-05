@@ -39,6 +39,7 @@ import {
   Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 
 interface Message {
   role: "user" | "assistant";
@@ -394,12 +395,16 @@ export default function RoleplaySession() {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-background">
         <div className="text-center animate-fade-in">
-          <div className="relative mb-8">
-            <div className="w-24 h-24 rounded-full bg-primary/20 animate-pulse mx-auto" />
-            <Loader2 className="h-12 w-12 animate-spin text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-          </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">Analyzing Your Performance...</h2>
-          <p className="text-muted-foreground">Our AI coach is reviewing your conversation</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4">
+            — The Debrief
+          </p>
+          <h2 className="font-display italic text-3xl md:text-4xl text-foreground mb-8">
+            Analyzing Your Performance
+          </h2>
+          <EditorialLoading label="Reviewing Conversation" className="py-8" />
+          <p className="font-body text-sm text-muted-foreground/80 mt-6">
+            Our AI coach is reviewing your conversation
+          </p>
         </div>
       </div>
     );
@@ -420,7 +425,7 @@ export default function RoleplaySession() {
   if (isLoading || !scenario) {
     return (
       <div className="h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <EditorialLoading label="Loading Scenario" />
       </div>
     );
   }
