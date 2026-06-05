@@ -1,6 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ViperButton } from "@/components/ui/viper-button";
-import { RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw } from "lucide-react";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 import { motion } from "framer-motion";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { LeaderboardFilters } from "@/components/leaderboard/LeaderboardFilters";
