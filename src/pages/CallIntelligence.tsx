@@ -202,15 +202,12 @@ export default function CallIntelligence() {
 
         {/* Empty State */}
         {!isLoading && (!data || data.metrics.totalCalls.value === 0) && (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="p-4 rounded-full bg-primary/10 mb-4">
-              <Phone className="h-8 w-8 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">No calls logged yet</h3>
-            <p className="text-muted-foreground max-w-md">
-              Start logging your calls to see analytics. Use the "Log Call" button in the header or dashboard.
-            </p>
-          </div>
+          <EditorialEmpty
+            eyebrow="Call Intelligence"
+            icon={<Phone className="h-10 w-10" strokeWidth={1.2} />}
+            title="No calls on the wire."
+            description='Log your first call via "Log Session" in the header to start the intelligence stream.'
+          />
         )}
       </div>
     </AppLayout>

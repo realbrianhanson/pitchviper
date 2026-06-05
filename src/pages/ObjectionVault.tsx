@@ -11,6 +11,8 @@ import { AddResponseModal } from "@/components/objections/AddResponseModal";
 import { AudioFlashcards } from "@/components/objections/AudioFlashcards";
 import { AudioLeaderboard } from "@/components/objections/AudioLeaderboard";
 import { Shield, Search, Plus, Loader2, Sparkles, Volume2, Trophy } from "lucide-react";
+import { EditorialEmpty } from "@/components/ui/editorial-empty";
+import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 import { useNavigate } from "react-router-dom";
 
 export default function ObjectionVault() {
