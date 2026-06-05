@@ -156,7 +156,7 @@ export function ForecastSection({ teamQuota = 500000 }: ForecastSectionProps) {
           </ViperCardHeader>
           <ViperCardContent>
             {repForecast.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No data available</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground/70 text-center py-6">— No data —</p>
             ) : (
               <div className="space-y-3">
                 {repForecast.map((rep, i) => (
