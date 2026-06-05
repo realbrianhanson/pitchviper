@@ -47,6 +47,27 @@ serve(async (req) => {
     );
   }
 
+  // Webhook signature verification (if secret is configured)
+  const expectedSecret = Deno.env.get('ALOWARE_WEBHOOK_SECRET');
+  if (expectedSecret) {
+    const provided = req.headers.get('X-Aloware-Signature') ?? '';
+    // Constant-time compare
+    const a = new TextEncoder().encode(provided);
+    const b = new TextEncoder().encode(expectedSecret);
+    let ok = a.length === b.length;
+    const len = Math.max(a.length, b.length);
+    let diff = a.length ^ b.length;
+    for (let i = 0; i < len; i++) diff |= (a[i] ?? 0) ^ (b[i] ?? 0);
+    ok = ok && diff === 0;
+    if (!ok) {
+      return new Response(JSON.stringify({ error: 'Invalid signature' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+  } else {
+    console.warn('ALOWARE_WEBHOOK_SECRET not configured — webhook is unauthenticated');
+  }
+
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);

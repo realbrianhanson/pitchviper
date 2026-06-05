@@ -35,7 +35,25 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
+    if (!token) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
+    const { data: userData, error: userErr } = await authClient.auth.getUser();
+    if (userErr || !userData.user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
     const { team_id, user_id } = await req.json();
+
+    // Authorization: user must be self, or member of requested team
+    if (user_id && user_id !== userData.user.id) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (team_id) {
+      const { data: callerProfile } = await supabase.from('profiles').select('team_id').eq('user_id', userData.user.id).maybeSingle();
+      if (callerProfile?.team_id !== team_id) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
 
     // Get current month bounds
     const now = new Date();

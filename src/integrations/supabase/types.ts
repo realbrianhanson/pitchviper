@@ -1919,7 +1919,68 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      team_profiles_safe: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          current_level: number | null
+          current_streak: number | null
+          full_name: string | null
+          hire_date: string | null
+          id: string | null
+          longest_streak: number | null
+          onboarding_completed: boolean | null
+          phone_extension: string | null
+          team_id: string | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+          xp_points: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          current_level?: number | null
+          current_streak?: number | null
+          full_name?: string | null
+          hire_date?: string | null
+          id?: string | null
+          longest_streak?: number | null
+          onboarding_completed?: boolean | null
+          phone_extension?: string | null
+          team_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          xp_points?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          current_level?: number | null
+          current_streak?: number | null
+          full_name?: string | null
+          hire_date?: string | null
+          id?: string | null
+          longest_streak?: number | null
+          onboarding_completed?: boolean | null
+          phone_extension?: string | null
+          team_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          xp_points?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       calculate_streak: { Args: { p_user_id: string }; Returns: number }

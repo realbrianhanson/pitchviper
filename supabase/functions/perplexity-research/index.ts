@@ -21,6 +21,11 @@ serve(async (req) => {
   }
 
   try {
+    const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
+    if (!token) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const userResp = await fetch(`${Deno.env.get('SUPABASE_URL')}/auth/v1/user`, { headers: { apikey: Deno.env.get('SUPABASE_ANON_KEY')!, Authorization: `Bearer ${token}` } });
+    if (!userResp.ok) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
     const { query_type, company_name, industry, contact_name, competitor_name }: ResearchRequest = await req.json();
 
     const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY');

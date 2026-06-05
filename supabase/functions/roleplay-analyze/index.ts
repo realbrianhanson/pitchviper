@@ -46,7 +46,19 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const token = authHeader.replace('Bearer ', '');
+    if (!token) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
+    const { data: userData, error: userErr } = await authClient.auth.getUser();
+    if (userErr || !userData.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // Fetch scenario details
     const { data: scenario, error: scenarioError } = await supabase
@@ -68,6 +80,10 @@ serve(async (req) => {
 
     if (sessionError || !sessionData) {
       throw new Error("Session not found");
+    }
+
+    if (sessionData.user_id !== userData.user.id) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Build transcript text

@@ -28,6 +28,12 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
 
+    // Require authenticated caller (or service role) to prevent abuse
+    const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
+    if (!token) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const userResp = await fetch(`${supabaseUrl}/auth/v1/user`, { headers: { apikey: Deno.env.get('SUPABASE_ANON_KEY')!, Authorization: `Bearer ${token}` } });
+    if (!userResp.ok) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get tomorrow's date
