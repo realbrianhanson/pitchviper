@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { LogCallModal } from "@/components/calls/LogCallModal";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -55,9 +56,10 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
   const roleLabel = role === "manager" ? "Sales Manager" : "Sales Rep";
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/90 backdrop-blur-xl px-4 md:px-8">
-      {/* Left: Terminal breadcrumb */}
-      <div className="flex items-center gap-3 min-w-0 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-2 md:gap-4 border-b border-border bg-background/90 backdrop-blur-xl px-3 md:px-8">
+      {/* Left: Mobile menu + Terminal breadcrumb */}
+      <div className="flex items-center gap-2 md:gap-3 min-w-0 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+        <SidebarTrigger className="md:hidden -ml-1 text-muted-foreground hover:text-primary" />
         <span className="text-primary hidden sm:inline">Terminal v1.0</span>
         <span className="opacity-30 hidden sm:inline">/</span>
         <span className="truncate text-foreground">{title || "Dashboard"}</span>
@@ -82,7 +84,14 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center gap-2 md:gap-4">
+      <div className="flex items-center gap-1 md:gap-4">
+        <button
+          onClick={onOpenPalette}
+          className="md:hidden inline-flex h-8 w-8 items-center justify-center border border-border text-muted-foreground hover:text-primary hover:border-primary/60 transition-colors"
+          aria-label="Open command palette"
+        >
+          <Search className="h-3.5 w-3.5" strokeWidth={1.5} />
+        </button>
         <button
           onClick={() => setShowLogCall(true)}
           className="hidden md:inline-flex items-center gap-2 px-4 py-1.5 border border-primary/60 text-primary text-[10px] font-mono uppercase tracking-[0.2em] font-bold hover:bg-primary hover:text-primary-foreground transition-all"
@@ -93,6 +102,7 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
         <button
           onClick={() => setShowLogCall(true)}
           className="md:hidden inline-flex h-8 w-8 items-center justify-center border border-primary/60 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+          aria-label="Log session"
         >
           <Phone className="h-3.5 w-3.5" />
         </button>
@@ -106,7 +116,8 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 px-2 py-1 transition-colors hover:text-primary border-l border-border pl-4 ml-2">
+            <button className="flex items-center gap-2 md:gap-3 px-1 md:px-2 py-1 transition-colors hover:text-primary md:border-l md:border-border md:pl-4 md:ml-2">
+
               {profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
