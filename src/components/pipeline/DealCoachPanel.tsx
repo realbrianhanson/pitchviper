@@ -65,14 +65,19 @@ export function DealCoachPanel({ dealId, onAnalyze }: DealCoachPanelProps) {
     return (
       <ViperCard variant="glass">
         <ViperCardContent className="py-6">
-          <div className="flex flex-col items-center justify-center gap-3">
-            <Brain className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Click to get AI coaching</p>
-            <Button onClick={handleRefresh}>
-              <Brain className="h-4 w-4 mr-2" />
-              Analyze Deal
-            </Button>
-          </div>
+          <EditorialEmpty
+            eyebrow="Deal Coach"
+            title="Ready when you are"
+            description="Run AI analysis to surface risks, next steps, and objections to prepare for."
+            icon={<Brain className="h-8 w-8" strokeWidth={1.25} />}
+            size="sm"
+            action={
+              <Button onClick={handleRefresh} className="rounded-none gap-2">
+                <Brain className="h-4 w-4" strokeWidth={1.5} />
+                Analyze Deal
+              </Button>
+            }
+          />
         </ViperCardContent>
       </ViperCard>
     );
