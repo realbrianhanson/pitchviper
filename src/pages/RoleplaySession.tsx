@@ -463,8 +463,9 @@ export default function RoleplaySession() {
   };
 
   const handleVoiceSessionEnd = () => {
-    // Voice session ended, trigger analysis
-    endSession();
+    // Give the last transcript line(s) a moment to arrive & persist before analysis.
+    // The analyzer also falls back to the DB-persisted transcript, so this is belt-and-suspenders.
+    setTimeout(() => { void endSession(); }, 800);
   };
 
   // Show analyzing screen

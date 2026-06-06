@@ -71,10 +71,10 @@ serve(async (req) => {
       throw new Error("Scenario not found");
     }
 
-    // Fetch session to get user_id
+    // Fetch session: user_id + persisted transcript fallback
     const { data: sessionData, error: sessionError } = await supabase
       .from("roleplay_sessions")
-      .select("user_id")
+      .select("user_id, transcript")
       .eq("id", session_id)
       .single();
 
@@ -86,10 +86,30 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Build transcript text
-    const transcriptText = (transcript as Message[])
+    // Prefer client transcript; fall back to persisted (voice mode writes each line as it arrives)
+    let effectiveTranscript: Message[] = Array.isArray(transcript) ? (transcript as Message[]) : [];
+    const persisted = Array.isArray(sessionData.transcript) ? (sessionData.transcript as Message[]) : [];
+    if (persisted.length > effectiveTranscript.length) {
+      console.log(`[roleplay-analyze] using persisted transcript (${persisted.length}) over client (${effectiveTranscript.length})`);
+      effectiveTranscript = persisted;
+    }
+
+    const userTurns = effectiveTranscript.filter((m) => m.role === "user").length;
+    const agentTurns = effectiveTranscript.filter((m) => m.role === "assistant").length;
+    console.log(`[roleplay-analyze] session=${session_id} total=${effectiveTranscript.length} user=${userTurns} agent=${agentTurns}`);
+
+    if (effectiveTranscript.length === 0 || userTurns === 0) {
+      return new Response(
+        JSON.stringify({ error: "Transcript missing salesperson turns — nothing to analyze." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const transcriptText = effectiveTranscript
       .map((msg) => `${msg.role === "user" ? "SALESPERSON" : "PROSPECT"}: ${msg.content}`)
       .join("\n\n");
+
+    console.log(`[roleplay-analyze] transcript preview:\n${transcriptText.slice(0, 800)}`);
 
     // Analysis prompt
     const analysisPrompt = `You are an expert sales coach analyzing a roleplay training session. Evaluate this sales conversation thoroughly.
