@@ -97,10 +97,13 @@ export default function RoleplaySession() {
   const [analysisResult, setAnalysisResult] = useState<SessionAnalysisResult | null>(null);
   const [inputMode, setInputMode] = useState<"text" | "voice">("text");
   const [voiceTranscript, setVoiceTranscript] = useState<{ user: string[]; agent: string[] }>({ user: [], agent: [] });
-  
+  const [voiceMomentum, setVoiceMomentum] = useState<{ addressed_objection: boolean; attempted_close: boolean }>({ addressed_objection: false, attempted_close: false });
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Live voice analysis pairing: hold the latest user line until an agent line arrives
+  const pendingUserRef = useRef<string | null>(null);
 
   // Initialize session
   useEffect(() => {
