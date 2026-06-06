@@ -1,4 +1,4 @@
-import { useTickerStats } from "@/hooks/useTickerStats";
+import { useGhlStats } from "@/hooks/useGhlStats";
 
 const formatCurrency = (v: number) => {
   if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
@@ -15,14 +15,14 @@ function formatClock(): string {
 }
 
 export function LiveTicker() {
-  const stats = useTickerStats();
+  const { stats, loading } = useGhlStats();
 
   const items = [
-    { label: "Calls", value: stats?.callsToday ?? 0, tone: "text-foreground" },
-    { label: "Appts", value: stats?.appts ?? 0, tone: "text-primary" },
-    { label: "Connect", value: `${stats?.connectRate ?? 0}%`, tone: "text-foreground" },
-    { label: "Revenue", value: formatCurrency(stats?.revenue ?? 0), tone: "text-success" },
-    { label: "Streak", value: `${stats?.streak ?? 0}D`, tone: "text-primary" },
+    { label: "Calls", value: loading ? "—" : stats.callsToday, tone: "text-foreground" },
+    { label: "Appts", value: "—", tone: "text-primary" },
+    { label: "Connect", value: "—", tone: "text-foreground" },
+    { label: "Revenue", value: loading ? "—" : formatCurrency(stats.revenueWonThisWeek), tone: "text-success" },
+    { label: "Streak", value: loading ? "—" : `${stats.currentStreak}D`, tone: "text-primary" },
   ];
 
   // Duplicate for seamless marquee
