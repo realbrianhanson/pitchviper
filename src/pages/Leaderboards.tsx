@@ -1,9 +1,11 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ViperButton } from "@/components/ui/viper-button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, AlertTriangle } from "lucide-react";
 import { EditorialLoading } from "@/components/ui/editorial-skeleton";
+import { EditorialEmpty } from "@/components/ui/editorial-empty";
 import { motion } from "framer-motion";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
+import { useAuth } from "@/hooks/useAuth";
 import { LeaderboardFilters } from "@/components/leaderboard/LeaderboardFilters";
 import { LeaderboardPodium } from "@/components/leaderboard/LeaderboardPodium";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
@@ -18,12 +20,17 @@ export default function Leaderboards() {
     currentUserRank,
     competitions,
     isLoading,
+    error,
     metricType,
     setMetricType,
     timePeriod,
     setTimePeriod,
+    viewMode,
+    setViewMode,
     refetch,
   } = useLeaderboard();
+
+  const { profile } = useAuth();
 
   const nextRankValue =
     currentUserRank && currentUserRank.rank > 1
@@ -74,11 +81,48 @@ export default function Leaderboards() {
           onMetricChange={setMetricType}
           timePeriod={timePeriod}
           onTimePeriodChange={setTimePeriod}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
 
+        {/* Error State */}
+        {error && !isLoading && (
+          <div className="border border-destructive/30 bg-destructive/5 p-6 rounded-lg flex items-start gap-4">
+            <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-destructive">Failed to load leaderboard</h3>
+              <p className="text-sm text-muted-foreground mt-1">{error}</p>
+              <ViperButton
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => refetch()}
+              >
+                <RefreshCw className="h-3.5 w-3.5 mr-2" strokeWidth={1.5} />
+                Try Again
+              </ViperButton>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State (no error, not loading, no data) */}
+        {!isLoading && !error && leaderboard.length === 0 && (
+          <EditorialEmpty
+            eyebrow="Leaderboards"
+            title={viewMode === 'team' ? "No team standings yet" : "No rankings available"}
+            description={
+              viewMode === 'team'
+                ? "Team totals will appear once reps start logging activity and closing deals."
+                : "Rep rankings will appear once activity is synced from GHL."
+            }
+            size="lg"
+          />
+        )}
+
+        {/* Content */}
         {isLoading ? (
           <EditorialLoading label="Compiling Rankings" />
-        ) : (
+        ) : !error && leaderboard.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-border border border-border">
             <div className="lg:col-span-2 bg-background p-6 space-y-8">
               <div>
@@ -88,7 +132,12 @@ export default function Leaderboards() {
                     Top three
                   </span>
                 </div>
-                <LeaderboardPodium topThree={topThree} metricType={metricType} />
+                <LeaderboardPodium
+                  topThree={topThree}
+                  metricType={metricType}
+                  viewMode={viewMode}
+                  currentUserTeamId={profile?.team_id}
+                />
               </div>
 
               {restOfRankings.length > 0 && (
@@ -99,7 +148,12 @@ export default function Leaderboards() {
                       Ranks 04 — {String(leaderboard.length).padStart(2, "0")}
                     </span>
                   </div>
-                  <LeaderboardTable entries={restOfRankings} metricType={metricType} />
+                  <LeaderboardTable
+                    entries={restOfRankings}
+                    metricType={metricType}
+                    viewMode={viewMode}
+                    currentUserTeamId={profile?.team_id}
+                  />
                 </div>
               )}
             </div>
@@ -114,12 +168,13 @@ export default function Leaderboards() {
               <CompetitionsPanel competitions={competitions} />
             </div>
           </div>
-        )}
+        ) : null}
 
-        {currentUserRank && !isLoading && (
+        {currentUserRank && !isLoading && !error && (
           <CurrentUserRankBar
             userRank={currentUserRank}
             metricType={metricType}
+            viewMode={viewMode}
             nextRankValue={nextRankValue}
           />
         )}
