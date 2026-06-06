@@ -1148,6 +1148,7 @@ export type Database = {
           longest_streak: number
           onboarding_completed: boolean
           phone_extension: string | null
+          promo_validated: boolean
           team_code: string | null
           team_id: string | null
           title: string | null
@@ -1169,6 +1170,7 @@ export type Database = {
           longest_streak?: number
           onboarding_completed?: boolean
           phone_extension?: string | null
+          promo_validated?: boolean
           team_code?: string | null
           team_id?: string | null
           title?: string | null
@@ -1190,6 +1192,7 @@ export type Database = {
           longest_streak?: number
           onboarding_completed?: boolean
           phone_extension?: string | null
+          promo_validated?: boolean
           team_code?: string | null
           team_id?: string | null
           title?: string | null
