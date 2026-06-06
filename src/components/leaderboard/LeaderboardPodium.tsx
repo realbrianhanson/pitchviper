@@ -1,34 +1,37 @@
-import { Crown, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Crown, TrendingUp, TrendingDown, Minus, Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LeaderboardEntry, MetricType } from "@/hooks/useLeaderboard";
+import { LeaderboardEntry, MetricType, ViewMode } from "@/hooks/useLeaderboard";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { EditorialEmpty } from "@/components/ui/editorial-empty";
 
 interface LeaderboardPodiumProps {
   topThree: LeaderboardEntry[];
   metricType: MetricType;
+  viewMode?: ViewMode;
+  currentUserTeamId?: string | null;
 }
 
 const formatValue = (value: number, metricType: MetricType) => {
-  if (metricType === "revenue") return `$${value.toLocaleString()}`;
-  if (metricType === "roleplay") return `${value}%`;
+  if (metricType === 'revenue') return `$${value.toLocaleString()}`;
   return value.toLocaleString();
 };
 
-const TrendIcon = ({ trend }: { trend: "up" | "down" | "same" }) => {
-  if (trend === "up") return <TrendingUp className="h-3.5 w-3.5 text-success" strokeWidth={1.5} />;
-  if (trend === "down") return <TrendingDown className="h-3.5 w-3.5 text-destructive" strokeWidth={1.5} />;
+const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'same' }) => {
+  if (trend === 'up') return <TrendingUp className="h-3.5 w-3.5 text-success" strokeWidth={1.5} />;
+  if (trend === 'down') return <TrendingDown className="h-3.5 w-3.5 text-destructive" strokeWidth={1.5} />;
   return <Minus className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />;
 };
 
-export function LeaderboardPodium({ topThree, metricType }: LeaderboardPodiumProps) {
+export function LeaderboardPodium({ topThree, metricType, viewMode = 'individual', currentUserTeamId }: LeaderboardPodiumProps) {
   if (topThree.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48">
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-          No rankings yet — be first
-        </p>
-      </div>
+      <EditorialEmpty
+        eyebrow="Podium"
+        title={viewMode === 'team' ? "No team leaders yet" : "No leaders yet"}
+        description="The podium is empty. Close a deal or make a call to claim your spot."
+        size="sm"
+      />
     );
   }
 
@@ -41,6 +44,7 @@ export function LeaderboardPodium({ topThree, metricType }: LeaderboardPodiumPro
         if (!entry) return null;
         const rank = entry.rank;
         const isFirst = rank === 1;
+        const isCurrentTeam = viewMode === 'team' && currentUserTeamId && entry.user_id === currentUserTeamId;
 
         return (
           <motion.div
@@ -52,7 +56,8 @@ export function LeaderboardPodium({ topThree, metricType }: LeaderboardPodiumPro
               "bg-background p-6 flex flex-col items-center text-center relative",
               isFirst && "md:order-2",
               !isFirst && idx === 0 && "md:order-1",
-              !isFirst && idx === 2 && "md:order-3"
+              !isFirst && idx === 2 && "md:order-3",
+              isCurrentTeam && "ring-1 ring-primary/30"
             )}
           >
             {/* Rank rule */}
@@ -76,18 +81,30 @@ export function LeaderboardPodium({ topThree, metricType }: LeaderboardPodiumPro
               {isFirst && <Crown className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />}
             </div>
 
-            {/* Avatar */}
-            <Avatar
-              className={cn(
-                "mb-4 ring-1",
-                isFirst ? "h-28 w-28 ring-primary" : "h-20 w-20 ring-border"
-              )}
-            >
-              <AvatarImage src={entry.avatar_url || undefined} />
-              <AvatarFallback className="bg-muted font-display text-2xl">
-                {entry.full_name.split(" ").map((n) => n[0]).join("")}
-              </AvatarFallback>
-            </Avatar>
+            {/* Avatar or Team Icon */}
+            {viewMode === 'team' ? (
+              <div className={cn(
+                "mb-4 rounded-full flex items-center justify-center ring-1",
+                isFirst ? "h-28 w-28 ring-primary bg-primary/10" : "h-20 w-20 ring-border bg-muted"
+              )}>
+                <Users className={cn(
+                  "text-muted-foreground",
+                  isFirst ? "h-10 w-10" : "h-7 w-7"
+                )} />
+              </div>
+            ) : (
+              <Avatar
+                className={cn(
+                  "mb-4 ring-1",
+                  isFirst ? "h-28 w-28 ring-primary" : "h-20 w-20 ring-border"
+                )}
+              >
+                <AvatarImage src={entry.avatar_url || undefined} />
+                <AvatarFallback className="bg-muted font-display text-2xl">
+                  {entry.full_name.split(" ").map((n) => n[0]).join("")}
+                </AvatarFallback>
+              </Avatar>
+            )}
 
             {/* Name */}
             <h3
@@ -103,6 +120,9 @@ export function LeaderboardPodium({ topThree, metricType }: LeaderboardPodiumPro
                 {entry.title}
               </p>
             )}
+            {isCurrentTeam && (
+              <span className="text-xs text-primary mt-1">Your Team</span>
+            )}
 
             {/* Score */}
             <div className="mt-5 pt-5 border-t border-border w-full flex flex-col items-center gap-1">
@@ -117,7 +137,7 @@ export function LeaderboardPodium({ topThree, metricType }: LeaderboardPodiumPro
               <div className="flex items-center gap-1.5">
                 <TrendIcon trend={entry.trend} />
                 <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-                  Lvl {entry.current_level}
+                  {viewMode === 'individual' ? `Lvl ${entry.current_level}` : 'Team Total'}
                 </span>
               </div>
             </div>

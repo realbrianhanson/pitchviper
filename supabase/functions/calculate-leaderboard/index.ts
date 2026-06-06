@@ -16,7 +16,89 @@ interface LeaderboardEntry {
   current_level: number;
   value: number;
   trend: 'up' | 'down' | 'same';
-  previous_rank?: number;
+}
+
+interface Profile {
+  user_id: string;
+  full_name: string;
+  avatar_url: string | null;
+  title: string | null;
+  current_level: number;
+  team_id: string | null;
+}
+
+function getStartOfDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function calculateDateRanges(timePeriod: string): { start: Date; prevStart: Date; prevEnd: Date } {
+  const now = new Date();
+  const today = getStartOfDay(now);
+
+  let start: Date;
+  let prevStart: Date;
+  let prevEnd: Date;
+
+  switch (timePeriod) {
+    case 'today':
+      start = new Date(today);
+      prevStart = new Date(today);
+      prevStart.setDate(prevStart.getDate() - 1);
+      prevEnd = new Date(today);
+      break;
+    case 'week': {
+      const dayIdx = (now.getDay() + 6) % 7; // Monday = 0
+      start = new Date(today);
+      start.setDate(today.getDate() - dayIdx);
+      prevStart = new Date(start);
+      prevStart.setDate(prevStart.getDate() - 7);
+      prevEnd = new Date(start);
+      break;
+    }
+    case 'month':
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      prevEnd = new Date(start);
+      break;
+    case 'all_time':
+    default:
+      start = new Date(0);
+      prevStart = new Date(0);
+      prevEnd = new Date(0);
+      break;
+  }
+
+  return { start, prevStart, prevEnd };
+}
+
+function aggregateMetrics(activities: any[], metricType: string): number {
+  if (!activities || activities.length === 0) return 0;
+
+  switch (metricType) {
+    case 'calls':
+      return activities.filter(a => a.event_type === 'call').length;
+    case 'deals_won':
+      return activities.filter(a => a.event_type === 'opportunity_won').length;
+    case 'revenue':
+      return activities
+        .filter(a => a.event_type === 'opportunity_won')
+        .reduce((sum, a) => sum + (Number(a.value) || 0), 0);
+    case 'contacts':
+      return activities.filter(a => a.event_type === 'contact_created').length;
+    case 'pipeline':
+      return activities.filter(a => a.event_type === 'opportunity_stage_changed').length;
+    case 'overall':
+    default: {
+      const calls = activities.filter(a => a.event_type === 'call').length;
+      const dealsWon = activities.filter(a => a.event_type === 'opportunity_won').length;
+      const revenue = activities
+        .filter(a => a.event_type === 'opportunity_won')
+        .reduce((sum, a) => sum + (Number(a.value) || 0), 0);
+      const contacts = activities.filter(a => a.event_type === 'contact_created').length;
+      const pipeline = activities.filter(a => a.event_type === 'opportunity_stage_changed').length;
+      return Math.round(calls + dealsWon * 10 + revenue / 1000 + contacts + pipeline * 5);
+    }
+  }
 }
 
 serve(async (req) => {
@@ -31,55 +113,17 @@ serve(async (req) => {
 
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
-    if (!token) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!token) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
     const { data: userData, error: userErr } = await authClient.auth.getUser();
-    if (userErr || !userData.user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-
-    const { metric_type, time_period, team_id } = await req.json();
-
-    if (team_id) {
-      const { data: callerProfile } = await supabase.from('profiles').select('team_id').eq('user_id', userData.user.id).maybeSingle();
-      if (callerProfile?.team_id !== team_id) {
-        return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      }
+    if (userErr || !userData.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Calculate date ranges
-    const now = new Date();
-    let startDate: Date;
-    let previousStartDate: Date;
-    let previousEndDate: Date;
-
-    switch (time_period) {
-      case 'today':
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        previousStartDate = new Date(startDate);
-        previousStartDate.setDate(previousStartDate.getDate() - 1);
-        previousEndDate = new Date(startDate);
-        break;
-      case 'week':
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - now.getDay());
-        startDate.setHours(0, 0, 0, 0);
-        previousStartDate = new Date(startDate);
-        previousStartDate.setDate(previousStartDate.getDate() - 7);
-        previousEndDate = new Date(startDate);
-        break;
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        previousStartDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        previousEndDate = new Date(startDate);
-        break;
-      case 'all_time':
-      default:
-        startDate = new Date(0);
-        previousStartDate = new Date(0);
-        previousEndDate = new Date(0);
-        break;
-    }
-
-    let leaderboardData: LeaderboardEntry[] = [];
+    const { metric_type = 'overall', time_period = 'week', view_mode = 'individual', team_id } = await req.json();
+    const { start, prevStart, prevEnd } = calculateDateRanges(time_period);
 
     // Fetch profiles with team info
     let profilesQuery = supabase
@@ -90,9 +134,7 @@ serve(async (req) => {
         avatar_url,
         title,
         current_level,
-        xp_points,
-        team_id,
-        teams:team_id (name)
+        team_id
       `);
 
     if (team_id) {
@@ -101,154 +143,165 @@ serve(async (req) => {
 
     const { data: profiles, error: profilesError } = await profilesQuery;
 
-    if (profilesError) {
-      throw profilesError;
-    }
-
+    if (profilesError) throw profilesError;
     if (!profiles || profiles.length === 0) {
-      return new Response(JSON.stringify({ leaderboard: [], userRank: null }), {
+      return new Response(JSON.stringify({ leaderboard: [] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Calculate metrics based on type
-    for (const profile of profiles) {
-      let value = 0;
-      let previousValue = 0;
+    const profileMap = new Map<string, Profile>();
+    const userIds: string[] = [];
+    for (const p of profiles) {
+      profileMap.set(p.user_id, p as Profile);
+      userIds.push(p.user_id);
+    }
 
-      switch (metric_type) {
-        case 'calls': {
-          const { count } = await supabase
-            .from('calls')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', profile.user_id)
-            .gte('created_at', startDate.toISOString());
-          value = count || 0;
-
-          if (time_period !== 'all_time') {
-            const { count: prevCount } = await supabase
-              .from('calls')
-              .select('*', { count: 'exact', head: true })
-              .eq('user_id', profile.user_id)
-              .gte('created_at', previousStartDate.toISOString())
-              .lt('created_at', previousEndDate.toISOString());
-            previousValue = prevCount || 0;
-          }
-          break;
-        }
-        case 'appointments': {
-          const { count } = await supabase
-            .from('calls')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', profile.user_id)
-            .not('appointment_scheduled_at', 'is', null)
-            .gte('created_at', startDate.toISOString());
-          value = count || 0;
-
-          if (time_period !== 'all_time') {
-            const { count: prevCount } = await supabase
-              .from('calls')
-              .select('*', { count: 'exact', head: true })
-              .eq('user_id', profile.user_id)
-              .not('appointment_scheduled_at', 'is', null)
-              .gte('created_at', previousStartDate.toISOString())
-              .lt('created_at', previousEndDate.toISOString());
-            previousValue = prevCount || 0;
-          }
-          break;
-        }
-        case 'revenue': {
-          const { data: deals } = await supabase
-            .from('calls')
-            .select('deal_value')
-            .eq('user_id', profile.user_id)
-            .not('deal_value', 'is', null)
-            .gte('created_at', startDate.toISOString());
-          value = deals?.reduce((sum, d) => sum + (Number(d.deal_value) || 0), 0) || 0;
-
-          if (time_period !== 'all_time') {
-            const { data: prevDeals } = await supabase
-              .from('calls')
-              .select('deal_value')
-              .eq('user_id', profile.user_id)
-              .not('deal_value', 'is', null)
-              .gte('created_at', previousStartDate.toISOString())
-              .lt('created_at', previousEndDate.toISOString());
-            previousValue = prevDeals?.reduce((sum, d) => sum + (Number(d.deal_value) || 0), 0) || 0;
-          }
-          break;
-        }
-        case 'roleplay': {
-          const { data: sessions } = await supabase
-            .from('roleplay_sessions')
-            .select('score')
-            .eq('user_id', profile.user_id)
-            .eq('status', 'completed')
-            .not('score', 'is', null)
-            .gte('started_at', startDate.toISOString());
-          
-          if (sessions && sessions.length > 0) {
-            value = Math.round(sessions.reduce((sum, s) => sum + (s.score || 0), 0) / sessions.length);
-          }
-          break;
-        }
-        case 'xp': {
-          // For XP, we use the current XP points from profile
-          value = profile.xp_points || 0;
-          break;
-        }
-        case 'overall':
-        default: {
-          // Combined score: calls * 1 + appointments * 10 + (revenue/100) + roleplay_avg + xp/10
-          const { count: callCount } = await supabase
-            .from('calls')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', profile.user_id)
-            .gte('created_at', startDate.toISOString());
-          
-          const { count: apptCount } = await supabase
-            .from('calls')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', profile.user_id)
-            .not('appointment_scheduled_at', 'is', null)
-            .gte('created_at', startDate.toISOString());
-          
-          const { data: deals } = await supabase
-            .from('calls')
-            .select('deal_value')
-            .eq('user_id', profile.user_id)
-            .not('deal_value', 'is', null)
-            .gte('created_at', startDate.toISOString());
-          
-          const revenue = deals?.reduce((sum, d) => sum + (Number(d.deal_value) || 0), 0) || 0;
-          
-          value = (callCount || 0) + ((apptCount || 0) * 10) + Math.floor(revenue / 100) + Math.floor((profile.xp_points || 0) / 10);
-          break;
+    // Fetch team names
+    const teamIds = [...new Set(profiles.filter(p => p.team_id).map(p => p.team_id))];
+    let teamMap = new Map<string, string>();
+    if (teamIds.length > 0) {
+      const { data: teams } = await supabase
+        .from('teams')
+        .select('id, name')
+        .in('id', teamIds);
+      if (teams) {
+        for (const t of teams) {
+          teamMap.set(t.id, t.name);
         }
       }
+    }
 
-      const teamData = profile.teams as unknown as { name: string } | null;
+    // Fetch current period ghl_activities in bulk
+    let currentQuery = supabase
+      .from('ghl_activities')
+      .select('matched_user_id, event_type, value')
+      .in('matched_user_id', userIds)
+      .gte('occurred_at', start.toISOString());
 
-      leaderboardData.push({
+    if (time_period === 'today') {
+      const tomorrow = new Date(start);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      currentQuery = currentQuery.lt('occurred_at', tomorrow.toISOString());
+    }
+
+    const { data: currentActivities } = await currentQuery;
+
+    // Fetch previous period ghl_activities in bulk (for trends)
+    let previousActivities: any[] | null = null;
+    if (time_period !== 'all_time') {
+      const { data: prevData } = await supabase
+        .from('ghl_activities')
+        .select('matched_user_id, event_type, value')
+        .in('matched_user_id', userIds)
+        .gte('occurred_at', prevStart.toISOString())
+        .lt('occurred_at', prevEnd.toISOString());
+      previousActivities = prevData;
+    }
+
+    // Group activities by user
+    const currentByUser = new Map<string, any[]>();
+    const prevByUser = new Map<string, any[]>();
+
+    for (const a of (currentActivities || [])) {
+      const uid = a.matched_user_id;
+      if (!uid) continue;
+      if (!currentByUser.has(uid)) currentByUser.set(uid, []);
+      currentByUser.get(uid)!.push(a);
+    }
+
+    for (const a of (previousActivities || [])) {
+      const uid = a.matched_user_id;
+      if (!uid) continue;
+      if (!prevByUser.has(uid)) prevByUser.set(uid, []);
+      prevByUser.get(uid)!.push(a);
+    }
+
+    // Build individual entries
+    const individualEntries: LeaderboardEntry[] = [];
+    for (const profile of profiles) {
+      const currentActs = currentByUser.get(profile.user_id) || [];
+      const prevActs = prevByUser.get(profile.user_id) || [];
+      const value = aggregateMetrics(currentActs, metric_type);
+      const prevValue = aggregateMetrics(prevActs, metric_type);
+
+      individualEntries.push({
         rank: 0,
         user_id: profile.user_id,
         full_name: profile.full_name,
         avatar_url: profile.avatar_url,
         title: profile.title,
-        team_name: teamData?.name || null,
-        current_level: profile.current_level,
+        team_name: profile.team_id ? (teamMap.get(profile.team_id) || null) : null,
+        current_level: profile.current_level || 1,
         value,
-        trend: previousValue > value ? 'down' : previousValue < value ? 'up' : 'same',
+        trend: prevValue > value ? 'down' : prevValue < value ? 'up' : 'same',
       });
     }
 
-    // Sort by value descending and assign ranks
+    let leaderboardData: LeaderboardEntry[];
+
+    // Build user -> team_id map for aggregation
+    const userTeamMap = new Map<string, string | null>();
+    for (const p of profiles) {
+      userTeamMap.set(p.user_id, p.team_id);
+    }
+
+    if (view_mode === 'team') {
+      // Aggregate by team
+      const teamGroups = new Map<string, {
+        team_id: string;
+        team_name: string;
+        totalValue: number;
+        totalPrevValue: number;
+        memberCount: number;
+        bestLevel: number;
+      }>();
+
+      for (const entry of individualEntries) {
+        const rawTeamId = userTeamMap.get(entry.user_id) || 'unassigned';
+        const tName = entry.team_name || 'Unassigned';
+        const prevActs = prevByUser.get(entry.user_id) || [];
+        const prevValue = aggregateMetrics(prevActs, metric_type);
+
+        if (!teamGroups.has(rawTeamId)) {
+          teamGroups.set(rawTeamId, {
+            team_id: rawTeamId,
+            team_name: tName,
+            totalValue: 0,
+            totalPrevValue: 0,
+            memberCount: 0,
+            bestLevel: 0,
+          });
+        }
+        const group = teamGroups.get(rawTeamId)!;
+        group.totalValue += entry.value;
+        group.totalPrevValue += prevValue;
+        group.memberCount += 1;
+        group.bestLevel = Math.max(group.bestLevel, entry.current_level);
+      }
+
+      leaderboardData = Array.from(teamGroups.values()).map(g => ({
+        rank: 0,
+        user_id: g.team_id,
+        full_name: g.team_name,
+        avatar_url: null,
+        title: `${g.memberCount} rep${g.memberCount === 1 ? '' : 's'}`,
+        team_name: null,
+        current_level: g.bestLevel,
+        value: Math.round(g.totalValue),
+        trend: g.totalPrevValue > g.totalValue ? 'down' : g.totalPrevValue < g.totalValue ? 'up' : 'same',
+      }));
+    } else {
+      leaderboardData = individualEntries;
+    }
+
+    // Sort and assign ranks
     leaderboardData.sort((a, b) => b.value - a.value);
     leaderboardData.forEach((entry, index) => {
       entry.rank = index + 1;
     });
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       leaderboard: leaderboardData,
       generated_at: new Date().toISOString()
     }), {
