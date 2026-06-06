@@ -27,7 +27,7 @@ interface TeamTableProps {
   isLoading: boolean;
 }
 
-type SortField = 'name' | 'today_calls' | 'today_appointments' | 'today_revenue' | 'current_streak' | 'current_level';
+type SortField = 'name' | 'today_calls' | 'today_appointments' | 'today_revenue' | 'current_streak' | 'current_level' | 'period_calls' | 'period_deals_won' | 'win_rate' | 'avg_roleplay_score';
 type SortDirection = 'asc' | 'desc';
 type PerformanceFilter = 'all' | 'above' | 'below';
 type StatusFilter = 'all' | 'available' | 'on_call' | 'in_meeting' | 'away' | 'offline';
@@ -84,8 +84,8 @@ export function TeamTable({ members, isLoading }: TeamTableProps) {
           bVal = b.full_name;
           break;
         default:
-          aVal = a[sortField];
-          bVal = b[sortField];
+          aVal = (a[sortField] as number | string | null) ?? 0;
+          bVal = (b[sortField] as number | string | null) ?? 0;
       }
 
       if (typeof aVal === 'string' && typeof bVal === 'string') {
@@ -163,28 +163,35 @@ export function TeamTable({ members, isLoading }: TeamTableProps) {
               <TableHead className="text-center">Level</TableHead>
               <TableHead className="text-center">
                 <button onClick={() => handleSort('today_calls')} className="flex items-center gap-1 hover:text-foreground mx-auto">
-                  Calls
+                  Today
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
               </TableHead>
               <TableHead className="text-center">
-                <button onClick={() => handleSort('today_appointments')} className="flex items-center gap-1 hover:text-foreground mx-auto">
-                  Appts
+                <button onClick={() => handleSort('period_calls')} className="flex items-center gap-1 hover:text-foreground mx-auto">
+                  Calls 30d
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
               </TableHead>
               <TableHead className="text-center">
-                <button onClick={() => handleSort('today_revenue')} className="flex items-center gap-1 hover:text-foreground mx-auto">
-                  Revenue
+                <button onClick={() => handleSort('period_deals_won')} className="flex items-center gap-1 hover:text-foreground mx-auto">
+                  Won
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
               </TableHead>
               <TableHead className="text-center">
-                <button onClick={() => handleSort('current_streak')} className="flex items-center gap-1 hover:text-foreground mx-auto">
-                  Streak
+                <button onClick={() => handleSort('win_rate')} className="flex items-center gap-1 hover:text-foreground mx-auto">
+                  Win %
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
               </TableHead>
+              <TableHead className="text-center">
+                <button onClick={() => handleSort('avg_roleplay_score')} className="flex items-center gap-1 hover:text-foreground mx-auto">
+                  Roleplay
+                  <ArrowUpDown className="h-3 w-3" />
+                </button>
+              </TableHead>
+              <TableHead className="text-center">Flags</TableHead>
               <TableHead className="text-center">Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -216,20 +223,55 @@ export function TeamTable({ members, isLoading }: TeamTableProps) {
                 <TableCell className="text-center">
                   <span className={cn(
                     "font-semibold",
-                    member.today_calls >= callTarget ? "text-success" : 
+                    member.today_calls >= callTarget ? "text-success" :
                     member.today_calls >= callTarget * 0.5 ? "text-warning" : "text-destructive"
                   )}>
                     {member.today_calls}
                   </span>
                 </TableCell>
-                <TableCell className="text-center font-medium">
-                  {member.today_appointments}
+                <TableCell className="text-center font-medium tabular-nums">
+                  {member.period_calls}
                 </TableCell>
-                <TableCell className="text-center font-medium text-success">
-                  ${member.today_revenue.toLocaleString()}
+                <TableCell className="text-center font-medium text-success tabular-nums">
+                  {member.period_deals_won}
                 </TableCell>
                 <TableCell className="text-center">
-                  <span className="text-warning font-medium">🔥 {member.current_streak}</span>
+                  <span className={cn(
+                    "font-semibold tabular-nums",
+                    member.win_rate >= 40 ? "text-success" :
+                    member.win_rate >= 20 ? "text-warning" : "text-destructive"
+                  )}>
+                    {member.period_deals_won + member.period_pipeline_moves > 0 ? `${member.win_rate}%` : "—"}
+                  </span>
+                </TableCell>
+                <TableCell className="text-center tabular-nums">
+                  {member.avg_roleplay_score !== null ? (
+                    <span className="text-foreground/80">
+                      {member.avg_roleplay_score}
+                      <span className="text-muted-foreground text-xs"> · {member.roleplay_count}</span>
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">No reps</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-center">
+                  {member.coaching_flags.length === 0 ? (
+                    <span className="text-success text-xs">All clear</span>
+                  ) : (
+                    <div className="flex flex-wrap gap-1 justify-center">
+                      {member.coaching_flags.slice(0, 2).map((flag) => (
+                        <span
+                          key={flag}
+                          className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/30"
+                        >
+                          {flag}
+                        </span>
+                      ))}
+                      {member.coaching_flags.length > 2 && (
+                        <span className="text-[10px] text-muted-foreground">+{member.coaching_flags.length - 2}</span>
+                      )}
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="flex items-center justify-center gap-2">
