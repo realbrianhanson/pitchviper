@@ -43,14 +43,67 @@ serve(async (req) => {
 
     // Get scenario details if provided
     let scenarioContext = "";
+    let agentPrompt = "";
+    let firstMessage = "";
+    let prospectName = "";
+
     if (scenario_id) {
       const { data: scenario } = await supabase
         .from("roleplay_scenarios")
         .select("name, prospect_persona, prospect_situation, objections_to_include, win_conditions")
         .eq("id", scenario_id)
-        .single();
+        .maybeSingle();
 
       if (scenario) {
+        const nameMap: Record<string, string> = {
+          "The Hot Lead": "Alex Chen",
+          "The Price Objector": "Morgan Williams",
+          "The Tire Kicker": "Jordan Smith",
+          "The Gatekeeper": "Taylor Martinez",
+          "The Feature Demander": "Casey Johnson",
+          "The Skeptical CFO": "Robin Anderson",
+          "The Competitor Loyal": "Sam Thompson",
+          "The Ghosted Follow-up": "Jamie Roberts",
+        };
+        prospectName = nameMap[scenario.name] ?? "Chris Davis";
+
+        // Try to enrich with the caller's company settings for product context
+        let companyContext = "";
+        try {
+          const authHeader = req.headers.get("authorization") ?? "";
+          const token = authHeader.replace("Bearer ", "");
+          if (token) {
+            const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+            const authClient = createClient(supabaseUrl, anonKey, {
+              global: { headers: { Authorization: `Bearer ${token}` } },
+            });
+            const { data: userData } = await authClient.auth.getUser();
+            if (userData?.user) {
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("team_id")
+                .eq("user_id", userData.user.id)
+                .maybeSingle();
+              if (profile?.team_id) {
+                const { data: cs } = await supabase
+                  .from("company_settings")
+                  .select("company_name, product_description, value_propositions, common_use_cases, industry, target_audience")
+                  .eq("team_id", profile.team_id)
+                  .maybeSingle();
+                if (cs) {
+                  companyContext = `
+
+PRODUCT/COMPANY THE SALESPERSON IS SELLING (react to it realistically):
+- Company: ${cs.company_name ?? "Unknown"}
+${cs.industry ? `- Industry: ${cs.industry}\n` : ""}${cs.target_audience ? `- Target audience: ${cs.target_audience}\n` : ""}${cs.product_description ? `- Product: ${cs.product_description}\n` : ""}${Array.isArray(cs.value_propositions) && cs.value_propositions.length ? `- Value propositions: ${cs.value_propositions.join("; ")}\n` : ""}${Array.isArray(cs.common_use_cases) && cs.common_use_cases.length ? `- Common use cases: ${cs.common_use_cases.join("; ")}\n` : ""}`.trimEnd();
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error("company_settings lookup failed:", e);
+        }
+
         scenarioContext = `
 Scenario: ${scenario.name}
 Your persona: ${scenario.prospect_persona}
@@ -58,8 +111,32 @@ Your situation: ${scenario.prospect_situation}
 Objections you should raise: ${scenario.objections_to_include.join(", ")}
 Win conditions (salesperson goals): ${scenario.win_conditions.join(", ")}
         `.trim();
+
+        agentPrompt = `You are ${prospectName}, a sales prospect in a realistic voice roleplay. Stay 100% in character — never break character or acknowledge this is a roleplay.
+
+CHARACTER PROFILE:
+Name: ${prospectName}
+Role: ${scenario.prospect_persona}
+
+SITUATION:
+${scenario.prospect_situation}
+${companyContext}
+
+BEHAVIOR:
+- Be realistic but fair — challenging but beatable with good sales technique.
+- Speak conversationally in 1-3 short sentences typical for a phone call. Use natural fillers occasionally.
+- Naturally weave in these objections over the course of the call (don't dump them all at once):
+${scenario.objections_to_include.map((o: string) => `  • "${o}"`).join("\n")}
+- Show subtle positive signals when the salesperson handles a concern well. If they're doing great, start showing buying signals.
+
+WIN CONDITIONS the salesperson is trying to achieve:
+${scenario.win_conditions.map((w: string) => `- ${w}`).join("\n")}
+If they earn one through skilled conversation, acknowledge it naturally ("Alright, you've convinced me", "Okay, let's schedule that").`;
+
+        firstMessage = `Hello, this is ${prospectName}.`;
       }
     }
+
 
     // Use provided agent_id or fall back to configured secret
     const effectiveAgentId = agent_id || ELEVENLABS_AGENT_ID;
@@ -97,9 +174,13 @@ Win conditions (salesperson goals): ${scenario.win_conditions.join(", ")}
       JSON.stringify({ 
         signed_url,
         scenario_context: scenarioContext,
+        agent_prompt: agentPrompt,
+        first_message: firstMessage,
+        prospect_name: prospectName,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (error) {
     console.error("ElevenLabs token error:", error);
     return new Response(

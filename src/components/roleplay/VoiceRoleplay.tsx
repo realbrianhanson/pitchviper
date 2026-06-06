@@ -156,10 +156,22 @@ export function VoiceRoleplay({
         throw new Error("No signed URL received");
       }
 
-      // Start the conversation with default agent settings
+      // Start the conversation with scenario-specific overrides.
+      // NOTE: For these overrides to take effect, the ElevenLabs agent must have
+      // "Security → Overrides" enabled for prompt and first_message in its dashboard.
+      // If overrides are disabled, ElevenLabs will silently fall back to the agent's
+      // default prompt — the call still works, it just won't be scenario-specific.
       await conversation.startSession({
         signedUrl: data.signed_url,
-      });
+        overrides: {
+          agent: {
+            ...(data.agent_prompt ? { prompt: { prompt: data.agent_prompt } } : {}),
+            ...(data.first_message ? { firstMessage: data.first_message } : {}),
+            language: "en",
+          },
+        },
+      } as any);
+
     } catch (error) {
       console.error("Failed to start voice conversation:", error);
       toast.error("Failed to start voice session. Please try text mode.");
