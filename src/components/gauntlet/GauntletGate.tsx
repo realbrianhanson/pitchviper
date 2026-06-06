@@ -74,10 +74,10 @@ export function GauntletGate() {
             variant="default"
             size="lg"
             className="w-full"
-            onClick={() => navigate("/gauntlet")}
+            disabled
           >
             <Flame className="h-5 w-5 mr-2" />
-            Start Challenge
+            Coming in V2
           </ViperButton>
 
           <button
