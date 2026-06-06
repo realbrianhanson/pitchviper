@@ -174,9 +174,13 @@ If they earn one through skilled conversation, acknowledge it naturally ("Alrigh
       JSON.stringify({ 
         signed_url,
         scenario_context: scenarioContext,
+        agent_prompt: agentPrompt,
+        first_message: firstMessage,
+        prospect_name: prospectName,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (error) {
     console.error("ElevenLabs token error:", error);
     return new Response(
