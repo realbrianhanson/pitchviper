@@ -156,35 +156,22 @@ export function VoiceRoleplay({
         throw new Error("No signed URL received");
       }
 
-      // Try with scenario-specific overrides first. If the agent doesn't have
-      // "Security → Overrides" enabled in the ElevenLabs dashboard, the server
-      // closes the session on connect. Fall back to a plain session in that case
-      // so voice still works on the agent's default config.
-      const hasOverrides = Boolean(data.agent_prompt || data.first_message);
-      const startPlain = () =>
-        conversation.startSession({ signedUrl: data.signed_url } as any);
+      const overridesEnabled = data.overrides_enabled === true;
+      const hasOverrides = overridesEnabled && Boolean(data.agent_prompt || data.first_message);
 
       if (hasOverrides) {
-        try {
-          await conversation.startSession({
-            signedUrl: data.signed_url,
-            overrides: {
-              agent: {
-                ...(data.agent_prompt ? { prompt: { prompt: data.agent_prompt } } : {}),
-                ...(data.first_message ? { firstMessage: data.first_message } : {}),
-                language: "en",
-              },
+        await conversation.startSession({
+          signedUrl: data.signed_url,
+          overrides: {
+            agent: {
+              ...(data.agent_prompt ? { prompt: { prompt: data.agent_prompt } } : {}),
+              ...(data.first_message ? { firstMessage: data.first_message } : {}),
+              language: "en",
             },
-          } as any);
-        } catch (overrideErr) {
-          console.warn("ElevenLabs rejected overrides, retrying without them:", overrideErr);
-          toast.message("Scenario customization disabled", {
-            description: "Enable Security → Overrides on your ElevenLabs agent to use scenario-specific prompts.",
-          });
-          await startPlain();
-        }
+          },
+        } as any);
       } else {
-        await startPlain();
+        await conversation.startSession({ signedUrl: data.signed_url } as any);
       }
 
     } catch (error) {

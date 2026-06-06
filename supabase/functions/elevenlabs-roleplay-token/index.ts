@@ -16,6 +16,8 @@ serve(async (req) => {
     
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     const ELEVENLABS_AGENT_ID = Deno.env.get("ELEVENLABS_AGENT_ID");
+    const ELEVENLABS_OVERRIDES_ENABLED = Deno.env.get("ELEVENLABS_OVERRIDES_ENABLED");
+    const overridesEnabled = ELEVENLABS_OVERRIDES_ENABLED?.trim().toLowerCase() === "true";
     
     if (!ELEVENLABS_API_KEY) {
       throw new Error("ELEVENLABS_API_KEY is not configured");
@@ -174,9 +176,14 @@ If they earn one through skilled conversation, acknowledge it naturally ("Alrigh
       JSON.stringify({ 
         signed_url,
         scenario_context: scenarioContext,
-        agent_prompt: agentPrompt,
-        first_message: firstMessage,
         prospect_name: prospectName,
+        overrides_enabled: overridesEnabled,
+        ...(overridesEnabled
+          ? {
+              agent_prompt: agentPrompt,
+              first_message: firstMessage,
+            }
+          : {}),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
