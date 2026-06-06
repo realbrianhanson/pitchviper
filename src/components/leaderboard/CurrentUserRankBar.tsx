@@ -1,9 +1,12 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LeaderboardEntry, MetricType } from "@/hooks/useLeaderboard";
+import { Users } from "lucide-react";
+import { LeaderboardEntry, MetricType, ViewMode } from "@/hooks/useLeaderboard";
+import { cn } from "@/lib/utils";
 
 interface CurrentUserRankBarProps {
   userRank: LeaderboardEntry;
   metricType: MetricType;
+  viewMode?: ViewMode;
   nextRankValue?: number;
 }
 
@@ -11,13 +14,10 @@ const formatValue = (value: number, metricType: MetricType) => {
   if (metricType === 'revenue') {
     return `$${value.toLocaleString()}`;
   }
-  if (metricType === 'roleplay') {
-    return `${value}%`;
-  }
   return value.toLocaleString();
 };
 
-export function CurrentUserRankBar({ userRank, metricType, nextRankValue }: CurrentUserRankBarProps) {
+export function CurrentUserRankBar({ userRank, metricType, viewMode = 'individual', nextRankValue }: CurrentUserRankBarProps) {
   const pointsToNext = nextRankValue ? nextRankValue - userRank.value : 0;
 
   return (
@@ -27,14 +27,22 @@ export function CurrentUserRankBar({ userRank, metricType, nextRankValue }: Curr
           <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center font-bold text-xl text-primary">
             #{userRank.rank}
           </div>
-          <Avatar className="h-10 w-10 border border-primary/30">
-            <AvatarImage src={userRank.avatar_url || undefined} />
-            <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
-              {userRank.full_name.split(' ').map(n => n[0]).join('')}
-            </AvatarFallback>
-          </Avatar>
+          {viewMode === 'team' ? (
+            <div className={cn(
+              "h-10 w-10 rounded-full flex items-center justify-center border border-primary/30 bg-primary/10"
+            )}>
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+          ) : (
+            <Avatar className="h-10 w-10 border border-primary/30">
+              <AvatarImage src={userRank.avatar_url || undefined} />
+              <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
+                {userRank.full_name.split(' ').map(n => n[0]).join('')}
+              </AvatarFallback>
+            </Avatar>
+          )}
           <div>
-            <p className="font-semibold">Your Rank</p>
+            <p className="font-semibold">{viewMode === 'team' ? 'Your Team Rank' : 'Your Rank'}</p>
             <p className="text-sm text-muted-foreground">
               Score: {formatValue(userRank.value, metricType)}
             </p>
