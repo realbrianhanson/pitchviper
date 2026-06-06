@@ -25,8 +25,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/sign-in" replace />;
   }
 
-  // Redirect to onboarding if not completed (but don't redirect if already on onboarding)
-  if (profile && !profile.onboarding_completed && location.pathname !== "/onboarding") {
+  // Gate: must have validated promo code AND completed onboarding before reaching the app
+  const needsOnboarding =
+    profile && (!profile.promo_validated || !profile.onboarding_completed);
+  if (needsOnboarding && location.pathname !== "/onboarding") {
     return <Navigate to="/onboarding" replace />;
   }
 
