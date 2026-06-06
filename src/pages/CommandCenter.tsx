@@ -7,7 +7,8 @@ import { TeamPulse } from "@/components/dashboard/TeamPulse";
 import { MotivationalQuote } from "@/components/dashboard/MotivationalQuote";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUpcomingFollowUps } from "@/hooks/useUpcomingFollowUps";
-import { Phone, Calendar, Target, TrendingUp } from "lucide-react";
+import { useGhlStats } from "@/hooks/useGhlStats";
+import { Phone, Calendar, Trophy, Flame } from "lucide-react";
 import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 import { EditorialEmpty } from "@/components/ui/editorial-empty";
 import { motion } from "framer-motion";
@@ -35,6 +36,7 @@ function calcChange(today: number, yesterday: number | null | undefined): number
 export default function CommandCenter() {
   const { data, loading, error } = useDashboardData();
   const { followUps } = useUpcomingFollowUps();
+  const { stats: ghl } = useGhlStats();
 
   if (loading) {
     return (
@@ -93,7 +95,7 @@ export default function CommandCenter() {
           <div className="md:border-l md:border-border md:pl-10 flex md:flex-col items-baseline md:items-start gap-3 md:gap-1">
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Day Streak</span>
             <span className="font-display italic text-5xl md:text-6xl leading-none text-primary tabular-nums">
-              {data?.profile?.current_streak || 0}
+              {ghl.currentStreak}
             </span>
           </div>
         </motion.div>
@@ -113,51 +115,38 @@ export default function CommandCenter() {
             progress: 0,
             goal: 1,
           }}
-          streak={data?.profile?.current_streak || 0}
+          streak={ghl.currentStreak}
         />
 
         {/* KPI strip — 4 hairline tiles */}
         <div className="bento-grid grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Calls Today"
-            value={todayStats?.calls_made || 0}
+            value={ghl.callsToday}
             icon={Phone}
-            comparison={{
-              value: calcChange(todayStats?.calls_made || 0, yesterdayStats?.calls_made),
-              label: "vs yest",
-            }}
             delay={0}
           />
           <MetricCard
-            label="Appts Set"
-            value={todayStats?.appointments_set || 0}
+            label="Pipeline Deals"
+            value={ghl.dealsInPipeline}
             icon={Calendar}
-            progress={{ current: todayStats?.appointments_set || 0, goal: 8 }}
             delay={80}
           />
           <MetricCard
-            label="Revenue"
-            value={Math.round(todayStats?.revenue_closed || 0)}
+            label="Won This Week"
+            value={Math.round(ghl.revenueWonThisWeek)}
             format="currency"
-            icon={Target}
+            icon={Trophy}
             comparison={{
-              value: calcChange(
-                Math.round(todayStats?.revenue_closed || 0),
-                yesterdayStats?.revenue_closed ? Math.round(yesterdayStats.revenue_closed) : null
-              ),
-              label: "today",
+              value: ghl.dealsWonThisWeek,
+              label: "deals",
             }}
             delay={160}
           />
           <MetricCard
-            label="Conversion"
-            value={conversionRate}
-            format="percentage"
-            icon={TrendingUp}
-            comparison={{
-              value: conversionRate - yesterdayConversionRate,
-              label: "delta",
-            }}
+            label="Day Streak"
+            value={ghl.currentStreak}
+            icon={Flame}
             delay={240}
           />
         </div>
