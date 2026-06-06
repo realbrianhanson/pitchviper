@@ -126,7 +126,7 @@ export function useLeaderboard() {
 
   const currentUserRank = leaderboard.find(e => e.user_id === user?.id);
   const currentUserTeamEntry = viewMode === 'team' && profile?.team_id
-    ? leaderboard.find(e => e.full_name === profile.team_id || e.user_id === `team:${profile.team_id}`)
+    ? leaderboard.find(e => e.user_id === profile.team_id)
     : undefined;
 
   const topThree = leaderboard.slice(0, 3);

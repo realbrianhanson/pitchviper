@@ -44,7 +44,7 @@ export function LeaderboardPodium({ topThree, metricType, viewMode = 'individual
         if (!entry) return null;
         const rank = entry.rank;
         const isFirst = rank === 1;
-        const isCurrentTeam = viewMode === 'team' && currentUserTeamId && entry.user_id === `team:${currentUserTeamId}`;
+        const isCurrentTeam = viewMode === 'team' && currentUserTeamId && entry.user_id === currentUserTeamId;
 
         return (
           <motion.div

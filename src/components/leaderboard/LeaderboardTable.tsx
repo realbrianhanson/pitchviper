@@ -44,7 +44,7 @@ export function LeaderboardTable({ entries, metricType, viewMode = 'individual',
     <div className="space-y-2">
       {entries.map((entry) => {
         const isCurrentUser = viewMode === 'individual' && entry.user_id === user?.id;
-        const isCurrentTeam = viewMode === 'team' && currentUserTeamId && entry.user_id === `team:${currentUserTeamId}`;
+        const isCurrentTeam = viewMode === 'team' && currentUserTeamId && entry.user_id === currentUserTeamId;
         const isHighlighted = isCurrentUser || isCurrentTeam;
 
         return (
