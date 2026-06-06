@@ -40,7 +40,7 @@ export function CompetitionsPanel({ competitions }: CompetitionsPanelProps) {
               No active competitions right now.
             </p>
             {isManager && (
-              <Link to="/competitions">
+                <Link to="/manager/competitions">
                 <ViperButton size="sm">
                   <Plus className="h-4 w-4 mr-1" />
                   Create Competition
@@ -62,7 +62,7 @@ export function CompetitionsPanel({ competitions }: CompetitionsPanelProps) {
             Competitions
           </ViperCardTitle>
           {isManager && (
-            <Link to="/competitions">
+            <Link to="/manager/competitions">
               <ViperButton variant="ghost" size="sm">
                 <Plus className="h-4 w-4 mr-1" />
                 Manage
