@@ -864,6 +864,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ghl_activities: {
+        Row: {
+          assigned_email: string | null
+          created_at: string
+          event_type: string
+          ghl_user_id: string | null
+          id: string
+          match_method: string | null
+          matched_user_id: string | null
+          occurred_at: string
+          payload: Json
+          unassigned: boolean
+        }
+        Insert: {
+          assigned_email?: string | null
+          created_at?: string
+          event_type: string
+          ghl_user_id?: string | null
+          id?: string
+          match_method?: string | null
+          matched_user_id?: string | null
+          occurred_at?: string
+          payload?: Json
+          unassigned?: boolean
+        }
+        Update: {
+          assigned_email?: string | null
+          created_at?: string
+          event_type?: string
+          ghl_user_id?: string | null
+          id?: string
+          match_method?: string | null
+          matched_user_id?: string | null
+          occurred_at?: string
+          payload?: Json
+          unassigned?: boolean
+        }
+        Relationships: []
+      }
       learning_paths: {
         Row: {
           created_at: string
@@ -1142,6 +1181,7 @@ export type Database = {
           current_streak: number
           default_aloware_line: string | null
           full_name: string
+          ghl_user_id: string | null
           hire_date: string | null
           id: string
           last_coached_at: string | null
@@ -1164,6 +1204,7 @@ export type Database = {
           current_streak?: number
           default_aloware_line?: string | null
           full_name: string
+          ghl_user_id?: string | null
           hire_date?: string | null
           id?: string
           last_coached_at?: string | null
@@ -1186,6 +1227,7 @@ export type Database = {
           current_streak?: number
           default_aloware_line?: string | null
           full_name?: string
+          ghl_user_id?: string | null
           hire_date?: string | null
           id?: string
           last_coached_at?: string | null
@@ -2060,6 +2102,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      match_ghl_user: {
+        Args: { _email: string; _ghl_user_id: string }
+        Returns: string
       }
       update_user_status: {
         Args: {
