@@ -172,6 +172,7 @@ export type Database = {
           duration_seconds: number
           id: string
           improvement_notes: string | null
+          is_demo: boolean
           is_synced_from_aloware: boolean | null
           notes: string | null
           outcome: Database["public"]["Enums"]["call_outcome"]
@@ -198,6 +199,7 @@ export type Database = {
           duration_seconds?: number
           id?: string
           improvement_notes?: string | null
+          is_demo?: boolean
           is_synced_from_aloware?: boolean | null
           notes?: string | null
           outcome: Database["public"]["Enums"]["call_outcome"]
@@ -224,6 +226,7 @@ export type Database = {
           duration_seconds?: number
           id?: string
           improvement_notes?: string | null
+          is_demo?: boolean
           is_synced_from_aloware?: boolean | null
           notes?: string | null
           outcome?: Database["public"]["Enums"]["call_outcome"]
@@ -1190,6 +1193,7 @@ export type Database = {
           ghl_user_id: string | null
           hire_date: string | null
           id: string
+          is_demo: boolean
           last_coached_at: string | null
           longest_streak: number
           onboarding_completed: boolean
@@ -1213,6 +1217,7 @@ export type Database = {
           ghl_user_id?: string | null
           hire_date?: string | null
           id?: string
+          is_demo?: boolean
           last_coached_at?: string | null
           longest_streak?: number
           onboarding_completed?: boolean
@@ -1236,6 +1241,7 @@ export type Database = {
           ghl_user_id?: string | null
           hire_date?: string | null
           id?: string
+          is_demo?: boolean
           last_coached_at?: string | null
           longest_streak?: number
           onboarding_completed?: boolean
