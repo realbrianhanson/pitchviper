@@ -8,6 +8,8 @@ import { MotivationalQuote } from "@/components/dashboard/MotivationalQuote";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUpcomingFollowUps } from "@/hooks/useUpcomingFollowUps";
 import { useGhlStats } from "@/hooks/useGhlStats";
+import { useLeaderboard } from "@/hooks/useLeaderboard";
+import { useAuth } from "@/hooks/useAuth";
 import { Phone, Calendar, Trophy, Flame } from "lucide-react";
 import { EditorialSkeleton } from "@/components/ui/editorial-skeleton";
 import { motion } from "framer-motion";
@@ -31,11 +33,18 @@ export default function CommandCenter() {
   const { data, loading: dashboardLoading, error: dashboardError } = useDashboardData();
   const { followUps, isLoading: followUpsLoading, error: followUpsError } = useUpcomingFollowUps();
   const { stats: ghl, loading: ghlLoading, error: ghlError } = useGhlStats();
+  const { user } = useAuth();
+  const {
+    leaderboard,
+    isLoading: leaderboardLoading,
+    error: leaderboardError,
+    metricLabels,
+    metricType,
+  } = useLeaderboard();
 
   const firstName = data?.profile?.full_name?.split(" ")[0] || "Operator";
   const challenge = data?.challenge;
   const activities = data?.activities || [];
-  const teamLeaderboard = data?.teamLeaderboard;
 
   return (
     <AppLayout title="Command Center">
@@ -166,17 +175,19 @@ export default function CommandCenter() {
         <div className="bento-grid grid-cols-1 lg:grid-cols-12">
           <div className="lg:col-span-7">
             <TeamPulse
-              members={teamLeaderboard?.map(m => ({
+              members={leaderboard.slice(0, 5).map((m) => ({
                 id: m.user_id,
-                name: m.name,
+                name: m.full_name,
                 avatarUrl: m.avatar_url || undefined,
-                value: m.calls_made,
-                metric: "calls",
+                value: m.value,
+                metric: metricLabels[metricType].toLowerCase(),
                 rank: m.rank,
-              })) || []}
+                level: m.current_level,
+                isCurrentUser: m.user_id === user?.id,
+              }))}
               teamName={data?.profile?.team?.name || null}
-              loading={dashboardLoading}
-              error={dashboardError}
+              loading={leaderboardLoading}
+              error={leaderboardError}
             />
           </div>
           <div className="lg:col-span-5">
