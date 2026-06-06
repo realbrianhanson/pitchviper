@@ -604,6 +604,30 @@ export default function RoleplaySession() {
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               Win Conditions
             </h4>
+            {inputMode === "voice" && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                <span
+                  className={cn(
+                    "text-[10px] uppercase tracking-wider px-2 py-1 rounded-full border transition-colors",
+                    voiceMomentum.addressed_objection
+                      ? "bg-success/10 text-success border-success/30"
+                      : "bg-background/50 text-muted-foreground border-border/50"
+                  )}
+                >
+                  {voiceMomentum.addressed_objection ? "✓" : "○"} Objection handled
+                </span>
+                <span
+                  className={cn(
+                    "text-[10px] uppercase tracking-wider px-2 py-1 rounded-full border transition-colors",
+                    voiceMomentum.attempted_close
+                      ? "bg-success/10 text-success border-success/30"
+                      : "bg-background/50 text-muted-foreground border-border/50"
+                  )}
+                >
+                  {voiceMomentum.attempted_close ? "✓" : "○"} Close attempted
+                </span>
+              </div>
+            )}
             <div className="space-y-2">
               {scenario.win_conditions.map((condition, idx) => {
                 const isAchieved = achievedConditions.has(condition);
