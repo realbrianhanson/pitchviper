@@ -13,6 +13,7 @@ interface Profile {
   xp_points: number;
   current_streak: number;
   onboarding_completed: boolean;
+  promo_validated: boolean;
 }
 
 interface AuthContextType {

@@ -5,13 +5,20 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { FloatingParticles } from "@/components/auth/FloatingParticles";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
+import { StepAccess } from "@/components/onboarding/StepAccess";
 import { StepProfile } from "@/components/onboarding/StepProfile";
 import { StepTeam } from "@/components/onboarding/StepTeam";
 import { StepComplete } from "@/components/onboarding/StepComplete";
 import { ViperCard, ViperCardContent } from "@/components/ui/viper-card";
 import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
+type UserRole = "rep" | "manager";
+
+interface AccessData {
+  promoCode: string;
+  role: UserRole;
+}
 
 interface ProfileData {
   avatarUrl: string | null;
@@ -26,76 +33,62 @@ interface TeamData {
 }
 
 export default function Onboarding() {
-  const { user, loading: authLoading, refreshProfile } = useAuth();
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState("");
-  const [isManager, setIsManager] = useState(false);
-  
+
+  const [accessData, setAccessData] = useState<AccessData>({
+    promoCode: "",
+    role: "rep",
+  });
+
   const [profileData, setProfileData] = useState<ProfileData>({
     avatarUrl: null,
     title: "",
     hireDate: "",
   });
-  
+
   const [teamData, setTeamData] = useState<TeamData>({
     teamId: null,
     teamName: null,
     teamCode: null,
   });
 
-  // Load existing profile data
+  // Initialize from auth profile (created by DB trigger)
   useEffect(() => {
-    if (!user) return;
+    if (!user || authLoading) return;
 
-    const loadProfile = async () => {
-      try {
-        // Get profile
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (profile) {
-          setFullName(profile.full_name);
-          if (profile.onboarding_completed) {
-            navigate("/");
-            return;
-          }
-        }
-
-        // Check if manager
-        const { data: roles } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id);
-
-        if (roles?.some(r => r.role === "manager")) {
-          setIsManager(true);
-        }
-      } catch (err) {
-        console.error("Error loading profile:", err);
-      } finally {
-        setLoading(false);
+    if (profile) {
+      setFullName(profile.full_name || "");
+      if (profile.onboarding_completed && profile.promo_validated) {
+        navigate("/");
+        return;
       }
-    };
+      // Skip to step 2 if promo already validated
+      if (profile.promo_validated) {
+        setStep(2);
+      }
+    }
+    setLoading(false);
+  }, [user, profile, authLoading, navigate]);
 
-    loadProfile();
-  }, [user, navigate]);
-
+  const handleAccessComplete = (data: AccessData) => {
+    setAccessData(data);
+    setStep(2);
+  };
 
   const handleProfileComplete = (data: ProfileData) => {
     setProfileData(data);
-    setStep(2);
+    setStep(3);
   };
 
   const handleTeamComplete = (data: TeamData) => {
     setTeamData(data);
-    setStep(3);
+    setStep(4);
   };
 
   const handleFinalComplete = async () => {
@@ -115,7 +108,6 @@ export default function Onboarding() {
 
       if (error) throw error;
 
-      // Refresh profile in AuthContext so ProtectedRoute sees updated onboarding_completed
       await refreshProfile();
 
       toast({
@@ -141,9 +133,10 @@ export default function Onboarding() {
     );
   }
 
+  const isManager = accessData.role === "manager";
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated gradient mesh background */}
       <div className="fixed inset-0 bg-background">
         <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[150px] animate-pulse" />
         <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-magenta/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: "1s" }} />
@@ -153,7 +146,6 @@ export default function Onboarding() {
       <FloatingParticles />
 
       <div className="relative z-10 w-full max-w-lg">
-        {/* Logo */}
         <div className="flex justify-center mb-6">
           <span className="font-display text-2xl tracking-tight text-foreground">
             <span className="font-normal">Pitch</span>
@@ -161,13 +153,18 @@ export default function Onboarding() {
           </span>
         </div>
 
-        {/* Progress */}
-        <OnboardingProgress currentStep={step} totalSteps={3} />
+        <OnboardingProgress currentStep={step} totalSteps={4} />
 
-        {/* Card */}
         <ViperCard variant="glass" className="overflow-hidden">
           <ViperCardContent className="p-8">
             {step === 1 && (
+              <StepAccess
+                initialData={accessData}
+                onComplete={handleAccessComplete}
+              />
+            )}
+
+            {step === 2 && (
               <StepProfile
                 fullName={fullName}
                 initialData={profileData}
@@ -175,15 +172,15 @@ export default function Onboarding() {
               />
             )}
 
-            {step === 2 && (
+            {step === 3 && (
               <StepTeam
                 isManager={isManager}
                 onComplete={handleTeamComplete}
-                onBack={() => setStep(1)}
+                onBack={() => setStep(2)}
               />
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <StepComplete
                 teamName={teamData.teamName}
                 onComplete={handleFinalComplete}
