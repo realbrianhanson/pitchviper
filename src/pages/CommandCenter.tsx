@@ -36,6 +36,7 @@ function calcChange(today: number, yesterday: number | null | undefined): number
 export default function CommandCenter() {
   const { data, loading, error } = useDashboardData();
   const { followUps } = useUpcomingFollowUps();
+  const { stats: ghl } = useGhlStats();
 
   if (loading) {
     return (
