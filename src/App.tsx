@@ -51,6 +51,7 @@ const TrainingAcademy = lazy(() => import("./pages/TrainingAcademy"));
 const DealPipeline = lazy(() => import("./pages/DealPipeline"));
 const TeamSettings = lazy(() => import("./pages/TeamSettings"));
 const CoachingConsole = lazy(() => import("./pages/CoachingConsole"));
+const AICoachInsightsPage = lazy(() => import("./pages/AICoachInsightsPage"));
 const ManagerDashboard = lazy(() => import("./pages/ManagerDashboard"));
 const CompetitionsManager = lazy(() => import("./pages/CompetitionsManager"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -104,7 +105,8 @@ const App = () => (
                       <Route path="/training" element={<ProtectedRoute><TrainingAcademy /></ProtectedRoute>} />
                       <Route path="/pipeline" element={<ProtectedRoute><DealPipeline /></ProtectedRoute>} />
                       <Route path="/team-settings" element={<ProtectedRoute><TeamSettings /></ProtectedRoute>} />
-                      <Route path="/coaching" element={<ProtectedRoute><CoachingConsole /></ProtectedRoute>} />
+                     <Route path="/coaching" element={<ProtectedRoute><CoachingConsole /></ProtectedRoute>} />
+                     <Route path="/ai-coach" element={<ProtectedRoute><AICoachInsightsPage /></ProtectedRoute>} />
                       <Route path="/manager" element={<ProtectedRoute><ManagerDashboard /></ProtectedRoute>} />
                       <Route path="/manager/competitions" element={<ProtectedRoute><CompetitionsManager /></ProtectedRoute>} />
                       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

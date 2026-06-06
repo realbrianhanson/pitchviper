@@ -45,6 +45,7 @@ const mainNavItems = [
   { title: "Objection Vault", url: "/objection-vault", icon: Shield },
   { title: "Leaderboards", url: "/leaderboards", icon: Trophy },
   { title: "My Performance", url: "/performance", icon: TrendingUp },
+  { title: "AI Coach", url: "/ai-coach", icon: Brain },
   { title: "Achievements", url: "/achievements", icon: Award },
   { title: "Training Academy", url: "/training", icon: GraduationCap },
   { title: "Deal Pipeline", url: "/pipeline", icon: GitBranch },
