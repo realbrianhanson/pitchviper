@@ -171,12 +171,25 @@ export default function Leaderboards() {
           </div>
         ) : null}
 
-        {currentUserRank && !isLoading && !error && (
+        {/* Current user / team rank bar */}
+        {viewMode === 'individual' && currentUserRank && !isLoading && !error && (
           <CurrentUserRankBar
             userRank={currentUserRank}
             metricType={metricType}
             viewMode={viewMode}
             nextRankValue={nextRankValue}
+          />
+        )}
+        {viewMode === 'team' && currentUserTeamEntry && !isLoading && !error && (
+          <CurrentUserRankBar
+            userRank={currentUserTeamEntry}
+            metricType={metricType}
+            viewMode={viewMode}
+            nextRankValue={
+              currentUserTeamEntry.rank > 1
+                ? leaderboard.find((e) => e.rank === currentUserTeamEntry.rank - 1)?.value
+                : undefined
+            }
           />
         )}
       </div>
