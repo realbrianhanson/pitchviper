@@ -7,16 +7,22 @@ const corsHeaders = {
 };
 
 // Promo codes are loaded from the PROMO_CODES secret (comma- or JSON-separated).
+// If the secret is unset/empty, we fall back to the default launch code "viper".
+const DEFAULT_PROMO_CODES = ['viper'];
 function loadPromoCodes(): string[] {
   const raw = Deno.env.get('PROMO_CODES') ?? '';
-  if (!raw.trim()) return [];
+  if (!raw.trim()) return DEFAULT_PROMO_CODES;
   try {
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed.map((c) => String(c).trim().toLowerCase());
+    if (Array.isArray(parsed)) {
+      const list = parsed.map((c) => String(c).trim().toLowerCase()).filter(Boolean);
+      return list.length ? list : DEFAULT_PROMO_CODES;
+    }
   } catch {
     // fallthrough to CSV parse
   }
-  return raw.split(',').map((c) => c.trim().toLowerCase()).filter(Boolean);
+  const list = raw.split(',').map((c) => c.trim().toLowerCase()).filter(Boolean);
+  return list.length ? list : DEFAULT_PROMO_CODES;
 }
 
 serve(async (req) => {
