@@ -365,24 +365,38 @@ export default function RoleplaySession() {
     toast.info("Hint revealed! This will cost 10 XP from your final score.");
   };
 
-  // Handle voice transcript updates
+  // Handle voice transcript updates — persist each line to DB as it arrives
+  // so a closed tab mid-call doesn't lose the transcript.
+  const persistTranscript = async (nextMessages: Message[]) => {
+    if (!sessionId) return;
+    try {
+      // Add speaker labels alongside role for downstream readability
+      const enriched = nextMessages.map((m) => ({
+        ...m,
+        speaker: m.role === "user" ? "rep" : "prospect",
+      }));
+      await supabase
+        .from("roleplay_sessions")
+        .update({ transcript: JSON.parse(JSON.stringify(enriched)) })
+        .eq("id", sessionId);
+    } catch (err) {
+      console.error("Failed to persist voice transcript line:", err);
+    }
+  };
+
   const handleVoiceTranscriptUpdate = (userText: string, agentText: string) => {
-    if (userText) {
-      const userMsg: Message = {
-        role: "user",
-        content: userText,
-        timestamp: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, userMsg]);
-    }
-    if (agentText) {
-      const agentMsg: Message = {
-        role: "assistant",
-        content: agentText,
-        timestamp: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, agentMsg]);
-    }
+    const newLines: Message[] = [];
+    const now = new Date().toISOString();
+    if (userText) newLines.push({ role: "user", content: userText, timestamp: now });
+    if (agentText) newLines.push({ role: "assistant", content: agentText, timestamp: now });
+    if (newLines.length === 0) return;
+
+    setMessages((prev) => {
+      const next = [...prev, ...newLines];
+      // Fire-and-forget persist with the up-to-date array
+      void persistTranscript(next);
+      return next;
+    });
   };
 
   const handleVoiceSessionEnd = () => {
