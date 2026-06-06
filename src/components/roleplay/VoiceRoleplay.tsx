@@ -156,21 +156,36 @@ export function VoiceRoleplay({
         throw new Error("No signed URL received");
       }
 
-      // Start the conversation with scenario-specific overrides.
-      // NOTE: For these overrides to take effect, the ElevenLabs agent must have
-      // "Security → Overrides" enabled for prompt and first_message in its dashboard.
-      // If overrides are disabled, ElevenLabs will silently fall back to the agent's
-      // default prompt — the call still works, it just won't be scenario-specific.
-      await conversation.startSession({
-        signedUrl: data.signed_url,
-        overrides: {
-          agent: {
-            ...(data.agent_prompt ? { prompt: { prompt: data.agent_prompt } } : {}),
-            ...(data.first_message ? { firstMessage: data.first_message } : {}),
-            language: "en",
-          },
-        },
-      } as any);
+      // Try with scenario-specific overrides first. If the agent doesn't have
+      // "Security → Overrides" enabled in the ElevenLabs dashboard, the server
+      // closes the session on connect. Fall back to a plain session in that case
+      // so voice still works on the agent's default config.
+      const hasOverrides = Boolean(data.agent_prompt || data.first_message);
+      const startPlain = () =>
+        conversation.startSession({ signedUrl: data.signed_url } as any);
+
+      if (hasOverrides) {
+        try {
+          await conversation.startSession({
+            signedUrl: data.signed_url,
+            overrides: {
+              agent: {
+                ...(data.agent_prompt ? { prompt: { prompt: data.agent_prompt } } : {}),
+                ...(data.first_message ? { firstMessage: data.first_message } : {}),
+                language: "en",
+              },
+            },
+          } as any);
+        } catch (overrideErr) {
+          console.warn("ElevenLabs rejected overrides, retrying without them:", overrideErr);
+          toast.message("Scenario customization disabled", {
+            description: "Enable Security → Overrides on your ElevenLabs agent to use scenario-specific prompts.",
+          });
+          await startPlain();
+        }
+      } else {
+        await startPlain();
+      }
 
     } catch (error) {
       console.error("Failed to start voice conversation:", error);
