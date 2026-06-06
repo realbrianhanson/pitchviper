@@ -8,22 +8,15 @@ import { ViperInput } from "@/components/ui/viper-input";
 import { ViperButton } from "@/components/ui/viper-button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Loader2, User, Mail, Lock, Users, Ticket, Chrome } from "lucide-react";
-
-type UserRole = "rep" | "manager";
-
-
+import { Loader2, User, Mail, Lock, Chrome } from "lucide-react";
 
 export default function SignUp() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [teamCode, setTeamCode] = useState("");
-  const [promoCode, setPromoCode] = useState("");
-  const [role, setRole] = useState<UserRole>("rep");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -33,70 +26,28 @@ export default function SignUp() {
     setError(null);
     setLoading(true);
 
-    // Validate promo code server-side
     try {
-      const { data: promoResult, error: promoError } = await supabase.functions.invoke('validate-promo-code', {
-        body: { promoCode: promoCode.trim() },
-      });
-
-      if (promoError || !promoResult?.valid) {
-        setError("Invalid promo code. Please enter a valid code to sign up.");
-        setLoading(false);
-        toast({
-          title: "Invalid Promo Code",
-          description: "You need a valid promo code to create an account.",
-          variant: "destructive",
-        });
-        return;
-      }
-    } catch {
-      setError("Could not validate promo code. Please try again.");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // Sign up the user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Sign up — DB trigger auto-creates profile + default 'rep' role.
+      // Promo code and role selection happen in onboarding.
+      const { error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: window.location.origin,
+          data: {
+            full_name: fullName,
+          },
         },
       });
 
       if (authError) throw authError;
-      if (!authData.user) throw new Error("No user returned from signup");
 
-      // Create profile
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-          user_id: authData.user.id,
-          full_name: fullName,
-          team_code: teamCode || null,
-        });
-
-      if (profileError) throw profileError;
-
-      // Create user role
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({
-          user_id: authData.user.id,
-          role: role,
-        });
-
-      if (roleError) throw roleError;
-
-      // Success!
       setSuccess(true);
       toast({
         title: "Welcome to PitchViper!",
         description: "Check your email to verify your account.",
       });
 
-      // Redirect to verify email page
       setTimeout(() => {
         navigate("/verify-email");
       }, 1500);
@@ -110,6 +61,22 @@ export default function SignUp() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSignUp = async () => {
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) {
+      toast({
+        title: "Google sign up failed",
+        description: result.error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    if (result.redirected) return;
+    navigate("/");
   };
 
   return (
@@ -168,79 +135,10 @@ export default function SignUp() {
           <PasswordStrengthIndicator password={password} />
         </div>
 
-        {/* Promo Code */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
-            Promo Code <span className="text-destructive">*</span>
-          </label>
-          <div className="relative">
-            <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <ViperInput
-              type="text"
-              placeholder="Enter your promo code"
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value)}
-              className={cn("pl-10", error?.includes("promo") && "border-destructive")}
-              variant="glow"
-              required
-            />
-          </div>
-        </div>
-
-        {/* Team Code */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
-            Team Code <span className="text-muted-foreground">(optional)</span>
-          </label>
-          <div className="relative">
-            <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <ViperInput
-              type="text"
-              placeholder="Enter team code to join"
-              value={teamCode}
-              onChange={(e) => setTeamCode(e.target.value)}
-              className="pl-10"
-              variant="glass"
-            />
-          </div>
-        </div>
-
-        {/* Role Selector */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">I am a...</label>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setRole("rep")}
-              className={cn(
-                "flex flex-col items-center gap-2 p-4 rounded-lg border transition-all duration-200",
-                role === "rep"
-                  ? "border-primary bg-primary/10 shadow-glow-sm"
-                  : "border-border bg-card/50 hover:border-primary/50"
-              )}
-            >
-              <span className="text-2xl">🎯</span>
-              <span className={cn("text-sm font-medium", role === "rep" ? "text-primary" : "text-foreground")}>
-                Sales Rep
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole("manager")}
-              className={cn(
-                "flex flex-col items-center gap-2 p-4 rounded-lg border transition-all duration-200",
-                role === "manager"
-                  ? "border-primary bg-primary/10 shadow-glow-sm"
-                  : "border-border bg-card/50 hover:border-primary/50"
-              )}
-            >
-              <span className="text-2xl">👑</span>
-              <span className={cn("text-sm font-medium", role === "manager" ? "text-primary" : "text-foreground")}>
-                Sales Manager
-              </span>
-            </button>
-          </div>
-        </div>
+        {/* Info: promo code now collected in onboarding */}
+        <p className="text-xs text-muted-foreground">
+          You'll be asked for your promo code and role after verifying your email.
+        </p>
 
         {/* Error message */}
         {error && (
@@ -285,21 +183,7 @@ export default function SignUp() {
           type="button"
           variant="glass"
           className="w-full"
-          onClick={async () => {
-            const result = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: window.location.origin,
-            });
-            if (result.error) {
-              toast({
-                title: "Google sign up failed",
-                description: result.error.message,
-                variant: "destructive",
-              });
-              return;
-            }
-            if (result.redirected) return;
-            navigate("/");
-          }}
+          onClick={handleGoogleSignUp}
         >
           <Chrome className="h-4 w-4" />
           Google
