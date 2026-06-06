@@ -137,7 +137,9 @@ export function LeaderboardPodium({ topThree, metricType, viewMode = 'individual
               <div className="flex items-center gap-1.5">
                 <TrendIcon trend={entry.trend} />
                 <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-                  {viewMode === 'individual' ? `Lvl ${entry.current_level}` : 'Team Total'}
+                  {viewMode === 'individual'
+                    ? `Lvl ${entry.current_level} · ${entry.xp_points.toLocaleString()} XP`
+                    : `Team XP ${entry.xp_points.toLocaleString()}`}
                 </span>
               </div>
             </div>

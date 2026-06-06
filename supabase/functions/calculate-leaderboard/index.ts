@@ -14,6 +14,7 @@ interface LeaderboardEntry {
   title: string | null;
   team_name: string | null;
   current_level: number;
+  xp_points: number;
   value: number;
   trend: 'up' | 'down' | 'same';
 }
@@ -24,6 +25,7 @@ interface Profile {
   avatar_url: string | null;
   title: string | null;
   current_level: number;
+  xp_points: number;
   team_id: string | null;
 }
 
@@ -134,6 +136,7 @@ serve(async (req) => {
         avatar_url,
         title,
         current_level,
+        xp_points,
         team_id
       `);
 
@@ -233,6 +236,7 @@ serve(async (req) => {
         title: profile.title,
         team_name: profile.team_id ? (teamMap.get(profile.team_id) || null) : null,
         current_level: profile.current_level || 1,
+        xp_points: profile.xp_points || 0,
         value,
         trend: prevValue > value ? 'down' : prevValue < value ? 'up' : 'same',
       });
@@ -255,6 +259,7 @@ serve(async (req) => {
         totalPrevValue: number;
         memberCount: number;
         bestLevel: number;
+        totalXp: number;
       }>();
 
       for (const entry of individualEntries) {
@@ -271,6 +276,7 @@ serve(async (req) => {
             totalPrevValue: 0,
             memberCount: 0,
             bestLevel: 0,
+            totalXp: 0,
           });
         }
         const group = teamGroups.get(rawTeamId)!;
@@ -278,6 +284,7 @@ serve(async (req) => {
         group.totalPrevValue += prevValue;
         group.memberCount += 1;
         group.bestLevel = Math.max(group.bestLevel, entry.current_level);
+        group.totalXp += entry.xp_points;
       }
 
       leaderboardData = Array.from(teamGroups.values()).map(g => ({
@@ -288,6 +295,7 @@ serve(async (req) => {
         title: `${g.memberCount} rep${g.memberCount === 1 ? '' : 's'}`,
         team_name: null,
         current_level: g.bestLevel,
+        xp_points: g.totalXp,
         value: Math.round(g.totalValue),
         trend: g.totalPrevValue > g.totalValue ? 'down' : g.totalPrevValue < g.totalValue ? 'up' : 'same',
       }));
