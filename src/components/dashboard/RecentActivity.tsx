@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { formatActivityDescription } from "@/hooks/useDashboardData";
+import { EditorialSkeleton } from "@/components/ui/editorial-skeleton";
 
 interface Activity {
   id: string;
@@ -11,6 +12,8 @@ interface Activity {
 
 interface RecentActivityProps {
   activities: Activity[];
+  loading?: boolean;
+  error?: string | null;
 }
 
 function formatTime(timestamp: string): string {
@@ -29,7 +32,19 @@ function tagFor(type: string): string {
   return "EVENT";
 }
 
-export function RecentActivity({ activities }: RecentActivityProps) {
+function ActivitySkeleton() {
+  return (
+    <div className="flex gap-6 items-start py-1">
+      <EditorialSkeleton className="h-3 w-10 shrink-0 mt-1" />
+      <div className="flex-1 space-y-2">
+        <EditorialSkeleton className="h-4 w-3/4" />
+        <EditorialSkeleton className="h-3 w-1/3" />
+      </div>
+    </div>
+  );
+}
+
+export function RecentActivity({ activities, loading = false, error = null }: RecentActivityProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -39,13 +54,35 @@ export function RecentActivity({ activities }: RecentActivityProps) {
     >
       <div className="flex items-center justify-between mb-8">
         <span className="eyebrow font-bold">Live Activity Stream</span>
-        <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.15em] text-success">
-          <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-          System Live
-        </span>
+        {!loading && !error && (
+          <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.15em] text-success">
+            <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+            System Live
+          </span>
+        )}
       </div>
 
-      {activities.length === 0 ? (
+      {loading ? (
+        <div className="space-y-5">
+          <ActivitySkeleton />
+          <ActivitySkeleton />
+          <ActivitySkeleton />
+          <ActivitySkeleton />
+          <ActivitySkeleton />
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-16 border border-dashed border-border">
+          <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center mb-4">
+            <span className="h-1.5 w-1.5 rounded-full bg-destructive/50 animate-pulse" />
+          </div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-destructive/70 mb-1">
+            Transmission Failed
+          </p>
+          <p className="font-body text-xs text-muted-foreground/60 max-w-xs text-center">
+            {error}
+          </p>
+        </div>
+      ) : activities.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 border border-dashed border-border">
           <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center mb-4">
             <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30 animate-pulse" />
