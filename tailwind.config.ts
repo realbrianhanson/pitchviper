@@ -118,6 +118,10 @@ export default {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-33.333%)" },
         },
+        "indeterminate-bar": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(400%)" },
+        },
         "flame-flicker": {
           "0%, 100%": { transform: "scale(1) rotate(-1deg)", opacity: "1", filter: "drop-shadow(0 0 6px hsl(var(--primary) / 0.7))" },
           "25%": { transform: "scale(1.08) rotate(2deg)", opacity: "0.95", filter: "drop-shadow(0 0 10px hsl(var(--primary) / 0.9))" },
