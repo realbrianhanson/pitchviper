@@ -478,7 +478,12 @@ export default function RoleplaySession() {
           <h2 className="font-display italic text-3xl md:text-4xl text-foreground mb-8">
             Analyzing Your Performance
           </h2>
-          <EditorialLoading label="Reviewing Conversation" className="py-8" />
+          <div className="flex flex-col items-center py-8">
+            <Loader2 className="h-8 w-8 text-primary animate-spin mb-4" />
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              Reviewing Conversation
+            </p>
+          </div>
           <p className="font-body text-sm text-muted-foreground/80 mt-6">
             Our AI coach is reviewing your conversation
           </p>
