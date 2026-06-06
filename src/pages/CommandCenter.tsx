@@ -122,44 +122,31 @@ export default function CommandCenter() {
         <div className="bento-grid grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Calls Today"
-            value={todayStats?.calls_made || 0}
+            value={ghl.callsToday}
             icon={Phone}
-            comparison={{
-              value: calcChange(todayStats?.calls_made || 0, yesterdayStats?.calls_made),
-              label: "vs yest",
-            }}
             delay={0}
           />
           <MetricCard
-            label="Appts Set"
-            value={todayStats?.appointments_set || 0}
+            label="Pipeline Deals"
+            value={ghl.dealsInPipeline}
             icon={Calendar}
-            progress={{ current: todayStats?.appointments_set || 0, goal: 8 }}
             delay={80}
           />
           <MetricCard
-            label="Revenue"
-            value={Math.round(todayStats?.revenue_closed || 0)}
+            label="Won This Week"
+            value={Math.round(ghl.revenueWonThisWeek)}
             format="currency"
-            icon={Target}
+            icon={Trophy}
             comparison={{
-              value: calcChange(
-                Math.round(todayStats?.revenue_closed || 0),
-                yesterdayStats?.revenue_closed ? Math.round(yesterdayStats.revenue_closed) : null
-              ),
-              label: "today",
+              value: ghl.dealsWonThisWeek,
+              label: "deals",
             }}
             delay={160}
           />
           <MetricCard
-            label="Conversion"
-            value={conversionRate}
-            format="percentage"
-            icon={TrendingUp}
-            comparison={{
-              value: conversionRate - yesterdayConversionRate,
-              label: "delta",
-            }}
+            label="Day Streak"
+            value={ghl.currentStreak}
+            icon={Flame}
             delay={240}
           />
         </div>
