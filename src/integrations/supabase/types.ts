@@ -871,11 +871,13 @@ export type Database = {
           event_type: string
           ghl_user_id: string | null
           id: string
+          is_demo: boolean
           match_method: string | null
           matched_user_id: string | null
           occurred_at: string
           payload: Json
           unassigned: boolean
+          value: number | null
         }
         Insert: {
           assigned_email?: string | null
@@ -883,11 +885,13 @@ export type Database = {
           event_type: string
           ghl_user_id?: string | null
           id?: string
+          is_demo?: boolean
           match_method?: string | null
           matched_user_id?: string | null
           occurred_at?: string
           payload?: Json
           unassigned?: boolean
+          value?: number | null
         }
         Update: {
           assigned_email?: string | null
@@ -895,11 +899,13 @@ export type Database = {
           event_type?: string
           ghl_user_id?: string | null
           id?: string
+          is_demo?: boolean
           match_method?: string | null
           matched_user_id?: string | null
           occurred_at?: string
           payload?: Json
           unassigned?: boolean
+          value?: number | null
         }
         Relationships: []
       }
