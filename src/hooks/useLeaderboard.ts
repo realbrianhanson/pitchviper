@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
-export type MetricType = 'overall' | 'calls' | 'appointments' | 'revenue' | 'roleplay' | 'xp';
+export type MetricType = 'overall' | 'calls' | 'deals_won' | 'revenue' | 'contacts' | 'pipeline';
 export type TimePeriod = 'today' | 'week' | 'month' | 'all_time';
+export type ViewMode = 'individual' | 'team';
 
 export interface LeaderboardEntry {
   rank: number;
@@ -28,28 +29,44 @@ export interface Competition {
   status: 'upcoming' | 'active' | 'completed';
 }
 
+const metricLabels: Record<MetricType, string> = {
+  overall: 'Overall',
+  calls: 'Calls',
+  deals_won: 'Deals Won',
+  revenue: 'Revenue',
+  contacts: 'Contacts',
+  pipeline: 'Pipeline',
+};
+
 export function useLeaderboard() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [metricType, setMetricType] = useState<MetricType>('overall');
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('week');
+  const [viewMode, setViewMode] = useState<ViewMode>('individual');
 
   const fetchLeaderboard = async () => {
     setIsLoading(true);
+    setError(null);
     try {
-      const { data, error } = await supabase.functions.invoke('calculate-leaderboard', {
+      const { data, error: fnError } = await supabase.functions.invoke('calculate-leaderboard', {
         body: {
           metric_type: metricType,
           time_period: timePeriod,
+          view_mode: viewMode,
         },
       });
 
-      if (error) throw error;
+      if (fnError) throw fnError;
+      if (data?.error) throw new Error(data.error);
       setLeaderboard(data.leaderboard || []);
-    } catch (error) {
-      console.error('Error fetching leaderboard:', error);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load leaderboard';
+      console.error('Error fetching leaderboard:', err);
+      setError(message);
       setLeaderboard([]);
     } finally {
       setIsLoading(false);
@@ -58,16 +75,15 @@ export function useLeaderboard() {
 
   const fetchCompetitions = async () => {
     try {
-      // Note: competitions table types will be available after types regeneration
-      const { data, error } = await supabase
-        .from('competitions' as any)
+      const { data, error: queryError } = await supabase
+        .from('competitions')
         .select('id, name, description, metric_type, start_date, end_date, prize_description, status')
         .in('status', ['active', 'upcoming'])
         .order('start_date', { ascending: true });
 
-      if (error) throw error;
-      
-      setCompetitions((data as any[] || []).map((comp: any) => ({
+      if (queryError) throw queryError;
+
+      setCompetitions((data || []).map((comp: any) => ({
         id: comp.id,
         name: comp.name,
         description: comp.description,
@@ -77,29 +93,23 @@ export function useLeaderboard() {
         prize_description: comp.prize_description,
         status: comp.status as 'upcoming' | 'active' | 'completed',
       })));
-    } catch (error) {
-      console.error('Error fetching competitions:', error);
+    } catch (err) {
+      console.error('Error fetching competitions:', err);
     }
   };
 
   useEffect(() => {
     fetchLeaderboard();
-  }, [metricType, timePeriod]);
+  }, [metricType, timePeriod, viewMode]);
 
   useEffect(() => {
     fetchCompetitions();
 
-    // Subscribe to realtime updates
     const channel = supabase
       .channel('leaderboard-updates')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'calls' },
-        () => fetchLeaderboard()
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'roleplay_sessions' },
+        { event: '*', schema: 'public', table: 'ghl_activities' },
         () => fetchLeaderboard()
       )
       .on(
@@ -115,6 +125,10 @@ export function useLeaderboard() {
   }, []);
 
   const currentUserRank = leaderboard.find(e => e.user_id === user?.id);
+  const currentUserTeamEntry = viewMode === 'team' && profile?.team_id
+    ? leaderboard.find(e => e.full_name === profile.team_id || e.user_id === `team:${profile.team_id}`)
+    : undefined;
+
   const topThree = leaderboard.slice(0, 3);
   const restOfRankings = leaderboard.slice(3, 50);
 
@@ -123,12 +137,17 @@ export function useLeaderboard() {
     topThree,
     restOfRankings,
     currentUserRank,
+    currentUserTeamEntry,
     competitions,
     isLoading,
+    error,
     metricType,
     setMetricType,
     timePeriod,
     setTimePeriod,
+    viewMode,
+    setViewMode,
     refetch: fetchLeaderboard,
+    metricLabels,
   };
 }
