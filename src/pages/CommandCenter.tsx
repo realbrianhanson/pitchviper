@@ -95,7 +95,7 @@ export default function CommandCenter() {
           <div className="md:border-l md:border-border md:pl-10 flex md:flex-col items-baseline md:items-start gap-3 md:gap-1">
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Day Streak</span>
             <span className="font-display italic text-5xl md:text-6xl leading-none text-primary tabular-nums">
-              {data?.profile?.current_streak || 0}
+              {ghl.currentStreak}
             </span>
           </div>
         </motion.div>
