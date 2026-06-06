@@ -139,6 +139,7 @@ export default {
         "glow-pulse": "glow-pulse 2s ease-in-out infinite",
         shimmer: "shimmer 2s linear infinite",
         marquee: "marquee 60s linear infinite",
+        "indeterminate-bar": "indeterminate-bar 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite",
         "flame-flicker": "flame-flicker 1.4s ease-in-out infinite",
       },
       boxShadow: {
