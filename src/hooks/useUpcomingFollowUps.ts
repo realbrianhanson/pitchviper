@@ -15,19 +15,22 @@ export function useUpcomingFollowUps() {
   const { user } = useAuth();
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
       setFollowUps([]);
       setIsLoading(false);
+      setError(null);
       return;
     }
 
     const fetchFollowUps = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         // Get deals that need follow-up (not closed, updated in last 7 days, or with expected close date)
-        const { data: deals, error } = await supabase
+        const { data: deals, error: queryError } = await supabase
           .from('deals')
           .select('id, company_name, contact_name, expected_close_date, stage, updated_at')
           .eq('user_id', user.id)
@@ -35,7 +38,7 @@ export function useUpcomingFollowUps() {
           .order('expected_close_date', { ascending: true, nullsFirst: false })
           .limit(10);
 
-        if (error) throw error;
+        if (queryError) throw queryError;
 
         // Transform deals into follow-ups
         const now = new Date();
@@ -71,8 +74,9 @@ export function useUpcomingFollowUps() {
           });
 
         setFollowUps(transformedFollowUps);
-      } catch (error) {
-        console.error('Error fetching follow-ups:', error);
+      } catch (err: any) {
+        console.error('Error fetching follow-ups:', err);
+        setError(err?.message || 'Failed to load follow-ups');
         setFollowUps([]);
       } finally {
         setIsLoading(false);
@@ -82,5 +86,5 @@ export function useUpcomingFollowUps() {
     fetchFollowUps();
   }, [user]);
 
-  return { followUps, isLoading };
+  return { followUps, isLoading, error };
 }
