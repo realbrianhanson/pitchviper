@@ -68,6 +68,30 @@ serve(async (req) => {
       throw new Error("Scenario not found");
     }
 
+    // Fetch the salesperson's company settings for product context
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("team_id")
+      .eq("user_id", userData.user.id)
+      .maybeSingle();
+
+    let companyContext = "";
+    if (profile?.team_id) {
+      const { data: companySettings } = await supabase
+        .from("company_settings")
+        .select("company_name, product_description, value_propositions, common_use_cases, industry, target_audience")
+        .eq("team_id", profile.team_id)
+        .maybeSingle();
+
+      if (companySettings) {
+        companyContext = `
+
+PRODUCT/COMPANY THE SALESPERSON IS SELLING (this is what they will pitch to you — react to it realistically):
+- Company: ${companySettings.company_name ?? "Unknown"}
+${companySettings.industry ? `- Industry: ${companySettings.industry}\n` : ""}${companySettings.target_audience ? `- Target audience: ${companySettings.target_audience}\n` : ""}${companySettings.product_description ? `- Product: ${companySettings.product_description}\n` : ""}${Array.isArray(companySettings.value_propositions) && companySettings.value_propositions.length ? `- Value propositions: ${companySettings.value_propositions.join("; ")}\n` : ""}${Array.isArray(companySettings.common_use_cases) && companySettings.common_use_cases.length ? `- Common use cases: ${companySettings.common_use_cases.join("; ")}\n` : ""}`.trimEnd();
+      }
+    }
+
     // Build the system prompt
     const systemPrompt = `You are playing the role of a sales prospect in a realistic roleplay training scenario. Stay completely in character at all times.
 
@@ -77,6 +101,7 @@ Role: ${scenario.prospect_persona}
 
 SITUATION:
 ${scenario.prospect_situation}
+${companyContext}
 
 YOUR BEHAVIOR GUIDELINES:
 1. Stay 100% in character - never break character or acknowledge this is a roleplay
@@ -95,6 +120,7 @@ ${scenario.win_conditions.map((wc: string) => `- ${wc}`).join("\n")}
 If the salesperson successfully achieves a win condition through skilled conversation, acknowledge it naturally (e.g., "Alright, you've convinced me" or "Okay, let's schedule that call").
 
 Remember: You're helping them practice, so be challenging but beatable with good sales technique.`;
+
 
     // Prepare messages for AI
     const messages: Message[] = [
