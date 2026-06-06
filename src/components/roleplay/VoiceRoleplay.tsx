@@ -51,19 +51,19 @@ export function VoiceRoleplay({
       
     },
     onMessage: (message: any) => {
-      
-      
-      // Handle transcripts for logging
-      if (message?.type === "user_transcript") {
-        const userTranscript = message?.user_transcription_event?.user_transcript;
-        if (userTranscript) {
-          onTranscriptUpdate(userTranscript, "");
-        }
-      } else if (message?.type === "agent_response") {
-        const agentResponse = message?.agent_response_event?.agent_response;
-        if (agentResponse) {
-          onTranscriptUpdate("", agentResponse);
-        }
+      // The ElevenLabs React SDK normalizes messages to { source: "user" | "ai", message: string }.
+      // The raw WebSocket event shape (type: "user_transcript" / "agent_response") is NOT what
+      // arrives here — relying on it silently dropped every transcript line.
+      const text: string = message?.message ?? "";
+      const source: string = message?.source ?? message?.role ?? "";
+      if (!text) return;
+
+      console.log("[VoiceRoleplay] transcript", { source, text });
+
+      if (source === "user") {
+        onTranscriptUpdate(text, "");
+      } else if (source === "ai" || source === "agent") {
+        onTranscriptUpdate("", text);
       }
     },
     onError: (error) => {
