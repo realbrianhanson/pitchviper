@@ -50,7 +50,7 @@ export function ManagerFAB({ onSendBroadcast, onStartCompetition }: ManagerFABPr
       icon: Trophy,
       label: "Start Competition",
       color: "bg-green-500",
-      onClick: onStartCompetition || (() => navigate("/competitions"))
+      onClick: onStartCompetition || (() => navigate("/manager/competitions"))
     }
   ];
 

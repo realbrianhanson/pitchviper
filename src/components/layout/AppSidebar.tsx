@@ -19,6 +19,7 @@ import {
   BarChart3,
   Gamepad2,
   Cog,
+  Phone,
 } from "lucide-react";
 
 import {
@@ -41,7 +42,7 @@ const mainNavItems = [
   { title: "Command Center", url: "/", icon: LayoutDashboard },
   { title: "War Room", url: "/war-room", icon: Radio },
   { title: "Roleplay Arena", url: "/roleplay", icon: Swords },
-  { title: "Call Intelligence", url: "/call-intelligence", icon: Brain },
+  { title: "Call Intelligence", url: "/call-intelligence", icon: Phone },
   { title: "Objection Vault", url: "/objection-vault", icon: Shield },
   { title: "Leaderboards", url: "/leaderboards", icon: Trophy },
   { title: "My Performance", url: "/performance", icon: TrendingUp },
