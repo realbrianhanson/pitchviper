@@ -58,7 +58,7 @@ export function EditorialLoading({ label = "Loading", className }: LoadingPanelP
   return (
     <div className={cn("flex flex-col items-center justify-center py-16", className)}>
       <div className="relative h-px w-32 overflow-hidden bg-border mb-4">
-        <div className="absolute inset-y-0 w-12 bg-primary animate-[marquee_1.5s_linear_infinite]" />
+        <div className="absolute inset-y-0 left-0 w-1/4 bg-primary animate-indeterminate-bar" />
       </div>
       <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
         {label}
