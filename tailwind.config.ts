@@ -118,6 +118,12 @@ export default {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-33.333%)" },
         },
+        "flame-flicker": {
+          "0%, 100%": { transform: "scale(1) rotate(-1deg)", opacity: "1", filter: "drop-shadow(0 0 6px hsl(var(--primary) / 0.7))" },
+          "25%": { transform: "scale(1.08) rotate(2deg)", opacity: "0.95", filter: "drop-shadow(0 0 10px hsl(var(--primary) / 0.9))" },
+          "50%": { transform: "scale(0.96) rotate(-2deg)", opacity: "1", filter: "drop-shadow(0 0 14px hsl(var(--primary) / 1))" },
+          "75%": { transform: "scale(1.04) rotate(1deg)", opacity: "0.9", filter: "drop-shadow(0 0 8px hsl(var(--primary) / 0.8))" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -129,6 +135,7 @@ export default {
         "glow-pulse": "glow-pulse 2s ease-in-out infinite",
         shimmer: "shimmer 2s linear infinite",
         marquee: "marquee 60s linear infinite",
+        "flame-flicker": "flame-flicker 1.4s ease-in-out infinite",
       },
       boxShadow: {
         "glow-sm": "0 0 10px hsl(var(--primary) / 0.3)",

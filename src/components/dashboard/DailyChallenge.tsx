@@ -63,7 +63,7 @@ export function DailyChallenge({ challenge, streak }: DailyChallengeProps) {
           <Flame
             className={cn(
               "h-4 w-4 transition-colors",
-              isOnFire ? "text-primary" : "text-muted-foreground/40"
+              isOnFire ? "text-primary animate-flame-flicker" : "text-muted-foreground/40"
             )}
             strokeWidth={1.5}
           />

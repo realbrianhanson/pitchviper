@@ -94,8 +94,13 @@ export default function CommandCenter() {
           </div>
           <div className="md:border-l md:border-border md:pl-10 flex md:flex-col items-baseline md:items-start gap-3 md:gap-1">
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Day Streak</span>
-            <span className="font-display italic text-5xl md:text-6xl leading-none text-primary tabular-nums">
-              {ghl.currentStreak}
+            <span className="flex items-center gap-3">
+              <span className="font-display italic text-5xl md:text-6xl leading-none text-primary tabular-nums">
+                {ghl.currentStreak}
+              </span>
+              {ghl.currentStreak > 7 && (
+                <Flame className="h-7 w-7 text-primary animate-flame-flicker" strokeWidth={1.5} />
+              )}
             </span>
           </div>
         </motion.div>
