@@ -172,6 +172,7 @@ export type Database = {
           duration_seconds: number
           id: string
           improvement_notes: string | null
+          is_demo: boolean
           is_synced_from_aloware: boolean | null
           notes: string | null
           outcome: Database["public"]["Enums"]["call_outcome"]
@@ -198,6 +199,7 @@ export type Database = {
           duration_seconds?: number
           id?: string
           improvement_notes?: string | null
+          is_demo?: boolean
           is_synced_from_aloware?: boolean | null
           notes?: string | null
           outcome: Database["public"]["Enums"]["call_outcome"]
@@ -224,6 +226,7 @@ export type Database = {
           duration_seconds?: number
           id?: string
           improvement_notes?: string | null
+          is_demo?: boolean
           is_synced_from_aloware?: boolean | null
           notes?: string | null
           outcome?: Database["public"]["Enums"]["call_outcome"]
