@@ -118,6 +118,10 @@ export default {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-33.333%)" },
         },
+        "indeterminate-bar": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(400%)" },
+        },
         "flame-flicker": {
           "0%, 100%": { transform: "scale(1) rotate(-1deg)", opacity: "1", filter: "drop-shadow(0 0 6px hsl(var(--primary) / 0.7))" },
           "25%": { transform: "scale(1.08) rotate(2deg)", opacity: "0.95", filter: "drop-shadow(0 0 10px hsl(var(--primary) / 0.9))" },
@@ -135,6 +139,7 @@ export default {
         "glow-pulse": "glow-pulse 2s ease-in-out infinite",
         shimmer: "shimmer 2s linear infinite",
         marquee: "marquee 60s linear infinite",
+        "indeterminate-bar": "indeterminate-bar 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite",
         "flame-flicker": "flame-flicker 1.4s ease-in-out infinite",
       },
       boxShadow: {
