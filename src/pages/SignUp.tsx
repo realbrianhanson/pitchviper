@@ -270,6 +270,41 @@ export default function SignUp() {
           )}
         </ViperButton>
 
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-card px-2 text-muted-foreground">or continue with</span>
+          </div>
+        </div>
+
+        {/* Google Sign Up */}
+        <ViperButton
+          type="button"
+          variant="glass"
+          className="w-full"
+          onClick={async () => {
+            const result = await lovable.auth.signInWithOAuth("google", {
+              redirect_uri: window.location.origin,
+            });
+            if (result.error) {
+              toast({
+                title: "Google sign up failed",
+                description: result.error.message,
+                variant: "destructive",
+              });
+              return;
+            }
+            if (result.redirected) return;
+            navigate("/");
+          }}
+        >
+          <Chrome className="h-4 w-4" />
+          Google
+        </ViperButton>
+
         {/* Sign In Link */}
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}
