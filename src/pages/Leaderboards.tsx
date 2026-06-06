@@ -18,6 +18,7 @@ export default function Leaderboards() {
     topThree,
     restOfRankings,
     currentUserRank,
+    currentUserTeamEntry,
     competitions,
     isLoading,
     error,
