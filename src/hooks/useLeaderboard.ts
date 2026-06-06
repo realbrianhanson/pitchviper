@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
@@ -8,12 +8,15 @@ export type ViewMode = 'individual' | 'team';
 
 export interface LeaderboardEntry {
   rank: number;
+  previous_rank?: number;
+  rank_delta?: number;
   user_id: string;
   full_name: string;
   avatar_url: string | null;
   title: string | null;
   team_name: string | null;
   current_level: number;
+  xp_points: number;
   value: number;
   trend: 'up' | 'down' | 'same';
 }
@@ -48,8 +51,9 @@ export function useLeaderboard() {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('week');
   const [viewMode, setViewMode] = useState<ViewMode>('individual');
 
+  const previousRanksRef = useRef<Map<string, number>>(new Map());
+
   const fetchLeaderboard = async () => {
-    setIsLoading(true);
     setError(null);
     try {
       const { data, error: fnError } = await supabase.functions.invoke('calculate-leaderboard', {
@@ -62,7 +66,21 @@ export function useLeaderboard() {
 
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
-      setLeaderboard(data.leaderboard || []);
+
+      const incoming: LeaderboardEntry[] = data.leaderboard || [];
+      const prevRanks = previousRanksRef.current;
+      const enriched = incoming.map((e) => {
+        const previous_rank = prevRanks.get(e.user_id);
+        const rank_delta =
+          previous_rank !== undefined ? previous_rank - e.rank : 0;
+        return { ...e, previous_rank, rank_delta };
+      });
+
+      const nextRanks = new Map<string, number>();
+      incoming.forEach((e) => nextRanks.set(e.user_id, e.rank));
+      previousRanksRef.current = nextRanks;
+
+      setLeaderboard(enriched);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load leaderboard';
       console.error('Error fetching leaderboard:', err);
@@ -99,27 +117,36 @@ export function useLeaderboard() {
   };
 
   useEffect(() => {
+    setIsLoading(true);
+    previousRanksRef.current = new Map();
     fetchLeaderboard();
   }, [metricType, timePeriod, viewMode]);
 
   useEffect(() => {
     fetchCompetitions();
 
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleRefetch = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => fetchLeaderboard(), 800);
+    };
+
     const channel = supabase
       .channel('leaderboard-updates')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'ghl_activities' },
-        () => fetchLeaderboard()
+        scheduleRefetch
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'profiles' },
-        () => fetchLeaderboard()
+        scheduleRefetch
       )
       .subscribe();
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
   }, []);
