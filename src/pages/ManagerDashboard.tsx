@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield } from "lucide-react";
+import { Shield, AlertCircle, Users, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useManagerDashboard } from "@/hooks/useManagerDashboard";
@@ -12,6 +12,7 @@ import { AITeamInsights } from "@/components/manager/AITeamInsights";
 import { ManagerQuickActions } from "@/components/manager/ManagerQuickActions";
 import { ForecastSection } from "@/components/manager/ForecastSection";
 import { EditorialLoading } from "@/components/ui/editorial-skeleton";
+import { ViperButton } from "@/components/ui/viper-button";
 
 function formatDate(): string {
   return new Date().toLocaleDateString("en-US", {
@@ -33,6 +34,8 @@ export default function ManagerDashboard() {
     coachingDue,
     isLoading,
     isLoadingInsights,
+    error,
+    refetch,
     refreshInsights,
   } = useManagerDashboard();
 
