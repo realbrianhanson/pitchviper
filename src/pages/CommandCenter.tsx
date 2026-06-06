@@ -115,7 +115,7 @@ export default function CommandCenter() {
             progress: 0,
             goal: 1,
           }}
-          streak={data?.profile?.current_streak || 0}
+          streak={ghl.currentStreak}
         />
 
         {/* KPI strip — 4 hairline tiles */}
