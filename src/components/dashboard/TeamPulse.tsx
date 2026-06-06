@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { EditorialSkeleton } from "@/components/ui/editorial-skeleton";
 
 interface TeamMember {
   id: string;
@@ -13,9 +14,58 @@ interface TeamMember {
 interface TeamPulseProps {
   members: TeamMember[];
   teamName: string | null;
+  loading?: boolean;
+  error?: string | null;
 }
 
-export function TeamPulse({ members, teamName }: TeamPulseProps) {
+export function TeamPulse({ members, teamName, loading = false, error = null }: TeamPulseProps) {
+  if (loading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="bento-tile min-h-[140px]"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <EditorialSkeleton className="h-3 w-32" />
+          <EditorialSkeleton className="h-3 w-16" />
+        </div>
+        <div className="flex items-center gap-8">
+          <div className="flex -space-x-3">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="w-10 h-10 border-2 border-background bg-accent overflow-hidden">
+                <EditorialSkeleton className="w-full h-full" />
+              </div>
+            ))}
+          </div>
+          <div className="flex-1 h-px bg-border" />
+          <div className="text-right space-y-2">
+            <EditorialSkeleton className="h-3 w-20" />
+            <EditorialSkeleton className="h-4 w-24" />
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (error) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="bento-tile min-h-[140px] flex flex-col justify-center"
+      >
+        <span className="eyebrow font-bold mb-3">Team Pulse</span>
+        <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-destructive/70 mb-1">
+          Sync Failed
+        </p>
+        <p className="font-body text-xs text-muted-foreground/60">{error}</p>
+      </motion.div>
+    );
+  }
+
   if (!teamName) {
     return (
       <motion.div
