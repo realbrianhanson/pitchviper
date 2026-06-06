@@ -387,6 +387,56 @@ export default function RoleplaySession() {
     }
   };
 
+  // Live voice analysis — pair the most recent user line with the next agent line
+  // and check for addressed objections, attempted closes, and achieved win conditions.
+  const analyzeVoiceTurn = async (userText: string, agentText: string) => {
+    if (!sessionId || !scenarioId || !session?.access_token) return;
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/roleplay-voice-analyze`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            scenario_id: scenarioId,
+            session_id: sessionId,
+            user_message: userText,
+            agent_message: agentText,
+          }),
+        }
+      );
+      if (!response.ok) return;
+      const data = await response.json();
+      const analysis = data.analysis as ChatAnalysisResult | undefined;
+      if (!analysis) return;
+
+      if (analysis.addressed_objection || analysis.attempted_close) {
+        setVoiceMomentum((prev) => ({
+          addressed_objection: prev.addressed_objection || analysis.addressed_objection,
+          attempted_close: prev.attempted_close || analysis.attempted_close,
+        }));
+      }
+
+      if (analysis.win_conditions_achieved?.length > 0) {
+        setAchievedConditions((prev) => {
+          const next = new Set(prev);
+          analysis.win_conditions_achieved.forEach((wc) => {
+            if (!prev.has(wc)) {
+              toast.success(`✅ Win condition achieved: ${wc}`);
+            }
+            next.add(wc);
+          });
+          return next;
+        });
+      }
+    } catch (err) {
+      console.error("Voice turn analysis failed:", err);
+    }
+  };
+
   const handleVoiceTranscriptUpdate = (userText: string, agentText: string) => {
     const newLines: Message[] = [];
     const now = new Date().toISOString();
@@ -400,6 +450,16 @@ export default function RoleplaySession() {
       void persistTranscript(next);
       return next;
     });
+
+    // Pair user→agent turns for live analysis
+    if (userText) {
+      pendingUserRef.current = userText;
+    }
+    if (agentText && pendingUserRef.current) {
+      const pairedUser = pendingUserRef.current;
+      pendingUserRef.current = null;
+      void analyzeVoiceTurn(pairedUser, agentText);
+    }
   };
 
   const handleVoiceSessionEnd = () => {
