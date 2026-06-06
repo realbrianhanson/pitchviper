@@ -240,6 +240,12 @@ serve(async (req) => {
 
     let leaderboardData: LeaderboardEntry[];
 
+    // Build user -> team_id map for aggregation
+    const userTeamMap = new Map<string, string | null>();
+    for (const p of profiles) {
+      userTeamMap.set(p.user_id, p.team_id);
+    }
+
     if (view_mode === 'team') {
       // Aggregate by team
       const teamGroups = new Map<string, {
@@ -252,14 +258,14 @@ serve(async (req) => {
       }>();
 
       for (const entry of individualEntries) {
-        const tId = entry.team_name ? `team:${entry.team_name}` : 'Unassigned';
+        const rawTeamId = userTeamMap.get(entry.user_id) || 'unassigned';
         const tName = entry.team_name || 'Unassigned';
         const prevActs = prevByUser.get(entry.user_id) || [];
         const prevValue = aggregateMetrics(prevActs, metric_type);
 
-        if (!teamGroups.has(tId)) {
-          teamGroups.set(tId, {
-            team_id: tId,
+        if (!teamGroups.has(rawTeamId)) {
+          teamGroups.set(rawTeamId, {
+            team_id: rawTeamId,
             team_name: tName,
             totalValue: 0,
             totalPrevValue: 0,
@@ -267,7 +273,7 @@ serve(async (req) => {
             bestLevel: 0,
           });
         }
-        const group = teamGroups.get(tId)!;
+        const group = teamGroups.get(rawTeamId)!;
         group.totalValue += entry.value;
         group.totalPrevValue += prevValue;
         group.memberCount += 1;
