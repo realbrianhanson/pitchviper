@@ -103,6 +103,32 @@ export default function ManagerDashboard() {
         </div>
       </motion.div>
 
+      {/* Error banner */}
+      {error && (
+        <div className="flex items-start gap-3 p-4 border border-destructive/40 bg-destructive/10 rounded-lg">
+          <AlertCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold text-destructive">Couldn't load team data</p>
+            <p className="text-sm text-muted-foreground mt-1">{error}</p>
+          </div>
+          <ViperButton variant="outline" size="sm" onClick={refetch} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Retry
+          </ViperButton>
+        </div>
+      )}
+
+      {/* Empty team state */}
+      {!isLoading && !error && teamMembers.length === 0 ? (
+        <div className="border border-border bg-background p-12 text-center">
+          <Users className="h-12 w-12 mx-auto text-muted-foreground/60 mb-4" strokeWidth={1.5} />
+          <h3 className="font-display italic text-2xl mb-2">No team members yet</h3>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            Invite reps from Team Settings — once they start logging calls and pipeline activity, you'll see live aggregates and coaching flags here.
+          </p>
+        </div>
+      ) : (
+      <>
       {/* Overview strip */}
       <TeamOverviewCards overview={overview} isLoading={isLoading} />
 
@@ -151,6 +177,8 @@ export default function ManagerDashboard() {
           />
         </div>
       </div>
+      </>
+      )}
     </div>
     </AppLayout>
   );
