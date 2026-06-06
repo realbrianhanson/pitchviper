@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Swords, Phone, GitBranch, Trophy } from "lucide-react";
 import { LogCallModal } from "@/components/calls/LogCallModal";
 import { motion } from "framer-motion";
+import { EditorialSkeleton } from "@/components/ui/editorial-skeleton";
 
 interface FollowUp {
   id: string;
@@ -14,6 +15,8 @@ interface FollowUp {
 
 interface QuickActionsProps {
   followUps: FollowUp[];
+  followUpsLoading?: boolean;
+  followUpsError?: string | null;
 }
 
 const quickActionButtons = [
@@ -23,7 +26,20 @@ const quickActionButtons = [
   { to: "/leaderboards", icon: Trophy, label: "Leaderboard", verb: "Open", hotkey: "⌘B" },
 ];
 
-export function QuickActions({ followUps }: QuickActionsProps) {
+function FollowUpSkeleton() {
+  return (
+    <div className="space-y-2 py-1">
+      <EditorialSkeleton className="h-3 w-16" />
+      <div className="flex items-center justify-between">
+        <EditorialSkeleton className="h-4 w-28" />
+        <EditorialSkeleton className="h-4 w-12" />
+      </div>
+      <EditorialSkeleton className="h-3 w-20" />
+    </div>
+  );
+}
+
+export function QuickActions({ followUps, followUpsLoading = false, followUpsError = null }: QuickActionsProps) {
   const [showLogCall, setShowLogCall] = useState(false);
 
   return (
@@ -65,7 +81,20 @@ export function QuickActions({ followUps }: QuickActionsProps) {
       {/* Follow-ups */}
       <div className="bento-tile">
         <div className="eyebrow font-bold mb-6">Urgent Follow-ups</div>
-        {followUps.length === 0 ? (
+        {followUpsLoading ? (
+          <div className="space-y-6">
+            <FollowUpSkeleton />
+            <FollowUpSkeleton />
+            <FollowUpSkeleton />
+          </div>
+        ) : followUpsError ? (
+          <div className="py-4">
+            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-destructive/70 mb-1">
+              Unable to Load
+            </p>
+            <p className="font-body text-xs text-muted-foreground/60">{followUpsError}</p>
+          </div>
+        ) : followUps.length === 0 ? (
           <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 py-4">
             No scheduled follow-ups
           </div>

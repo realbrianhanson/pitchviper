@@ -22,21 +22,25 @@ export function useGhlStats() {
   const { user } = useAuth();
   const [stats, setStats] = useState<GhlStats>(EMPTY);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.id) {
       setStats(EMPTY);
       setLoading(false);
+      setError(null);
       return;
     }
 
     let active = true;
 
     const load = async () => {
+      setLoading(true);
+      setError(null);
       const since = new Date();
       since.setDate(since.getDate() - 60);
 
-      const { data, error } = await supabase
+      const { data, error: queryError } = await supabase
         .from("ghl_activities")
         .select("event_type, value, occurred_at")
         .eq("matched_user_id", user.id)
@@ -44,7 +48,13 @@ export function useGhlStats() {
         .order("occurred_at", { ascending: false });
 
       if (!active) return;
-      if (error || !data) {
+      if (queryError) {
+        setError(queryError.message);
+        setStats(EMPTY);
+        setLoading(false);
+        return;
+      }
+      if (!data) {
         setStats(EMPTY);
         setLoading(false);
         return;
@@ -122,5 +132,5 @@ export function useGhlStats() {
     };
   }, [user?.id]);
 
-  return { stats, loading };
+  return { stats, loading, error };
 }
