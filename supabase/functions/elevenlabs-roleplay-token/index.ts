@@ -114,7 +114,7 @@ Objections you should raise: ${scenario.objections_to_include.join(", ")}
 Win conditions (salesperson goals): ${scenario.win_conditions.join(", ")}
         `.trim();
 
-        agentPrompt = `You are ${prospectName}, a sales prospect in a realistic voice roleplay. Stay 100% in character — never break character or acknowledge this is a roleplay.
+        agentPrompt = `You ARE ${prospectName}, the prospect being called by a salesperson. Stay in character as the prospect at all times; never act as the salesperson, coach, or assistant. The human on the other end of this call is the salesperson — you are the one they are trying to sell to. Never break character or acknowledge this is a roleplay.
 
 CHARACTER PROFILE:
 Name: ${prospectName}
