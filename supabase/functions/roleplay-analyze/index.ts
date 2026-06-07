@@ -31,6 +31,276 @@ interface AnalysisResult {
   xp_earned: number;
 }
 
+class HttpError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+const EXPECTED_CATEGORY_NAMES = [
+  "Opening & Rapport",
+  "Discovery Questions",
+  "Objection Handling",
+  "Value Presentation",
+  "Closing Technique",
+  "Conversation Control",
+] as const;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const stripCodeFences = (value: string) => {
+  const trimmed = value.trim();
+  const fullFenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  if (fullFenceMatch) {
+    return fullFenceMatch[1].trim();
+  }
+
+  return trimmed.replace(/```json\s*/gi, "").replace(/```/g, "").trim();
+};
+
+const extractJsonObject = (value: string) => {
+  let depth = 0;
+  let start = -1;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = 0; i < value.length; i += 1) {
+    const char = value[i];
+
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+
+    if (char === '"') {
+      inString = !inString;
+      continue;
+    }
+
+    if (inString) {
+      continue;
+    }
+
+    if (char === "{") {
+      if (depth === 0) {
+        start = i;
+      }
+      depth += 1;
+    } else if (char === "}") {
+      depth -= 1;
+      if (depth === 0 && start >= 0) {
+        return value.slice(start, i + 1);
+      }
+    }
+  }
+
+  return null;
+};
+
+const getStringArray = (value: unknown, fieldName: string) => {
+  if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || !item.trim())) {
+    throw new Error(`Invalid ${fieldName} in analysis response`);
+  }
+
+  return value.map((item) => item.trim());
+};
+
+const parseAnalysisResponse = (rawContent: string): AnalysisResult => {
+  const sanitized = stripCodeFences(rawContent);
+  const jsonCandidate = extractJsonObject(sanitized) ?? sanitized;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonCandidate);
+  } catch (error) {
+    throw new Error(
+      `Unable to parse model JSON: ${error instanceof Error ? error.message : "Unknown parse error"}`,
+    );
+  }
+
+  if (!isRecord(parsed)) {
+    throw new Error("Analysis response was not a JSON object");
+  }
+
+  const outcome = parsed.outcome;
+  if (outcome !== "won" && outcome !== "lost" && outcome !== "progress") {
+    throw new Error("Analysis response had an invalid outcome");
+  }
+
+  const overallScore = Number(parsed.overall_score);
+  if (!Number.isFinite(overallScore)) {
+    throw new Error("Analysis response had an invalid overall_score");
+  }
+
+  if (!Array.isArray(parsed.categories) || parsed.categories.length === 0) {
+    throw new Error("Analysis response had no categories");
+  }
+
+  const categories = parsed.categories.map((category, index) => {
+    if (!isRecord(category)) {
+      throw new Error(`Category ${index + 1} was invalid`);
+    }
+
+    const name = typeof category.name === "string" && category.name.trim()
+      ? category.name.trim()
+      : EXPECTED_CATEGORY_NAMES[index] ?? `Category ${index + 1}`;
+    const score = Number(category.score);
+    const feedback = typeof category.feedback === "string" ? category.feedback.trim() : "";
+
+    if (!Number.isFinite(score)) {
+      throw new Error(`Category ${name} had an invalid score`);
+    }
+
+    if (!feedback) {
+      throw new Error(`Category ${name} had empty feedback`);
+    }
+
+    return {
+      name,
+      score: Math.max(0, Math.min(100, Math.round(score))),
+      feedback,
+    };
+  });
+
+  const keyMoment = parsed.key_moment;
+  if (!isRecord(keyMoment)) {
+    throw new Error("Analysis response had an invalid key_moment");
+  }
+
+  const keyMomentType = keyMoment.type;
+  const keyMomentDescription = typeof keyMoment.description === "string" ? keyMoment.description.trim() : "";
+  if ((keyMomentType !== "highlight" && keyMomentType !== "missed_opportunity") || !keyMomentDescription) {
+    throw new Error("Analysis response had an invalid key_moment payload");
+  }
+
+  return {
+    outcome,
+    overall_score: Math.max(0, Math.min(100, Math.round(overallScore))),
+    categories,
+    strengths: getStringArray(parsed.strengths, "strengths"),
+    improvements: getStringArray(parsed.improvements, "improvements"),
+    key_moment: {
+      type: keyMomentType,
+      description: keyMomentDescription,
+    },
+    xp_earned: 0,
+  };
+};
+
+const extractAiMessageContent = (aiData: unknown) => {
+  if (!isRecord(aiData)) return "";
+
+  const choices = aiData.choices;
+  if (!Array.isArray(choices) || choices.length === 0 || !isRecord(choices[0])) {
+    return "";
+  }
+
+  const message = choices[0].message;
+  if (!isRecord(message)) {
+    return "";
+  }
+
+  const content = message.content;
+  if (typeof content === "string") {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => (isRecord(part) && typeof part.text === "string" ? part.text : ""))
+      .join("")
+      .trim();
+  }
+
+  return "";
+};
+
+const requestAnalysis = async (LOVABLE_API_KEY: string, analysisPrompt: string) => {
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    const retryInstruction = attempt === 1
+      ? ""
+      : "\n\nIMPORTANT: Your previous response was not parseable. Return exactly one raw JSON object with no markdown fences, no commentary, and no trailing text.";
+
+    try {
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-pro",
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert sales coach. Return exactly one valid JSON object and nothing else.",
+            },
+            { role: "user", content: `${analysisPrompt}${retryInstruction}` },
+          ],
+          max_tokens: 1500,
+          temperature: attempt === 1 ? 0.2 : 0,
+        }),
+      });
+
+      const rawBody = await aiResponse.text();
+      console.log(`[roleplay-analyze] raw Gemini response attempt ${attempt}: ${rawBody}`);
+
+      if (!aiResponse.ok) {
+        if (aiResponse.status === 429) {
+          throw new HttpError(429, "Rate limit exceeded. Please wait a moment and try again.");
+        }
+        if (aiResponse.status === 402) {
+          throw new HttpError(402, "AI credits exhausted. Please add credits to continue.");
+        }
+
+        throw new Error(`AI analysis request failed with status ${aiResponse.status}: ${rawBody}`);
+      }
+
+      let aiData: unknown;
+      try {
+        aiData = JSON.parse(rawBody);
+      } catch (error) {
+        throw new Error(
+          `AI gateway returned non-JSON response: ${error instanceof Error ? error.message : "Unknown parse error"}`,
+        );
+      }
+
+      const analysisText = extractAiMessageContent(aiData);
+      console.log(`[roleplay-analyze] extracted Gemini content attempt ${attempt}: ${analysisText}`);
+
+      if (!analysisText) {
+        throw new Error(`AI response missing message content. Response shape: ${JSON.stringify(aiData)}`);
+      }
+
+      return parseAnalysisResponse(analysisText);
+    } catch (error) {
+      if (error instanceof HttpError && (error.status === 429 || error.status === 402)) {
+        throw error;
+      }
+
+      lastError = error instanceof Error ? error : new Error("Unknown analysis failure");
+      console.error(`[roleplay-analyze] analysis attempt ${attempt} failed:`, lastError);
+    }
+  }
+
+  throw new HttpError(
+    502,
+    `Analysis failed after retry: ${lastError?.message ?? "Model returned an invalid response."}`,
+  );
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -65,7 +335,7 @@ serve(async (req) => {
       .from("roleplay_scenarios")
       .select("*")
       .eq("id", scenario_id)
-      .single();
+      .maybeSingle();
 
     if (scenarioError || !scenario) {
       throw new Error("Scenario not found");
@@ -76,7 +346,7 @@ serve(async (req) => {
       .from("roleplay_sessions")
       .select("user_id, transcript")
       .eq("id", session_id)
-      .single();
+      .maybeSingle();
 
     if (sessionError || !sessionData) {
       throw new Error("Session not found");
@@ -151,83 +421,7 @@ SCORING GUIDELINES:
 - Be specific in feedback - reference actual things said in the conversation
 - For key_moment, pick the single most impactful moment (positive or negative)`;
 
-    // Call Lovable AI with Gemini 2.5 Pro for better analysis
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
-        messages: [
-          { role: "system", content: "You are an expert sales coach. Return only valid JSON, no markdown." },
-          { role: "user", content: analysisPrompt },
-        ],
-        max_tokens: 1500,
-        temperature: 0.3,
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please wait a moment and try again." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      throw new Error("Failed to get AI analysis");
-    }
-
-    const aiData = await aiResponse.json();
-    const analysisText = aiData.choices?.[0]?.message?.content || "";
-
-    // Parse the analysis
-    let analysis: AnalysisResult;
-    try {
-      const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysis = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error("No JSON found in response");
-      }
-    } catch (e) {
-      console.error("Failed to parse analysis:", e, analysisText);
-      // Return a default analysis
-      analysis = {
-        outcome: "progress",
-        overall_score: 65,
-        categories: [
-          { name: "Opening & Rapport", score: 70, feedback: "Decent opening, could build more connection." },
-          { name: "Discovery Questions", score: 60, feedback: "Asked some questions but could dig deeper." },
-          { name: "Objection Handling", score: 65, feedback: "Addressed some concerns adequately." },
-          { name: "Value Presentation", score: 70, feedback: "Communicated value but could be more specific." },
-          { name: "Closing Technique", score: 55, feedback: "Need stronger close attempts." },
-          { name: "Conversation Control", score: 65, feedback: "Maintained reasonable control of the conversation." },
-        ],
-        strengths: [
-          "Engaged professionally with the prospect",
-          "Showed knowledge of the product",
-          "Remained calm under pressure",
-        ],
-        improvements: [
-          "Ask more discovery questions early",
-          "Handle objections with more confidence",
-          "Close more assertively",
-        ],
-        key_moment: {
-          type: "missed_opportunity",
-          description: "There was an opportunity to address the prospect's core concern more directly.",
-        },
-        xp_earned: 0,
-      };
-    }
+    const analysis = await requestAnalysis(LOVABLE_API_KEY, analysisPrompt);
 
     // Calculate XP
     let xpEarned = 0;
@@ -270,7 +464,7 @@ SCORING GUIDELINES:
       .from("profiles")
       .select("xp_points")
       .eq("user_id", sessionData.user_id)
-      .single();
+      .maybeSingle();
 
     if (profile) {
       await supabase
@@ -303,7 +497,7 @@ SCORING GUIDELINES:
       .neq("id", session_id)
       .order("score", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     const isNewBest = !previousBest || analysis.overall_score > (previousBest.score || 0);
     const isFirstCompletion = !previousBest;
@@ -318,6 +512,13 @@ SCORING GUIDELINES:
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
+    if (error instanceof HttpError) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { status: error.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     console.error("Roleplay analysis error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
