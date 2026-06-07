@@ -274,23 +274,25 @@ const requestAnalysis = async (LOVABLE_API_KEY: string, analysisPrompt: string) 
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "google/gemini-3-flash-preview",
           response_format: { type: "json_object" },
-          reasoning_effort: "none",
           messages: [
             {
               role: "system",
-              content: "You are an expert sales coach. Return exactly one valid JSON object and nothing else. Do not include reasoning, markdown, or explanatory text.",
+              content:
+                "You are an expert sales coach. Return exactly one valid JSON object — minified, no whitespace padding, no newlines between keys, no markdown fences, no commentary, no reasoning text. The response body must contain only the JSON object and nothing else.",
             },
             { role: "user", content: `${analysisPrompt}${retryInstruction}` },
           ],
-          max_tokens: attempt === 1 ? 1200 : 1600,
+          max_tokens: 4000,
           temperature: 0,
         }),
       });
 
       const rawBody = await aiResponse.text();
-      console.log(`[roleplay-analyze] raw Gemini response attempt ${attempt}: ${rawBody}`);
+      // Compact for logging — earlier raw responses were polluted with thousands of whitespace chars.
+      const compactRaw = rawBody.replace(/\s+/g, " ").trim();
+      console.log(`[roleplay-analyze] raw response attempt ${attempt} (${rawBody.length} chars, compacted): ${compactRaw.slice(0, 2000)}`);
 
       if (!aiResponse.ok) {
         if (aiResponse.status === 429) {
@@ -300,7 +302,7 @@ const requestAnalysis = async (LOVABLE_API_KEY: string, analysisPrompt: string) 
           throw new HttpError(402, "AI credits exhausted. Please add credits to continue.");
         }
 
-        throw new Error(`AI analysis request failed with status ${aiResponse.status}: ${rawBody}`);
+        throw new Error(`AI analysis request failed with status ${aiResponse.status}: ${compactRaw.slice(0, 500)}`);
       }
 
       let aiData: unknown;
@@ -319,16 +321,18 @@ const requestAnalysis = async (LOVABLE_API_KEY: string, analysisPrompt: string) 
 
       const finishReason = getFinishReason(aiData);
       if (finishReason?.finishReason === "length" || finishReason?.nativeFinishReason === "MAX_TOKENS") {
+        // Honest truncation error — never fall back to fake scores.
         throw new Error(
           `Model response truncated before completion (finish_reason=${finishReason.finishReason ?? "unknown"}, native_finish_reason=${finishReason.nativeFinishReason ?? "unknown"})`,
         );
       }
 
       const analysisText = extractAiMessageContent(aiData);
-      console.log(`[roleplay-analyze] extracted Gemini content attempt ${attempt}: ${analysisText}`);
+      const compactExtracted = analysisText.replace(/\s+/g, " ").trim();
+      console.log(`[roleplay-analyze] extracted content attempt ${attempt} (${analysisText.length} chars, compacted): ${compactExtracted.slice(0, 2000)}`);
 
       if (!analysisText) {
-        throw new Error(`AI response missing message content. Response shape: ${JSON.stringify(aiData)}`);
+        throw new Error(`AI response missing message content. Response shape: ${JSON.stringify(aiData).slice(0, 500)}`);
       }
 
       return parseAnalysisResponse(analysisText);
