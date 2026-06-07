@@ -224,13 +224,47 @@ const extractAiMessageContent = (aiData: unknown) => {
   return "";
 };
 
+const getFinishReason = (aiData: unknown) => {
+  if (!isRecord(aiData)) return null;
+
+  const choices = aiData.choices;
+  if (!Array.isArray(choices) || choices.length === 0 || !isRecord(choices[0])) {
+    return null;
+  }
+
+  const finishReason = choices[0].finish_reason;
+  const nativeFinishReason = choices[0].native_finish_reason;
+
+  return {
+    finishReason: typeof finishReason === "string" ? finishReason : null,
+    nativeFinishReason: typeof nativeFinishReason === "string" ? nativeFinishReason : null,
+  };
+};
+
+const getRefusalMessage = (aiData: unknown) => {
+  if (!isRecord(aiData)) return null;
+
+  const choices = aiData.choices;
+  if (!Array.isArray(choices) || choices.length === 0 || !isRecord(choices[0])) {
+    return null;
+  }
+
+  const message = choices[0].message;
+  if (!isRecord(message)) {
+    return null;
+  }
+
+  const refusal = message.refusal;
+  return typeof refusal === "string" && refusal.trim() ? refusal.trim() : null;
+};
+
 const requestAnalysis = async (LOVABLE_API_KEY: string, analysisPrompt: string) => {
   let lastError: Error | null = null;
 
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     const retryInstruction = attempt === 1
       ? ""
-      : "\n\nIMPORTANT: Your previous response was not parseable. Return exactly one raw JSON object with no markdown fences, no commentary, and no trailing text.";
+      : "\n\nIMPORTANT: Your previous response was incomplete or not parseable. Return exactly one compact raw JSON object with no markdown fences, no commentary, no trailing text, and no extra keys.";
 
     try {
       const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -240,17 +274,18 @@ const requestAnalysis = async (LOVABLE_API_KEY: string, analysisPrompt: string) 
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-pro",
+          model: "google/gemini-2.5-flash",
           response_format: { type: "json_object" },
+          reasoning_effort: "none",
           messages: [
             {
               role: "system",
-              content: "You are an expert sales coach. Return exactly one valid JSON object and nothing else.",
+              content: "You are an expert sales coach. Return exactly one valid JSON object and nothing else. Do not include reasoning, markdown, or explanatory text.",
             },
             { role: "user", content: `${analysisPrompt}${retryInstruction}` },
           ],
-          max_tokens: 1500,
-          temperature: attempt === 1 ? 0.2 : 0,
+          max_tokens: attempt === 1 ? 1200 : 1600,
+          temperature: 0,
         }),
       });
 
@@ -274,6 +309,18 @@ const requestAnalysis = async (LOVABLE_API_KEY: string, analysisPrompt: string) 
       } catch (error) {
         throw new Error(
           `AI gateway returned non-JSON response: ${error instanceof Error ? error.message : "Unknown parse error"}`,
+        );
+      }
+
+      const refusalMessage = getRefusalMessage(aiData);
+      if (refusalMessage) {
+        throw new Error(`Model refusal: ${refusalMessage}`);
+      }
+
+      const finishReason = getFinishReason(aiData);
+      if (finishReason?.finishReason === "length" || finishReason?.nativeFinishReason === "MAX_TOKENS") {
+        throw new Error(
+          `Model response truncated before completion (finish_reason=${finishReason.finishReason ?? "unknown"}, native_finish_reason=${finishReason.nativeFinishReason ?? "unknown"})`,
         );
       }
 
