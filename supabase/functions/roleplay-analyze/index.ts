@@ -421,83 +421,7 @@ SCORING GUIDELINES:
 - Be specific in feedback - reference actual things said in the conversation
 - For key_moment, pick the single most impactful moment (positive or negative)`;
 
-    // Call Lovable AI with Gemini 2.5 Pro for better analysis
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
-        messages: [
-          { role: "system", content: "You are an expert sales coach. Return only valid JSON, no markdown." },
-          { role: "user", content: analysisPrompt },
-        ],
-        max_tokens: 1500,
-        temperature: 0.3,
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please wait a moment and try again." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      throw new Error("Failed to get AI analysis");
-    }
-
-    const aiData = await aiResponse.json();
-    const analysisText = aiData.choices?.[0]?.message?.content || "";
-
-    // Parse the analysis
-    let analysis: AnalysisResult;
-    try {
-      const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysis = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error("No JSON found in response");
-      }
-    } catch (e) {
-      console.error("Failed to parse analysis:", e, analysisText);
-      // Return a default analysis
-      analysis = {
-        outcome: "progress",
-        overall_score: 65,
-        categories: [
-          { name: "Opening & Rapport", score: 70, feedback: "Decent opening, could build more connection." },
-          { name: "Discovery Questions", score: 60, feedback: "Asked some questions but could dig deeper." },
-          { name: "Objection Handling", score: 65, feedback: "Addressed some concerns adequately." },
-          { name: "Value Presentation", score: 70, feedback: "Communicated value but could be more specific." },
-          { name: "Closing Technique", score: 55, feedback: "Need stronger close attempts." },
-          { name: "Conversation Control", score: 65, feedback: "Maintained reasonable control of the conversation." },
-        ],
-        strengths: [
-          "Engaged professionally with the prospect",
-          "Showed knowledge of the product",
-          "Remained calm under pressure",
-        ],
-        improvements: [
-          "Ask more discovery questions early",
-          "Handle objections with more confidence",
-          "Close more assertively",
-        ],
-        key_moment: {
-          type: "missed_opportunity",
-          description: "There was an opportunity to address the prospect's core concern more directly.",
-        },
-        xp_earned: 0,
-      };
-    }
+    const analysis = await requestAnalysis(LOVABLE_API_KEY, analysisPrompt);
 
     // Calculate XP
     let xpEarned = 0;
@@ -573,7 +497,7 @@ SCORING GUIDELINES:
       .neq("id", session_id)
       .order("score", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     const isNewBest = !previousBest || analysis.overall_score > (previousBest.score || 0);
     const isFirstCompletion = !previousBest;
@@ -588,6 +512,13 @@ SCORING GUIDELINES:
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
+    if (error instanceof HttpError) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { status: error.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     console.error("Roleplay analysis error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
