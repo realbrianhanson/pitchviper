@@ -104,11 +104,17 @@ export default function RoleplaySession() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Live voice analysis pairing: hold the latest user line until an agent line arrives
   const pendingUserRef = useRef<string | null>(null);
+  // Guard so the init effect runs at most once per scenarioId. Without this,
+  // useAuth re-emitting a new user/session reference on window-focus would re-run
+  // init, create a brand-new DB session, and wipe `messages` back to just the opening line.
+  const initializedRef = useRef<string | null>(null);
 
-  // Initialize session
+  // Initialize session — runs exactly once per scenarioId
   useEffect(() => {
     const initSession = async () => {
       if (!scenarioId || !user) return;
+      if (initializedRef.current === scenarioId) return;
+      initializedRef.current = scenarioId;
 
       try {
         // Fetch scenario
@@ -160,6 +166,7 @@ export default function RoleplaySession() {
       } catch (error) {
         console.error("Error initializing session:", error);
         toast.error("Failed to start session");
+        initializedRef.current = null;
         navigate("/roleplay");
       }
     };
