@@ -335,7 +335,7 @@ serve(async (req) => {
       .from("roleplay_scenarios")
       .select("*")
       .eq("id", scenario_id)
-      .single();
+      .maybeSingle();
 
     if (scenarioError || !scenario) {
       throw new Error("Scenario not found");
@@ -346,7 +346,7 @@ serve(async (req) => {
       .from("roleplay_sessions")
       .select("user_id, transcript")
       .eq("id", session_id)
-      .single();
+      .maybeSingle();
 
     if (sessionError || !sessionData) {
       throw new Error("Session not found");
@@ -464,7 +464,7 @@ SCORING GUIDELINES:
       .from("profiles")
       .select("xp_points")
       .eq("user_id", sessionData.user_id)
-      .single();
+      .maybeSingle();
 
     if (profile) {
       await supabase
