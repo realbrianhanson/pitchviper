@@ -2040,6 +2040,10 @@ export type Database = {
       }
     }
     Functions: {
+      append_roleplay_messages: {
+        Args: { p_messages: Json; p_session_id: string }
+        Returns: Json
+      }
       calculate_streak: { Args: { p_user_id: string }; Returns: number }
       generate_team_code: { Args: never; Returns: string }
       get_or_create_daily_stats: {

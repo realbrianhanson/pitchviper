@@ -226,26 +226,23 @@ Return ONLY a valid JSON object (no markdown, no explanation):
       }
     }
 
-    // Update session transcript
+    // Atomically append both turns to the persisted transcript via SECURITY DEFINER RPC.
+    // Replaces a read-modify-write that could overwrite the transcript with a partial
+    // when the SELECT raced another in-flight chat call or returned no row.
     const timestamp = new Date().toISOString();
     const newMessages = [
       { role: "user", content: user_message, timestamp },
       { role: "assistant", content: assistantMessage, timestamp: new Date().toISOString() },
     ];
 
-    const { data: session } = await supabase
-      .from("roleplay_sessions")
-      .select("transcript")
-      .eq("id", session_id)
-      .single();
+    const { error: appendError } = await supabase.rpc("append_roleplay_messages", {
+      p_session_id: session_id,
+      p_messages: newMessages,
+    });
 
-    const currentTranscript = (session?.transcript as Message[]) || [];
-    const updatedTranscript = [...currentTranscript, ...newMessages];
-
-    await supabase
-      .from("roleplay_sessions")
-      .update({ transcript: updatedTranscript })
-      .eq("id", session_id);
+    if (appendError) {
+      console.error("[roleplay-chat] failed to append transcript:", appendError);
+    }
 
     return new Response(
       JSON.stringify({
