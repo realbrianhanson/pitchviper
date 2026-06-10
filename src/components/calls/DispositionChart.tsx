@@ -1,18 +1,20 @@
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { EDITORIAL_COLORS, editorialAxis, editorialGrid, EditorialTooltip } from "@/lib/chart-theme";
+import { EditorialEmpty } from "@/components/ui/editorial-empty";
 
 interface DispositionChartProps {
   dispositions: Record<string, number>;
 }
 
 const DISPOSITION_CONFIG: Record<string, { label: string; color: string }> = {
-  appointment_set: { label: 'Appointment Set', color: 'hsl(var(--success))' },
-  deal_closed: { label: 'Deal Closed', color: 'hsl(var(--success))' },
-  callback_scheduled: { label: 'Callback Scheduled', color: 'hsl(var(--primary))' },
-  info_sent: { label: 'Info Sent', color: 'hsl(var(--primary))' },
-  no_decision: { label: 'No Decision', color: 'hsl(var(--muted-foreground))' },
-  not_interested: { label: 'Not Interested', color: 'hsl(var(--destructive))' },
-  deal_lost: { label: 'Deal Lost', color: 'hsl(var(--destructive))' },
+  appointment_set: { label: "Appointment Set", color: EDITORIAL_COLORS.acidGreen },
+  deal_closed: { label: "Deal Closed", color: EDITORIAL_COLORS.acidGreen },
+  callback_scheduled: { label: "Callback Scheduled", color: EDITORIAL_COLORS.gold },
+  info_sent: { label: "Info Sent", color: EDITORIAL_COLORS.gold },
+  no_decision: { label: "No Decision", color: EDITORIAL_COLORS.muted },
+  not_interested: { label: "Not Interested", color: EDITORIAL_COLORS.magenta },
+  deal_lost: { label: "Deal Lost", color: EDITORIAL_COLORS.magenta },
 };
 
 export function DispositionChart({ dispositions }: DispositionChartProps) {
@@ -20,7 +22,7 @@ export function DispositionChart({ dispositions }: DispositionChartProps) {
     .map(([key, value]) => ({
       name: DISPOSITION_CONFIG[key]?.label || key,
       value,
-      color: DISPOSITION_CONFIG[key]?.color || 'hsl(var(--muted-foreground))',
+      color: DISPOSITION_CONFIG[key]?.color || EDITORIAL_COLORS.muted,
     }))
     .sort((a, b) => b.value - a.value);
 
@@ -31,9 +33,12 @@ export function DispositionChart({ dispositions }: DispositionChartProps) {
           <ViperCardTitle>Disposition Breakdown</ViperCardTitle>
         </ViperCardHeader>
         <ViperCardContent>
-          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-            No disposition data yet
-          </div>
+          <EditorialEmpty
+            eyebrow="Dispositions"
+            title="No outcomes logged yet"
+            description="Log a call disposition and the breakdown lands here."
+            size="sm"
+          />
         </ViperCardContent>
       </ViperCard>
     );
@@ -47,24 +52,12 @@ export function DispositionChart({ dispositions }: DispositionChartProps) {
       <ViperCardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} layout="vertical" margin={{ left: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-              <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <YAxis 
-                type="category" 
-                dataKey="name" 
-                stroke="hsl(var(--muted-foreground))" 
-                fontSize={12}
-                width={120}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                }}
-              />
-              <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+            <BarChart data={data} layout="vertical" margin={{ left: 20, right: 8 }}>
+              <CartesianGrid {...editorialGrid} horizontal={false} vertical />
+              <XAxis type="number" {...editorialAxis} />
+              <YAxis type="category" dataKey="name" {...editorialAxis} width={140} />
+              <Tooltip content={<EditorialTooltip />} cursor={{ fill: "hsl(var(--accent) / 0.4)" }} />
+              <Bar dataKey="value" radius={[0, 0, 0, 0]}>
                 {data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}

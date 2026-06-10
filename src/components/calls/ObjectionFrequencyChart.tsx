@@ -1,6 +1,8 @@
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { AlertTriangle } from "lucide-react";
+import { EDITORIAL_COLORS, editorialAxis, editorialGrid, EditorialTooltip } from "@/lib/chart-theme";
+import { EditorialEmpty } from "@/components/ui/editorial-empty";
 
 interface ObjectionFrequencyChartProps {
   data: Array<{ objection: string; count: number }>;
@@ -12,14 +14,17 @@ export function ObjectionFrequencyChart({ data }: ObjectionFrequencyChartProps) 
       <ViperCard variant="glass">
         <ViperCardHeader>
           <ViperCardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-warning" />
+            <AlertTriangle className="h-4 w-4 text-warning" strokeWidth={1.5} />
             Objection Frequency
           </ViperCardTitle>
         </ViperCardHeader>
         <ViperCardContent>
-          <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-            <p>No objection data yet. Log calls with self-assessments to see insights.</p>
-          </div>
+          <EditorialEmpty
+            eyebrow="Objections"
+            title="No friction recorded yet"
+            description="Self-assess your calls and the pressure points will surface here."
+            size="sm"
+          />
         </ViperCardContent>
       </ViperCard>
     );
@@ -29,40 +34,28 @@ export function ObjectionFrequencyChart({ data }: ObjectionFrequencyChartProps) 
     <ViperCard variant="glass">
       <ViperCardHeader>
         <ViperCardTitle className="flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-warning" />
+          <AlertTriangle className="h-4 w-4 text-warning" strokeWidth={1.5} />
           Objection Frequency
         </ViperCardTitle>
-        <p className="text-xs text-muted-foreground mt-1">
-          Most common objections reps struggled with
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 mt-1">
+          Most Common Pushbacks
         </p>
       </ViperCardHeader>
       <ViperCardContent>
         <div className="h-[200px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} layout="vertical" margin={{ left: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-              <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <YAxis 
-                type="category" 
-                dataKey="objection" 
-                stroke="hsl(var(--muted-foreground))" 
-                fontSize={11}
-                width={120}
-                tickFormatter={(value) => value.length > 15 ? `${value.slice(0, 15)}...` : value}
+            <BarChart data={data} layout="vertical" margin={{ left: 20, right: 8 }}>
+              <CartesianGrid {...editorialGrid} horizontal={false} vertical />
+              <XAxis type="number" {...editorialAxis} />
+              <YAxis
+                type="category"
+                dataKey="objection"
+                {...editorialAxis}
+                width={140}
+                tickFormatter={(value: string) => (value.length > 18 ? `${value.slice(0, 18)}…` : value)}
               />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                }}
-              />
-              <Bar 
-                dataKey="count" 
-                fill="hsl(var(--warning))" 
-                radius={[0, 4, 4, 0]}
-                name="Times Struggled"
-              />
+              <Tooltip content={<EditorialTooltip />} cursor={{ fill: "hsl(var(--accent) / 0.4)" }} />
+              <Bar dataKey="count" fill={EDITORIAL_COLORS.magenta} />
             </BarChart>
           </ResponsiveContainer>
         </div>
