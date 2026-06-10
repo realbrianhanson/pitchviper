@@ -17,6 +17,12 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
+    // Service-role only — invoked internally from aloware-webhook-receiver
+    const authHeader = req.headers.get('Authorization') ?? '';
+    if (!authHeader.startsWith('Bearer ') || authHeader.replace('Bearer ', '') !== supabaseServiceKey) {
+      return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const { callId, transcription } = await req.json();
 
     if (!callId || !transcription) {
