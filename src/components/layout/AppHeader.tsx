@@ -15,7 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { LogCallModal } from "@/components/calls/LogCallModal";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { ChatPanel } from "@/components/chat/ChatPanel";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+
 
 interface AppHeaderProps {
   title?: string;
@@ -110,7 +110,7 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
 
         <div className="flex items-center gap-1 text-muted-foreground">
           <ChatPanel />
-          <ThemeToggle />
+          
           <NotificationBell />
         </div>
 

@@ -11,7 +11,7 @@ const viperButtonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:bg-primary/90",
+          "relative overflow-hidden bg-primary text-primary-foreground hover:bg-primary/95 bg-[length:200%_100%] [background-image:linear-gradient(110deg,hsl(var(--primary))_30%,hsl(var(--primary-foreground)/0.18)_50%,hsl(var(--primary))_70%)] hover:animate-shimmer",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         success:

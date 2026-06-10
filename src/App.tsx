@@ -69,7 +69,7 @@ const queryClient = new QueryClient({
 // Main application component
 const App = () => (
   <ErrorBoundary>
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
