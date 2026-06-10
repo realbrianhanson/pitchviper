@@ -29,12 +29,31 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Auth: signed-in user OR service role (for scheduled invocations)
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const isServiceRole = token === supabaseServiceKey;
+    let authedUserId: string | null = null;
+    if (!isServiceRole) {
+      const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
+      const { data: userData, error: userErr } = await authClient.auth.getUser();
+      if (userErr || !userData?.user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      authedUserId = userData.user.id;
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { deal_id } = await req.json();
 
-    // If a specific deal_id is provided, calculate for that deal only
-    // Otherwise, calculate for all active deals
+    // If a specific deal_id is provided, calculate for that deal only.
+    // Otherwise scope by authenticated user (or all when service role).
     let dealsQuery = supabase
       .from("deals")
       .select("*")
@@ -42,11 +61,18 @@ serve(async (req) => {
 
     if (deal_id) {
       dealsQuery = dealsQuery.eq("id", deal_id);
+    } else if (authedUserId) {
+      dealsQuery = dealsQuery.eq("user_id", authedUserId);
     }
 
     const { data: deals, error: dealsError } = await dealsQuery;
 
     if (dealsError) throw dealsError;
+
+    // If specific deal requested, enforce ownership
+    if (deal_id && deals && deals[0] && authedUserId && deals[0].user_id !== authedUserId) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     if (!deals || deals.length === 0) {
       return new Response(
         JSON.stringify({ success: true, message: "No deals to process" }),
