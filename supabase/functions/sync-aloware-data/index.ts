@@ -349,6 +349,23 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Auth
+    const authHeader = req.headers.get('Authorization') ?? '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const token = authHeader.replace('Bearer ', '');
+    const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
+    const { data: userData, error: userErr } = await authClient.auth.getUser();
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const authedUserId = userData.user.id;
+
     const apiToken = Deno.env.get("ALOWARE_API_TOKEN");
     if (!apiToken) {
       console.error("ALOWARE_API_TOKEN not configured");
@@ -358,13 +375,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body = await req.json().catch(() => ({}));
-    const { 
-      syncType = "all", // "users" | "calls" | "contacts" | "all"
+    const {
+      syncType = "all",
       teamId,
       userId,
       daysBack = 30,
@@ -375,6 +390,16 @@ Deno.serve(async (req) => {
         JSON.stringify({ success: false, error: "teamId and userId are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // userId must match the authenticated caller, and team must match caller's team
+    if (userId !== authedUserId) {
+      return new Response(JSON.stringify({ success: false, error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const { data: callerProfile } = await supabase
+      .from('profiles').select('team_id').eq('user_id', authedUserId).maybeSingle();
+    if (callerProfile?.team_id !== teamId) {
+      return new Response(JSON.stringify({ success: false, error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     console.log(`Starting Aloware sync: type=${syncType}, team=${teamId}`);
