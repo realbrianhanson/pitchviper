@@ -16,8 +16,9 @@ serve(async (req) => {
     
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     const ELEVENLABS_AGENT_ID = Deno.env.get("ELEVENLABS_AGENT_ID");
-    const ELEVENLABS_OVERRIDES_ENABLED = Deno.env.get("ELEVENLABS_OVERRIDES_ENABLED");
-    const overridesEnabled = ELEVENLABS_OVERRIDES_ENABLED?.trim().toLowerCase() === "true";
+    // Overrides are always returned. If the ElevenLabs agent has overrides disabled,
+    // the client will surface an editorial error telling the manager to enable
+    // "Security → Overrides" in the agent dashboard.
     
     if (!ELEVENLABS_API_KEY) {
       throw new Error("ELEVENLABS_API_KEY is not configured");
