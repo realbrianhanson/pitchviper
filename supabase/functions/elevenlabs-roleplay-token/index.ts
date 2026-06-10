@@ -33,15 +33,47 @@ serve(async (req) => {
       );
     }
 
-    // Validate user is authenticated
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
-      throw new Error("Missing authorization header");
+    // Validate caller's JWT — this endpoint mints signed URLs that burn ElevenLabs credits.
+    const authHeader = req.headers.get("authorization") ?? req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "unauthorized", message: "Missing bearer token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+    const token = authHeader.replace("Bearer ", "");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: userData, error: userErr } = await authClient.auth.getUser();
+    if (userErr || !userData?.user) {
+      return new Response(
+        JSON.stringify({ error: "unauthorized", message: "Invalid or expired session" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const authedUserId = userData.user.id;
+
+    // If scenario_id given, ensure it exists and is active (scenarios are shared, not per-user)
+    if (scenario_id) {
+      const { data: scenarioCheck } = await supabase
+        .from("roleplay_scenarios")
+        .select("id, is_active")
+        .eq("id", scenario_id)
+        .maybeSingle();
+      if (!scenarioCheck || scenarioCheck.is_active === false) {
+        return new Response(
+          JSON.stringify({ error: "forbidden", message: "Scenario not available" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
 
     // Get scenario details if provided
     let scenarioContext = "";
