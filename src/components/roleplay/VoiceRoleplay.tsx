@@ -40,6 +40,7 @@ export function VoiceRoleplay({
   const [isConnecting, setIsConnecting] = useState(false);
   const [micPermission, setMicPermission] = useState<"pending" | "granted" | "denied">("pending");
   const [agentNotConfigured, setAgentNotConfigured] = useState(false);
+  const [overridesBlocked, setOverridesBlocked] = useState(false);
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
 
   const conversation = useConversation({
