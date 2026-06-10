@@ -6,9 +6,10 @@ import { AuthLayout } from "@/components/auth/AuthLayout";
 import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
 import { ViperInput } from "@/components/ui/viper-input";
 import { ViperButton } from "@/components/ui/viper-button";
+import { GoogleIcon } from "@/components/ui/google-icon";
+import { FieldLabel, AuthErrorNote } from "@/components/auth/AuthFormBits";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
-import { Loader2, User, Mail, Lock, Chrome } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -27,37 +28,24 @@ export default function SignUp() {
     setLoading(true);
 
     try {
-      // Sign up — DB trigger auto-creates profile + default 'rep' role.
+      // DB trigger auto-creates profile + default 'rep' role.
       // Promo code and role selection happen in onboarding.
       const { error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: window.location.origin,
-          data: {
-            full_name: fullName,
-          },
+          data: { full_name: fullName },
         },
       });
-
       if (authError) throw authError;
 
       setSuccess(true);
-      toast({
-        title: "Welcome to PitchViper!",
-        description: "Check your email to verify your account.",
-      });
-
-      setTimeout(() => {
-        navigate("/verify-email");
-      }, 1500);
+      toast({ title: "Welcome to PitchViper.", description: "Check your email to verify your account." });
+      setTimeout(() => navigate("/verify-email"), 1200);
     } catch (err: any) {
       setError(err.message);
-      toast({
-        title: "Sign up failed",
-        description: err.message,
-        variant: "destructive",
-      });
+      toast({ title: "Sign up failed", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -68,11 +56,7 @@ export default function SignUp() {
       redirect_uri: window.location.origin,
     });
     if (result.error) {
-      toast({
-        title: "Google sign up failed",
-        description: result.error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Google sign up failed", description: result.error.message, variant: "destructive" });
       return;
     }
     if (result.redirected) return;
@@ -80,119 +64,89 @@ export default function SignUp() {
   };
 
   return (
-    <AuthLayout>
+    <AuthLayout
+      eyebrow="Create Account"
+      title="Earn your place."
+      subtitle="The promo code and role come in onboarding."
+    >
       <form onSubmit={handleSignUp} className="space-y-5">
-        {/* Full Name */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Full Name</label>
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <ViperInput
-              type="text"
-              placeholder="John Doe"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className={cn("pl-10", error && "animate-pulse border-destructive")}
-              variant="glow"
-              required
-            />
+        <div>
+          <FieldLabel htmlFor="fullName">Full Name</FieldLabel>
+          <ViperInput
+            id="fullName"
+            type="text"
+            placeholder="Jane Doe"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
+          />
+        </div>
+
+        <div>
+          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <ViperInput
+            id="email"
+            type="email"
+            placeholder="you@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        <div>
+          <FieldLabel htmlFor="password">Password</FieldLabel>
+          <ViperInput
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+          />
+          <div className="mt-2">
+            <PasswordStrengthIndicator password={password} />
           </div>
         </div>
 
-        {/* Email */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Email</label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <ViperInput
-              type="email"
-              placeholder="you@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={cn("pl-10", error && "animate-pulse border-destructive")}
-              variant="glow"
-              required
-            />
-          </div>
-        </div>
+        <AuthErrorNote message={error} />
 
-        {/* Password */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Password</label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <ViperInput
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={cn("pl-10", error && "animate-pulse border-destructive")}
-              variant="glow"
-              required
-              minLength={6}
-            />
-          </div>
-          <PasswordStrengthIndicator password={password} />
-        </div>
-
-        {/* Info: promo code now collected in onboarding */}
-        <p className="text-xs text-muted-foreground">
-          You'll be asked for your promo code and role after verifying your email.
-        </p>
-
-        {/* Error message */}
-        {error && (
-          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 animate-pulse">
-            <p className="text-sm text-destructive">{error}</p>
-          </div>
-        )}
-
-        {/* Submit Button */}
-        <ViperButton
-          type="submit"
-          className={cn(
-            "w-full font-display",
-            success && "bg-success hover:bg-success shadow-glow-success"
-          )}
-          disabled={loading}
-        >
+        <ViperButton type="submit" className="w-full" disabled={loading || success}>
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Creating account...
+              Creating account
             </>
           ) : success ? (
-            "Success! Redirecting..."
+            <>
+              <Check className="h-4 w-4" />
+              Redirecting
+            </>
           ) : (
             "Create Account"
           )}
         </ViperButton>
 
-        {/* Divider */}
-        <div className="relative">
+        <div className="relative py-1">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-border" />
           </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="bg-card px-2 text-muted-foreground">or continue with</span>
+          <div className="relative flex justify-center">
+            <span className="bg-background px-3 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70">
+              or
+            </span>
           </div>
         </div>
 
-        {/* Google Sign Up */}
-        <ViperButton
-          type="button"
-          variant="glass"
-          className="w-full"
-          onClick={handleGoogleSignUp}
-        >
-          <Chrome className="h-4 w-4" />
-          Google
+        <ViperButton type="button" variant="glass" className="w-full" onClick={handleGoogleSignUp}>
+          <GoogleIcon />
+          Continue with Google
         </ViperButton>
 
-        {/* Sign In Link */}
-        <p className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link to="/sign-in" className="text-primary hover:underline font-medium">
+        <p className="text-center font-body text-sm text-muted-foreground pt-2">
+          Already signed up?{" "}
+          <Link to="/sign-in" className="text-primary gold-underline">
             Sign in
           </Link>
         </p>

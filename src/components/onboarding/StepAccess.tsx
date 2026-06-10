@@ -129,7 +129,7 @@ export function StepAccess({ initialData, onComplete }: StepAccessProps) {
               className={cn(
                 "flex flex-col items-center gap-2 p-4 rounded-lg border transition-all duration-200",
                 role === "rep"
-                  ? "border-primary bg-primary/10 shadow-glow-sm"
+                  ? "border-primary bg-primary/10"
                   : "border-border bg-card/50 hover:border-primary/50"
               )}
             >
@@ -149,7 +149,7 @@ export function StepAccess({ initialData, onComplete }: StepAccessProps) {
               className={cn(
                 "flex flex-col items-center gap-2 p-4 rounded-lg border transition-all duration-200",
                 role === "manager"
-                  ? "border-primary bg-primary/10 shadow-glow-sm"
+                  ? "border-primary bg-primary/10"
                   : "border-border bg-card/50 hover:border-primary/50"
               )}
             >

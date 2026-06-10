@@ -1,42 +1,106 @@
-import { ReactNode } from "react";
-import { FloatingParticles } from "./FloatingParticles";
+import { ReactNode, useEffect, useState } from "react";
+import { FilmGrain } from "@/components/ui/film-grain";
+
+const APHORISMS = [
+  "The deal is closed in the silence after the ask.",
+  "Discipline is the rep's only equal-opportunity employer.",
+  "A no on Tuesday is a yes you haven't earned yet.",
+  "Numbers don't lie. They just wait.",
+  "The follow-up is the close.",
+  "Pressure is a privilege.",
+];
 
 interface AuthLayoutProps {
   children: ReactNode;
+  eyebrow?: string;
+  title?: string;
+  subtitle?: string;
 }
 
-export function AuthLayout({ children }: AuthLayoutProps) {
+export function AuthLayout({ children, eyebrow, title, subtitle }: AuthLayoutProps) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => setIndex((i) => (i + 1) % APHORISMS.length), 6000);
+    return () => clearInterval(t);
+  }, []);
+
   return (
-    <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-3 sm:p-4 relative overflow-hidden">
-      {/* Animated gradient mesh background */}
-      <div className="fixed inset-0 bg-background">
-        <div className="absolute top-0 left-1/4 w-[400px] sm:w-[800px] h-[400px] sm:h-[800px] bg-primary/10 rounded-full blur-[100px] sm:blur-[150px] animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-magenta/10 rounded-full blur-[80px] sm:blur-[120px] animate-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] sm:w-[500px] h-[250px] sm:h-[500px] bg-success/5 rounded-full blur-[60px] sm:blur-[100px] animate-pulse" style={{ animationDelay: "2s" }} />
-      </div>
+    <div className="min-h-screen min-h-[100dvh] bg-background flex">
+      <FilmGrain />
 
-      {/* Floating particles */}
-      <FloatingParticles />
+      {/* LEFT — editorial obsidian field. Hidden on mobile. */}
+      <aside className="hidden lg:flex relative w-1/2 flex-col justify-between p-12 xl:p-16 border-r border-border bg-card overflow-hidden">
+        <div className="gold-vignette">
+          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70 mb-3">
+            — Where Closers Are Made
+          </p>
+          <h1 className="font-display text-5xl xl:text-6xl leading-[0.95] text-foreground">
+            Pitch<span className="italic">Viper</span>
+          </h1>
+        </div>
 
-      {/* Auth card */}
-      <div className="relative z-10 w-full max-w-md">
-        <div className="bg-card/80 backdrop-blur-xl border border-glass-border rounded-xl sm:rounded-2xl p-5 sm:p-8 shadow-2xl shadow-primary/5">
-          {/* Logo */}
-          <div className="flex flex-col items-center mb-6 sm:mb-8">
-            <div className="flex items-center mb-2 sm:mb-3">
-              <span className="font-display text-3xl sm:text-4xl tracking-tight text-foreground">
-                <span className="font-normal">Pitch</span>
-                <span className="font-bold">Viper</span>
-              </span>
-            </div>
-            <p className="text-muted-foreground text-xs sm:text-sm font-display tracking-wide">
-              Where Closers Are Made
-            </p>
+        {/* Rotating aphorisms */}
+        <div className="relative flex-1 flex items-center max-w-xl">
+          <div className="relative w-full h-40">
+            {APHORISMS.map((line, i) => (
+              <p
+                key={i}
+                className="absolute inset-0 font-display italic text-3xl xl:text-4xl leading-snug text-foreground/85 transition-opacity duration-[1400ms] ease-out"
+                style={{ opacity: i === index ? 1 : 0 }}
+                aria-hidden={i !== index}
+              >
+                "{line}"
+              </p>
+            ))}
           </div>
+        </div>
+
+        {/* Bottom gold hairline + mono microtype */}
+        <div>
+          <div className="h-px w-16 bg-primary mb-4" />
+          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70">
+            Vol. I · Est. 2026 · Manuscript of the Closer
+          </p>
+        </div>
+      </aside>
+
+      {/* RIGHT — the form */}
+      <main className="relative flex-1 flex items-center justify-center p-6 sm:p-10">
+        <div className="w-full max-w-md">
+          {/* Mobile wordmark */}
+          <div className="lg:hidden mb-8">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70 mb-2">
+              — Where Closers Are Made
+            </p>
+            <h1 className="font-display text-4xl leading-none text-foreground">
+              Pitch<span className="italic">Viper</span>
+            </h1>
+          </div>
+
+          {(eyebrow || title || subtitle) && (
+            <div className="mb-8">
+              {eyebrow && (
+                <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70 mb-3">
+                  — {eyebrow}
+                </p>
+              )}
+              {title && (
+                <h2 className="font-display italic text-3xl md:text-4xl leading-tight text-foreground">
+                  {title}
+                </h2>
+              )}
+              {subtitle && (
+                <p className="font-body text-sm text-muted-foreground mt-2 max-w-sm">
+                  {subtitle}
+                </p>
+              )}
+            </div>
+          )}
 
           {children}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

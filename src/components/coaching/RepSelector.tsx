@@ -108,7 +108,7 @@ export function RepSelector({ members, selectedRepId, onSelectRep, isLoading }: 
                   "w-full p-2.5 rounded-lg border transition-all text-left",
                   "hover:border-primary/50 hover:bg-muted/30",
                   isSelected 
-                    ? "border-primary bg-primary/10 shadow-glow-sm" 
+                    ? "border-primary bg-primary/10" 
                     : "border-border bg-background/50"
                 )}
               >

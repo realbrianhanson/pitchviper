@@ -2,22 +2,25 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
+// Sovereign Editorial: hairline obsidian tiles, no blur, no glow, no gradients.
+// Legacy `glass`/`gradient`/`glow` variants render as plain editorial tiles so
+// older call sites adopt the new aesthetic without per-file edits.
 const viperCardVariants = cva(
-  "rounded-lg transition-all duration-200 ease-out",
+  "rounded-[2px] transition-colors duration-200 ease-out",
   {
     variants: {
       variant: {
         default: "bg-card border border-border",
-        glass: "bg-card/70 backdrop-blur-xl border border-glass-border",
-        gradient: "bg-card relative gradient-border",
-        elevated: "bg-card border border-border shadow-lg shadow-background/50",
-        glow: "bg-card border border-primary/30 shadow-glow-sm",
+        glass: "bg-card border border-border",
+        gradient: "bg-card border border-border",
+        elevated: "bg-card border border-border",
+        glow: "bg-card border border-border",
       },
       hover: {
         none: "",
-        lift: "hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10",
-        glow: "hover:shadow-glow-md hover:border-primary/50",
-        scale: "hover:scale-[1.02]",
+        lift: "hover:border-primary/40",
+        glow: "hover:border-primary/40",
+        scale: "",
       },
     },
     defaultVariants: {

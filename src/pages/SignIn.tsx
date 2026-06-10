@@ -5,14 +5,15 @@ import { lovable } from "@/integrations/lovable";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { ViperInput } from "@/components/ui/viper-input";
 import { ViperButton } from "@/components/ui/viper-button";
+import { GoogleIcon } from "@/components/ui/google-icon";
+import { FieldLabel, AuthErrorNote } from "@/components/auth/AuthFormBits";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
-import { Loader2, Mail, Lock, Chrome } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 
 export default function SignIn() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,31 +26,15 @@ export default function SignIn() {
     setLoading(true);
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) throw signInError;
 
-      // Success!
       setSuccess(true);
-      toast({
-        title: "Welcome back!",
-        description: "You've signed in successfully.",
-      });
-
-      // Flash green and redirect
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
+      toast({ title: "Welcome back.", description: "You've signed in successfully." });
+      setTimeout(() => navigate("/"), 900);
     } catch (err: any) {
       setError(err.message);
-      toast({
-        title: "Sign in failed",
-        description: err.message,
-        variant: "destructive",
-      });
+      toast({ title: "Sign in failed", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -59,120 +44,88 @@ export default function SignIn() {
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
-
     if (result.error) {
-      toast({
-        title: "Google sign in failed",
-        description: result.error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Google sign in failed", description: result.error.message, variant: "destructive" });
       return;
     }
-
     if (result.redirected) return;
-
     navigate("/");
   };
 
   return (
-    <AuthLayout>
+    <AuthLayout eyebrow="Sign In" title="Welcome back." subtitle="The territory awaits.">
       <form onSubmit={handleSignIn} className="space-y-5">
-        {/* Email */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Email</label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <ViperInput
-              type="email"
-              placeholder="you@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={cn("pl-10", error && "animate-pulse border-destructive")}
-              variant="glow"
-              required
-            />
-          </div>
+        <div>
+          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <ViperInput
+            id="email"
+            type="email"
+            placeholder="you@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
 
-        {/* Password */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-foreground">Password</label>
-            <Link
-              to="/forgot-password"
-              className="text-xs text-primary hover:underline"
-            >
-              Forgot password?
-            </Link>
-          </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <ViperInput
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={cn("pl-10", error && "animate-pulse border-destructive")}
-              variant="glow"
-              required
-            />
-          </div>
+        <div>
+          <FieldLabel
+            htmlFor="password"
+            action={
+              <Link to="/forgot-password" className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary gold-underline">
+                Forgot
+              </Link>
+            }
+          >
+            Password
+          </FieldLabel>
+          <ViperInput
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
         </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 animate-pulse">
-            <p className="text-sm text-destructive">{error}</p>
-          </div>
-        )}
+        <AuthErrorNote message={error} />
 
-        {/* Submit Button */}
-        <ViperButton
-          type="submit"
-          className={cn(
-            "w-full font-display",
-            success && "bg-success hover:bg-success shadow-glow-success"
-          )}
-          disabled={loading}
-        >
+        <ViperButton type="submit" className="w-full" disabled={loading || success}>
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Signing in...
+              Signing in
             </>
           ) : success ? (
-            "Success! Redirecting..."
+            <>
+              <Check className="h-4 w-4" />
+              Redirecting
+            </>
           ) : (
             "Sign In"
           )}
         </ViperButton>
 
-        {/* Divider */}
-        <div className="relative">
+        <div className="relative py-1">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-border" />
           </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="bg-card px-2 text-muted-foreground">or continue with</span>
+          <div className="relative flex justify-center">
+            <span className="bg-background px-3 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70">
+              or
+            </span>
           </div>
         </div>
 
-        {/* Google Sign In */}
-        <ViperButton
-          type="button"
-          variant="glass"
-          className="w-full"
-          onClick={handleGoogleSignIn}
-        >
-          <Chrome className="h-4 w-4" />
-          Google
+        <ViperButton type="button" variant="glass" className="w-full" onClick={handleGoogleSignIn}>
+          <GoogleIcon />
+          Continue with Google
         </ViperButton>
 
-        {/* Sign Up Link */}
-        <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
-          <Link to="/sign-up" className="text-primary hover:underline font-medium">
-            Sign up
+        <p className="text-center font-body text-sm text-muted-foreground pt-2">
+          New here?{" "}
+          <Link to="/sign-up" className="text-primary gold-underline">
+            Create an account
           </Link>
         </p>
       </form>

@@ -35,26 +35,11 @@ const viperBadgeVariants = cva(
       },
     },
     compoundVariants: [
-      {
-        variant: "default",
-        glow: true,
-        className: "shadow-glow-sm",
-      },
-      {
-        variant: "success",
-        glow: true,
-        className: "shadow-glow-success",
-      },
-      {
-        variant: "destructive",
-        glow: true,
-        className: "shadow-glow-magenta",
-      },
-      {
-        variant: "magenta",
-        glow: true,
-        className: "shadow-glow-magenta",
-      },
+      // Editorial: no glow halos. Keep variant compat as no-ops.
+      { variant: "default", glow: true, className: "" },
+      { variant: "success", glow: true, className: "" },
+      { variant: "destructive", glow: true, className: "" },
+      { variant: "magenta", glow: true, className: "" },
     ],
     defaultVariants: {
       variant: "default",

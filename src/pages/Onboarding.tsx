@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { FloatingParticles } from "@/components/auth/FloatingParticles";
+import { FilmGrain } from "@/components/ui/film-grain";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 import { StepAccess } from "@/components/onboarding/StepAccess";
 import { StepProfile } from "@/components/onboarding/StepProfile";
@@ -136,16 +136,11 @@ export default function Onboarding() {
   const isManager = accessData.role === "manager";
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="fixed inset-0 bg-background">
-        <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[150px] animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-magenta/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-success/5 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "2s" }} />
-      </div>
-
-      <FloatingParticles />
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
+      <FilmGrain />
 
       <div className="relative z-10 w-full max-w-lg">
+
         <div className="flex justify-center mb-6">
           <span className="font-display text-2xl tracking-tight text-foreground">
             <span className="font-normal">Pitch</span>

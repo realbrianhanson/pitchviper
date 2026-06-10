@@ -118,7 +118,7 @@ export function AlowareSyncPanel() {
   };
 
   return (
-    <Card className="glass-card">
+    <Card className="">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <RefreshCw className="h-5 w-5 text-primary" />

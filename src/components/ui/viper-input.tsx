@@ -2,21 +2,24 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
+// Sovereign Editorial: hairline borders, gold focus ring, sharp 2px radius.
+// Legacy `glass` and `glow` variants are kept as aliases of the editorial
+// default so older call sites quietly adopt the new aesthetic without edits.
 const viperInputVariants = cva(
-  "flex w-full rounded-lg border bg-input px-4 py-3 text-sm font-body text-foreground shadow-sm transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+  "flex w-full rounded-[2px] border bg-input px-4 py-3 text-sm font-body text-foreground transition-colors duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
         default:
-          "border-border focus:border-primary focus:ring-2 focus:ring-primary/20",
+          "border-border focus:border-primary focus:ring-1 focus:ring-primary/60",
         glass:
-          "border-glass-border bg-card/50 backdrop-blur-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/20",
+          "border-border focus:border-primary focus:ring-1 focus:ring-primary/60",
         glow:
-          "border-primary/30 focus:border-primary focus:shadow-glow-sm focus:ring-2 focus:ring-primary/30",
+          "border-border focus:border-primary focus:ring-1 focus:ring-primary/60",
         error:
-          "border-destructive/50 focus:border-destructive focus:ring-2 focus:ring-destructive/20",
+          "border-destructive/60 focus:border-destructive focus:ring-1 focus:ring-destructive/40",
         success:
-          "border-success/50 focus:border-success focus:ring-2 focus:ring-success/20",
+          "border-success/60 focus:border-success focus:ring-1 focus:ring-success/40",
       },
       inputSize: {
         default: "h-11",

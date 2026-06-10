@@ -56,7 +56,7 @@ export function AvatarUpload({ currentUrl, onUploadComplete }: AvatarUploadProps
       <div
         className={cn(
           "relative w-32 h-32 rounded-full overflow-hidden border-2 transition-all duration-300",
-          previewUrl ? "border-primary shadow-glow-sm" : "border-border"
+          previewUrl ? "border-primary" : "border-border"
         )}
       >
         {previewUrl ? (

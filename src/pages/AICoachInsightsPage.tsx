@@ -80,7 +80,7 @@ export default function AICoachInsightsPage() {
     <AppLayout title="AI Coach Insights">
       <div className="animate-fade-in space-y-6">
         {/* Header */}
-        <ViperCard variant="glass" className="gradient-border">
+        <ViperCard variant="glass">
           <ViperCardContent className="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-xl bg-primary/15">
