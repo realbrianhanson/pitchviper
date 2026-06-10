@@ -200,17 +200,19 @@ If they earn one through skilled conversation, acknowledge it naturally ("Alrigh
     const { signed_url } = await response.json();
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         signed_url,
         scenario_context: scenarioContext,
         prospect_name: prospectName,
-        overrides_enabled: overridesEnabled,
-        ...(overridesEnabled
-          ? {
-              agent_prompt: agentPrompt,
-              first_message: firstMessage,
-            }
-          : {}),
+        scenario_name: scenarioName,
+        difficulty: scenarioDifficulty,
+        agent_prompt: agentPrompt,
+        first_message: firstMessage,
+        dynamic_variables: {
+          prospect_name: prospectName,
+          scenario_name: scenarioName,
+          difficulty: scenarioDifficulty,
+        },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
