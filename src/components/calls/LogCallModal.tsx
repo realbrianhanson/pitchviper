@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useCallLogging, CallFormData, CallDirection, CallOutcome, CallPurpose } from '@/hooks/useCallLogging';
 import { ResearchButton } from '@/components/research/ResearchButton';
+import { fireGoldCelebration } from '@/components/ui/gold-celebration';
 
 interface LogCallModalProps {
   open: boolean;
@@ -157,7 +158,7 @@ export function LogCallModal({ open, onOpenChange }: LogCallModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] bg-card border-border/50 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] bg-card border-border/50 max-h-[90dvh] overflow-y-auto p-4 sm:p-6 w-[calc(100%-1.5rem)] sm:w-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Phone className="h-5 w-5 text-primary" />
