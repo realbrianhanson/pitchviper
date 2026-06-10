@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { EDITORIAL_COLORS, editorialAxis, editorialGrid, EditorialTooltip, EditorialLegend } from "@/lib/chart-theme";
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -30,23 +31,10 @@ export function PerformanceTrendsChart({ dailyTrends, teamAverages }: Performanc
     };
   });
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card/95 backdrop-blur border border-border rounded-lg p-3 shadow-xl">
-          <p className="text-sm font-medium text-foreground mb-2">
-            {format(parseISO(label), "MMM d, yyyy")}
-          </p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {entry.name.includes("Rate") ? `${entry.value}%` : entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
+  const tooltipLabelFormatter = (label: string) => format(parseISO(label), "MMM d, yyyy");
+  const tooltipValueFormatter = (value: any, name?: string) =>
+    name && name.includes("Rate") ? `${value}%` : value;
+
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
