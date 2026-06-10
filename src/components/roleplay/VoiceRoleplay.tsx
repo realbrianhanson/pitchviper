@@ -219,6 +219,26 @@ export function VoiceRoleplay({
     );
   }
 
+  if (overridesBlocked) {
+    return (
+      <div className="editorial-tile p-8 text-center">
+        <p className="eyebrow text-muted-foreground mb-3">— Voice Agent Misconfigured</p>
+        <h3 className="font-display italic text-2xl text-foreground mb-3">
+          Scenario overrides are disabled.
+        </h3>
+        <p className="font-body text-sm text-foreground/70 max-w-md mx-auto mb-4">
+          This scenario sends a custom prospect prompt and first message to the ElevenLabs agent.
+          The agent currently rejects them. In the ElevenLabs dashboard, open the agent's{" "}
+          <span className="text-primary">Security</span> tab and enable{" "}
+          <span className="text-primary">First message</span>,{" "}
+          <span className="text-primary">System prompt</span>, and{" "}
+          <span className="text-primary">Language</span> under Overrides. Then try again.
+        </p>
+        <ViperButton onClick={() => setOverridesBlocked(false)}>Try Again</ViperButton>
+      </div>
+    );
+  }
+
   if (micPermission === "denied") {
     return (
       <ViperCard variant="glass" className="p-6">
