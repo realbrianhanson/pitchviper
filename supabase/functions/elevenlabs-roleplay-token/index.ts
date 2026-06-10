@@ -82,10 +82,13 @@ serve(async (req) => {
     let firstMessage = "";
     let prospectName = "";
 
+    let scenarioName = "";
+    let scenarioDifficulty = "";
+
     if (scenario_id) {
       const { data: scenario } = await supabase
         .from("roleplay_scenarios")
-        .select("name, prospect_persona, prospect_situation, objections_to_include, win_conditions")
+        .select("name, difficulty, prospect_persona, prospect_situation, objections_to_include, win_conditions")
         .eq("id", scenario_id)
         .maybeSingle();
 
