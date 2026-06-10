@@ -85,8 +85,8 @@ serve(async (req) => {
 
     if (team_id) {
       prevQuery = prevQuery.eq('team_id', team_id);
-    } else if (user_id) {
-      prevQuery = prevQuery.eq('user_id', user_id);
+    } else {
+      prevQuery = prevQuery.eq('user_id', scopedUserId);
     }
 
     const { data: prevCalls } = await prevQuery;
