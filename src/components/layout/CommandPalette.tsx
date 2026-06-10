@@ -193,13 +193,13 @@ export function CommandPalette({ open, onOpenChange, onLogCall }: CommandPalette
                   onSelect={() =>
                     go(
                       `/roleplay/session?scenario=${s.id}`,
-                      `Start roleplay: ${s.title}`,
+                      `Start roleplay: ${s.name}`,
                       `roleplay:${s.id}`,
                     )
                   }
                 >
                   <Swords className="mr-2 h-4 w-4 text-primary" strokeWidth={1.5} />
-                  Start roleplay: {s.title}
+                  Start roleplay: {s.name}
                 </CommandItem>
               ))}
             </CommandGroup>
