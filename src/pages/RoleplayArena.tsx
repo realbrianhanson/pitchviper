@@ -6,6 +6,7 @@ import { useRoleplayData } from "@/hooks/useRoleplayData";
 import { Gamepad2, Swords } from "lucide-react";
 import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 import { EditorialEmpty } from "@/components/ui/editorial-empty";
+import { UnfinishedSessionPrompt } from "@/components/roleplay/UnfinishedSessionPrompt";
 
 export default function RoleplayArena() {
   const { scenarios, userStats, isLoading } = useRoleplayData();
