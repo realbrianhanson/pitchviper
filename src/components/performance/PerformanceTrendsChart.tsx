@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { EDITORIAL_COLORS, editorialAxis, editorialGrid, EditorialTooltip, EditorialLegend } from "@/lib/chart-theme";
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -30,23 +31,10 @@ export function PerformanceTrendsChart({ dailyTrends, teamAverages }: Performanc
     };
   });
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card/95 backdrop-blur border border-border rounded-lg p-3 shadow-xl">
-          <p className="text-sm font-medium text-foreground mb-2">
-            {format(parseISO(label), "MMM d, yyyy")}
-          </p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {entry.name.includes("Rate") ? `${entry.value}%` : entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
+  const tooltipLabelFormatter = (label: string) => format(parseISO(label), "MMM d, yyyy");
+  const tooltipValueFormatter = (value: any, name?: string) =>
+    name && name.includes("Rate") ? `${value}%` : value;
+
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -58,33 +46,39 @@ export function PerformanceTrendsChart({ dailyTrends, teamAverages }: Performanc
         <ViperCardContent>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendsWithCloseRate}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="hsl(var(--muted-foreground))"
-                  tick={{ fontSize: 10 }}
+              <LineChart data={trendsWithCloseRate} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <CartesianGrid {...editorialGrid} />
+                <XAxis
+                  dataKey="date"
+                  {...editorialAxis}
                   tickFormatter={(value) => format(parseISO(value), "M/d")}
                 />
-                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="calls" 
+                <YAxis {...editorialAxis} width={28} />
+                <Tooltip
+                  content={
+                    <EditorialTooltip
+                      labelFormatter={tooltipLabelFormatter}
+                      valueFormatter={tooltipValueFormatter}
+                    />
+                  }
+                />
+                <Legend content={<EditorialLegend />} />
+                <Line
+                  type="monotone"
+                  dataKey="calls"
                   name="My Calls"
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={2}
+                  stroke={EDITORIAL_COLORS.gold}
+                  strokeWidth={1.5}
                   dot={false}
                 />
                 {showTeamAverage && teamAverages && (
-                  <Line 
-                    type="monotone" 
-                    dataKey="teamAvgCalls" 
+                  <Line
+                    type="monotone"
+                    dataKey="teamAvgCalls"
                     name="Team Average"
-                    stroke="hsl(var(--muted-foreground))" 
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
+                    stroke={EDITORIAL_COLORS.muted}
+                    strokeWidth={1}
+                    strokeDasharray="3 4"
                     dot={false}
                   />
                 )}
@@ -102,38 +96,44 @@ export function PerformanceTrendsChart({ dailyTrends, teamAverages }: Performanc
         <ViperCardContent>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendsWithCloseRate}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="hsl(var(--muted-foreground))"
-                  tick={{ fontSize: 10 }}
+              <LineChart data={trendsWithCloseRate} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <CartesianGrid {...editorialGrid} />
+                <XAxis
+                  dataKey="date"
+                  {...editorialAxis}
                   tickFormatter={(value) => format(parseISO(value), "M/d")}
                 />
-                <YAxis 
-                  stroke="hsl(var(--muted-foreground))" 
-                  tick={{ fontSize: 10 }} 
+                <YAxis
+                  {...editorialAxis}
+                  width={32}
                   domain={[0, 100]}
                   tickFormatter={(value) => `${value}%`}
                 />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="closeRate" 
+                <Tooltip
+                  content={
+                    <EditorialTooltip
+                      labelFormatter={tooltipLabelFormatter}
+                      valueFormatter={tooltipValueFormatter}
+                    />
+                  }
+                />
+                <Legend content={<EditorialLegend />} />
+                <Line
+                  type="monotone"
+                  dataKey="closeRate"
                   name="My Close Rate"
-                  stroke="hsl(var(--success))" 
-                  strokeWidth={2}
+                  stroke={EDITORIAL_COLORS.acidGreen}
+                  strokeWidth={1.5}
                   dot={false}
                 />
                 {showTeamAverage && teamAverages && (
-                  <Line 
-                    type="monotone" 
-                    dataKey="teamAvgCloseRate" 
+                  <Line
+                    type="monotone"
+                    dataKey="teamAvgCloseRate"
                     name="Team Average"
-                    stroke="hsl(var(--muted-foreground))" 
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
+                    stroke={EDITORIAL_COLORS.muted}
+                    strokeWidth={1}
+                    strokeDasharray="3 4"
                     dot={false}
                   />
                 )}

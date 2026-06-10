@@ -1,5 +1,6 @@
 import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/components/ui/viper-card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { EDITORIAL_COLORS, EditorialTooltip, EditorialLegend } from "@/lib/chart-theme";
 
 interface CallOutcomesChartProps {
   outcomes: {
@@ -11,17 +12,17 @@ interface CallOutcomesChartProps {
 }
 
 const COLORS = {
-  connected: 'hsl(var(--success))',
-  voicemail: 'hsl(var(--warning))',
-  no_answer: 'hsl(var(--muted-foreground))',
-  wrong_number: 'hsl(var(--destructive))',
+  connected: EDITORIAL_COLORS.acidGreen,
+  voicemail: EDITORIAL_COLORS.gold,
+  no_answer: EDITORIAL_COLORS.muted,
+  wrong_number: EDITORIAL_COLORS.magenta,
 };
 
 const LABELS = {
-  connected: 'Connected',
-  voicemail: 'Voicemail',
-  no_answer: 'No Answer',
-  wrong_number: 'Wrong Number',
+  connected: "Connected",
+  voicemail: "Voicemail",
+  no_answer: "No Answer",
+  wrong_number: "Wrong Number",
 };
 
 export function CallOutcomesChart({ outcomes }: CallOutcomesChartProps) {
@@ -30,7 +31,6 @@ export function CallOutcomesChart({ outcomes }: CallOutcomesChartProps) {
     value,
     color: COLORS[key as keyof typeof COLORS],
   }));
-
   const total = Object.values(outcomes).reduce((sum, val) => sum + val, 0);
 
   return (
@@ -50,29 +50,26 @@ export function CallOutcomesChart({ outcomes }: CallOutcomesChartProps) {
                 outerRadius={100}
                 paddingAngle={2}
                 dataKey="value"
+                stroke="hsl(var(--background))"
+                strokeWidth={1}
               >
                 {data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                }}
-              />
-              <Legend />
+              <Tooltip content={<EditorialTooltip />} />
             </PieChart>
           </ResponsiveContainer>
-          {/* Center total */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center">
-              <p className="text-3xl font-display font-bold text-foreground">{total}</p>
-              <p className="text-xs text-muted-foreground">Total Calls</p>
+              <p className="font-display text-4xl tabular-nums text-foreground">{total}</p>
+              <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground/70 mt-1">
+                Total Calls
+              </p>
             </div>
           </div>
         </div>
+        <EditorialLegend payload={data.map((d) => ({ value: d.name, color: d.color }))} />
       </ViperCardContent>
     </ViperCard>
   );

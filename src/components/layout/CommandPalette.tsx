@@ -19,9 +19,9 @@ import {
   Plus,
   Sparkles,
   LogOut,
-  Sun,
-  Moon,
   User,
+  History,
+  Heart,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -33,7 +33,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "next-themes";
+import { useRoleplayData } from "@/hooks/useRoleplayData";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -41,28 +41,63 @@ interface CommandPaletteProps {
   onLogCall?: () => void;
 }
 
+interface RecentAction {
+  id: string;
+  label: string;
+  path?: string;
+  action?: string;
+  ts: number;
+}
+
+const RECENTS_KEY = "pv.command.recents";
+const MAX_RECENTS = 5;
+
+function loadRecents(): RecentAction[] {
+  try {
+    return JSON.parse(localStorage.getItem(RECENTS_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function pushRecent(item: Omit<RecentAction, "ts">) {
+  const next = [
+    { ...item, ts: Date.now() },
+    ...loadRecents().filter((r) => r.id !== item.id),
+  ].slice(0, MAX_RECENTS);
+  try {
+    localStorage.setItem(RECENTS_KEY, JSON.stringify(next));
+  } catch {}
+}
+
 export function CommandPalette({ open, onOpenChange, onLogCall }: CommandPaletteProps) {
   const navigate = useNavigate();
   const { isManager, signOut } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { scenarios } = useRoleplayData();
+  const [recents, setRecents] = useState<RecentAction[]>([]);
 
-  const go = (path: string) => {
+  useEffect(() => {
+    if (open) setRecents(loadRecents());
+  }, [open]);
+
+  const go = (path: string, label: string, id?: string) => {
+    pushRecent({ id: id || `nav:${path}`, label, path });
     onOpenChange(false);
     navigate(path);
   };
 
   const navItems = useMemo(
     () => [
-      { label: "Command Center", path: "/", icon: LayoutDashboard, hint: "Home" },
+      { label: "Command Center", path: "/", icon: LayoutDashboard },
       { label: "War Room", path: "/war-room", icon: Radio },
       { label: "Roleplay Arena", path: "/roleplay", icon: Swords },
       { label: "Call Intelligence", path: "/call-intelligence", icon: Brain },
       { label: "Objection Vault", path: "/objection-vault", icon: Shield },
-      { label: "Leaderboards", path: "/leaderboards", icon: Trophy },
+      { label: "Open Pipeline", path: "/pipeline", icon: GitBranch },
+      { label: "View Leaderboards", path: "/leaderboards", icon: Trophy },
       { label: "My Performance", path: "/performance", icon: TrendingUp },
       { label: "Achievements", path: "/achievements", icon: Award },
       { label: "Training Academy", path: "/training", icon: GraduationCap },
-      { label: "Deal Pipeline", path: "/pipeline", icon: GitBranch },
     ],
     []
   );
@@ -71,49 +106,111 @@ export function CommandPalette({ open, onOpenChange, onLogCall }: CommandPalette
     () => [
       { label: "Manager Dashboard", path: "/manager", icon: BarChart3 },
       { label: "Competitions", path: "/manager/competitions", icon: Gamepad2 },
-      { label: "Team Settings", path: "/team-settings", icon: Users },
       { label: "Coaching Console", path: "/coaching", icon: Users },
+      { label: "Team Settings", path: "/team-settings", icon: Users },
     ],
     []
   );
 
+  const runRecent = (r: RecentAction) => {
+    if (r.path) {
+      onOpenChange(false);
+      navigate(r.path);
+    } else if (r.action === "log-call" && onLogCall) {
+      onOpenChange(false);
+      onLogCall();
+    } else if (r.action === "send-kudos") {
+      go("/leaderboards", r.label, r.id);
+    }
+  };
+
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput placeholder="Type a command or jump to a page..." />
+      <CommandInput placeholder="Type a command, jump to anything…" />
       <CommandList>
         <CommandEmpty>
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            No matches
+            Nothing matches that one
           </span>
         </CommandEmpty>
+
+        {recents.length > 0 && (
+          <>
+            <CommandGroup heading="Recent">
+              {recents.map((r) => (
+                <CommandItem key={r.id} onSelect={() => runRecent(r)}>
+                  <History className="mr-2 h-4 w-4 text-muted-foreground/60" strokeWidth={1.5} />
+                  {r.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
 
         <CommandGroup heading="Actions">
           {onLogCall && (
             <CommandItem
               onSelect={() => {
+                pushRecent({ id: "act:log-call", label: "Log a call", action: "log-call" });
                 onOpenChange(false);
                 onLogCall();
               }}
             >
               <Phone className="mr-2 h-4 w-4 text-primary" strokeWidth={1.5} />
-              Log a call session
+              Log a call
             </CommandItem>
           )}
-          <CommandItem onSelect={() => go("/pipeline?new=1")}>
+          <CommandItem onSelect={() => go("/pipeline?new=1", "New deal", "act:new-deal")}>
             <Plus className="mr-2 h-4 w-4 text-primary" strokeWidth={1.5} />
             New deal
           </CommandItem>
-          <CommandItem onSelect={() => go("/roleplay")}>
+          <CommandItem onSelect={() => go("/roleplay", "Start a roleplay", "act:start-roleplay")}>
             <Sparkles className="mr-2 h-4 w-4 text-primary" strokeWidth={1.5} />
             Start a roleplay
           </CommandItem>
+          <CommandItem onSelect={() => go("/leaderboards", "Send kudos", "act:send-kudos")}>
+            <Heart className="mr-2 h-4 w-4 text-primary" strokeWidth={1.5} />
+            Send kudos
+          </CommandItem>
+          <CommandItem onSelect={() => go("/pipeline", "Open pipeline", "act:open-pipeline")}>
+            <GitBranch className="mr-2 h-4 w-4 text-primary" strokeWidth={1.5} />
+            Open pipeline
+          </CommandItem>
+          <CommandItem onSelect={() => go("/leaderboards", "View leaderboards", "act:view-leaderboards")}>
+            <Trophy className="mr-2 h-4 w-4 text-primary" strokeWidth={1.5} />
+            View leaderboards
+          </CommandItem>
         </CommandGroup>
+
+        {scenarios && scenarios.length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Roleplay">
+              {scenarios.slice(0, 8).map((s) => (
+                <CommandItem
+                  key={s.id}
+                  onSelect={() =>
+                    go(
+                      `/roleplay/session?scenario=${s.id}`,
+                      `Start roleplay: ${s.name}`,
+                      `roleplay:${s.id}`,
+                    )
+                  }
+                >
+                  <Swords className="mr-2 h-4 w-4 text-primary" strokeWidth={1.5} />
+                  Start roleplay: {s.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
 
         <CommandSeparator />
 
         <CommandGroup heading="Navigate">
           {navItems.map((item) => (
-            <CommandItem key={item.path} onSelect={() => go(item.path)}>
+            <CommandItem key={item.path} onSelect={() => go(item.path, item.label)}>
               <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
               {item.label}
             </CommandItem>
@@ -125,7 +222,7 @@ export function CommandPalette({ open, onOpenChange, onLogCall }: CommandPalette
             <CommandSeparator />
             <CommandGroup heading="Manager">
               {managerItems.map((item) => (
-                <CommandItem key={item.path} onSelect={() => go(item.path)}>
+                <CommandItem key={item.path} onSelect={() => go(item.path, item.label)}>
                   <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
                   {item.label}
                 </CommandItem>
@@ -137,25 +234,13 @@ export function CommandPalette({ open, onOpenChange, onLogCall }: CommandPalette
         <CommandSeparator />
 
         <CommandGroup heading="Account">
-          <CommandItem onSelect={() => go("/performance")}>
+          <CommandItem onSelect={() => go("/performance", "Profile", "nav:profile")}>
             <User className="mr-2 h-4 w-4" strokeWidth={1.5} />
             Profile
           </CommandItem>
-          <CommandItem onSelect={() => go("/settings")}>
+          <CommandItem onSelect={() => go("/settings", "Settings", "nav:settings")}>
             <Cog className="mr-2 h-4 w-4" strokeWidth={1.5} />
             Settings
-          </CommandItem>
-          <CommandItem
-            onSelect={() => {
-              setTheme(theme === "dark" ? "light" : "dark");
-            }}
-          >
-            {theme === "dark" ? (
-              <Sun className="mr-2 h-4 w-4" strokeWidth={1.5} />
-            ) : (
-              <Moon className="mr-2 h-4 w-4" strokeWidth={1.5} />
-            )}
-            Toggle theme
           </CommandItem>
           <CommandItem
             onSelect={async () => {

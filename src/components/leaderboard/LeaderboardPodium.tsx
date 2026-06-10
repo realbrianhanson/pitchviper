@@ -57,6 +57,10 @@ export function LeaderboardPodium({ topThree, metricType, viewMode = 'individual
               isFirst && "md:order-2",
               !isFirst && idx === 0 && "md:order-1",
               !isFirst && idx === 2 && "md:order-3",
+              // Ceremony hierarchy
+              isFirst &&
+                "border border-primary outline outline-1 outline-offset-[3px] outline-primary/70 shadow-[0_0_28px_-8px_hsl(var(--primary)/0.5)]",
+              !isFirst && "border border-primary/40",
               isCurrentTeam && "ring-1 ring-primary/30"
             )}
           >
@@ -64,7 +68,7 @@ export function LeaderboardPodium({ topThree, metricType, viewMode = 'individual
             <div
               className={cn(
                 "absolute top-0 left-0 right-0 h-[2px]",
-                rank === 1 ? "bg-primary" : rank === 2 ? "bg-muted-foreground/40" : "bg-warning/60"
+                rank === 1 ? "bg-primary" : rank === 2 ? "bg-primary/60" : "bg-primary/40"
               )}
             />
 
@@ -110,7 +114,7 @@ export function LeaderboardPodium({ topThree, metricType, viewMode = 'individual
             <h3
               className={cn(
                 "font-display leading-tight",
-                isFirst ? "text-2xl italic" : "text-lg text-muted-foreground"
+                isFirst ? "text-3xl italic text-primary" : "text-lg text-muted-foreground"
               )}
             >
               {entry.full_name}

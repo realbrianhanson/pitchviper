@@ -68,7 +68,7 @@ export function MetricCard({
         ) : (
           <div
             className={cn(
-              "font-display text-5xl leading-none tabular-nums",
+              "font-display text-3xl sm:text-4xl md:text-5xl leading-none tabular-nums",
               isRevenue && "text-primary"
             )}
           >

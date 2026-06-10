@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { EditorialSkeleton } from "@/components/ui/editorial-skeleton";
 import { Crown } from "lucide-react";
+import { NumberFlash } from "@/components/ui/number-flash";
 
 export interface TeamPulseMember {
   id: string;
@@ -111,7 +112,9 @@ export function TeamPulse({ members, teamName, loading = false, error = null }: 
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35, delay: idx * 0.05 }}
             className={cn(
-              "flex items-center gap-3 px-2 py-2 -mx-2 rounded-sm transition-colors",
+              "flex items-center gap-3 px-2 py-2 -mx-2 transition-colors",
+              idx === 0 && "border border-primary/60",
+              idx === 1 || idx === 2 ? "border-l border-primary/30" : "",
               m.isCurrentUser ? "bg-primary/10 ring-1 ring-primary/20" : "hover:bg-accent/30"
             )}
           >
@@ -142,12 +145,12 @@ export function TeamPulse({ members, teamName, loading = false, error = null }: 
               <div className="flex items-baseline gap-2">
                 <span
                   className={cn(
-                    "font-display text-sm leading-none truncate",
-                    idx === 0 ? "italic text-primary" : "text-foreground"
+                    "leading-none truncate",
+                    idx === 0 ? "font-display italic text-base text-primary" : "font-display text-sm text-foreground"
                   )}
                 >
                   {m.name.split(" ")[0]}{" "}
-                  <span className="text-foreground/80">
+                  <span className={cn(idx === 0 ? "text-primary/80" : "text-foreground/80")}>
                     {m.name.split(" ").slice(1).join(" ")}
                   </span>
                 </span>
@@ -165,9 +168,15 @@ export function TeamPulse({ members, teamName, loading = false, error = null }: 
             </div>
 
             <div className="text-right shrink-0">
-              <span className="font-mono text-sm tabular-nums text-foreground">
+              <NumberFlash
+                value={m.value}
+                className={cn(
+                  "font-mono text-sm tabular-nums",
+                  idx === 0 ? "text-primary" : "text-foreground"
+                )}
+              >
                 {m.value.toLocaleString()}
-              </span>
+              </NumberFlash>
               <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground/60 ml-1">
                 {metricLabel}
               </span>

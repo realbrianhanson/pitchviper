@@ -3,6 +3,8 @@ import { ViperCard, ViperCardContent, ViperCardHeader, ViperCardTitle } from "@/
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart3 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
+import { EDITORIAL_COLORS, editorialAxis, editorialGrid, EditorialTooltip, EditorialLegend } from "@/lib/chart-theme";
+import { CartesianGrid } from "recharts";
 import { format, parseISO } from "date-fns";
 
 interface PerformanceDeepDiveProps {
@@ -59,73 +61,48 @@ export function PerformanceDeepDive({ stats, isLoading }: PerformanceDeepDivePro
       teamAvgCalls: Math.round(stats.team_avg_calls / 7), // Approximate daily avg
     }));
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-lg">
-          <p className="font-medium mb-1">{label}</p>
-          {payload.map((entry: any, i: number) => (
-            <p key={i} style={{ color: entry.color }} className="text-sm">
-              {entry.name}: {entry.name === 'Revenue' ? `$${entry.value.toLocaleString()}` : entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <ViperCard variant="glass">
       <ViperCardHeader>
         <ViperCardTitle className="flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-primary" />
+          <BarChart3 className="h-5 w-5 text-primary" strokeWidth={1.5} />
           Performance Deep Dive
         </ViperCardTitle>
       </ViperCardHeader>
       <ViperCardContent className="space-y-6">
-        {/* Calls Over Time */}
         <div>
-          <h4 className="text-sm font-medium mb-3">Call Volume (vs Team Avg)</h4>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 mb-3">
+            Call Volume vs Team Average
+          </p>
           <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
+              <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="callsGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    <stop offset="0%" stopColor={EDITORIAL_COLORS.gold} stopOpacity={0.25} />
+                    <stop offset="100%" stopColor={EDITORIAL_COLORS.gold} stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                  tickLine={false}
-                />
-                <YAxis 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                  tickLine={false}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend 
-                  wrapperStyle={{ fontSize: '12px' }}
-                />
+                <CartesianGrid {...editorialGrid} />
+                <XAxis dataKey="date" {...editorialAxis} />
+                <YAxis {...editorialAxis} width={28} />
+                <Tooltip content={<EditorialTooltip />} />
+                <Legend content={<EditorialLegend />} />
                 <Area
                   type="monotone"
                   dataKey="calls"
                   name="Calls"
-                  stroke="hsl(var(--primary))"
+                  stroke={EDITORIAL_COLORS.gold}
                   fill="url(#callsGradient)"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                 />
                 <Line
                   type="monotone"
                   dataKey="teamAvgCalls"
                   name="Team Avg"
-                  stroke="hsl(var(--muted-foreground))"
-                  strokeDasharray="5 5"
-                  strokeWidth={1.5}
+                  stroke={EDITORIAL_COLORS.muted}
+                  strokeDasharray="3 4"
+                  strokeWidth={1}
                   dot={false}
                 />
               </AreaChart>
@@ -133,42 +110,33 @@ export function PerformanceDeepDive({ stats, isLoading }: PerformanceDeepDivePro
           </div>
         </div>
 
-        {/* Appointments & Deals */}
         <div>
-          <h4 className="text-sm font-medium mb-3">Appointments & Deals</h4>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 mb-3">
+            Appointments & Deals
+          </p>
           <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                  tickLine={false}
-                />
-                <YAxis 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                  tickLine={false}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend 
-                  wrapperStyle={{ fontSize: '12px' }}
-                />
+              <LineChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <CartesianGrid {...editorialGrid} />
+                <XAxis dataKey="date" {...editorialAxis} />
+                <YAxis {...editorialAxis} width={28} />
+                <Tooltip content={<EditorialTooltip />} />
+                <Legend content={<EditorialLegend />} />
                 <Line
                   type="monotone"
                   dataKey="appointments"
                   name="Appointments"
-                  stroke="hsl(var(--warning))"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
+                  stroke={EDITORIAL_COLORS.gold}
+                  strokeWidth={1.5}
+                  dot={false}
                 />
                 <Line
                   type="monotone"
                   dataKey="deals"
                   name="Deals"
-                  stroke="hsl(var(--success))"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
+                  stroke={EDITORIAL_COLORS.acidGreen}
+                  strokeWidth={1.5}
+                  dot={false}
                 />
               </LineChart>
             </ResponsiveContainer>
