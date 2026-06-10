@@ -67,9 +67,17 @@ export function VoiceRoleplay({
         onTranscriptUpdate("", text);
       }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("ElevenLabs error:", error);
-      toast.error("Voice connection error. Please try again.");
+      const msg = typeof error === "string" ? error : (error?.message || error?.reason || JSON.stringify(error ?? {}));
+      // ElevenLabs rejects connections when conversation overrides are sent
+      // but disabled in the agent's Security settings. Surface that explicitly.
+      if (/override/i.test(msg) || /not allowed/i.test(msg) || /security/i.test(msg)) {
+        setOverridesBlocked(true);
+        toast.error("Voice agent rejected scenario overrides. Enable overrides in the ElevenLabs agent settings.");
+      } else {
+        toast.error("Voice connection error. Please try again.");
+      }
     },
   });
 
