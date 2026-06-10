@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useGhlStats } from "@/hooks/useGhlStats";
 
 const formatCurrency = (v: number) => {
@@ -6,8 +7,8 @@ const formatCurrency = (v: number) => {
   return `$${v.toFixed(0)}`;
 };
 
-function formatClock(): string {
-  return new Date().toLocaleTimeString("en-US", {
+function formatLocalClock(d: Date): string {
+  return d.toLocaleTimeString(undefined, {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -16,11 +17,21 @@ function formatClock(): string {
 
 export function LiveTicker() {
   const { stats, loading } = useGhlStats();
+  const [clock, setClock] = useState(() => formatLocalClock(new Date()));
 
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setClock(formatLocalClock(new Date()));
+    }, 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  // Only real metrics. Appts/Connect were hardcoded "—" and have been removed
+  // until a real data source (ghl_activities appointment event) is wired up.
   const items = [
     { label: "Calls", value: loading ? "—" : stats.callsToday, tone: "text-foreground" },
-    { label: "Appts", value: "—", tone: "text-primary" },
-    { label: "Connect", value: "—", tone: "text-foreground" },
+    { label: "Pipeline", value: loading ? "—" : stats.dealsInPipeline, tone: "text-foreground" },
+    { label: "Won", value: loading ? "—" : stats.dealsWonThisWeek, tone: "text-primary" },
     { label: "Revenue", value: loading ? "—" : formatCurrency(stats.revenueWonThisWeek), tone: "text-success" },
     { label: "Streak", value: loading ? "—" : `${stats.currentStreak}D`, tone: "text-primary" },
   ];
@@ -41,8 +52,8 @@ export function LiveTicker() {
           <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success" />
         </span>
         <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-success">Live</span>
-        <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60 hidden md:inline">
-          {formatClock()} UTC
+        <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60 hidden md:inline tabular-nums">
+          {clock}
         </span>
         <span className="h-3 w-px bg-border ml-2 hidden md:block" />
       </div>
