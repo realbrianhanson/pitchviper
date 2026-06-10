@@ -63,14 +63,14 @@ export default function CommandCenter() {
                 <EditorialSkeleton className="h-3 w-56" />
               </div>
             ) : (
-              <>
+              <div className="gold-vignette">
                 <h1 className="font-display text-5xl md:text-6xl leading-[1.05]">
                   {getGreeting()}, <span className="italic">{firstName}.</span>
                 </h1>
                 <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70 mt-3">
                   <span className="text-success">●</span> System Status: Active · {formatDate()}
                 </p>
-              </>
+              </div>
             )}
           </div>
           <div className="md:border-l md:border-border md:pl-10 flex md:flex-col items-baseline md:items-start gap-3 md:gap-1">
