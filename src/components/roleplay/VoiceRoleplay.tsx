@@ -165,23 +165,28 @@ export function VoiceRoleplay({
         throw new Error("No signed URL received");
       }
 
-      const overridesEnabled = data.overrides_enabled === true;
-      const hasOverrides = overridesEnabled && Boolean(data.agent_prompt || data.first_message);
+      // Always send overrides + dynamic variables — the scenario MUST drive the agent.
+      // If ElevenLabs rejects them because overrides are disabled on the agent, onError
+      // sets overridesBlocked and surfaces the editorial error card below.
+      const dynamicVariables = data.dynamic_variables ?? {
+        prospect_name: prospectName,
+        scenario_name: scenario.name,
+        difficulty: scenario.difficulty,
+      };
 
-      if (hasOverrides) {
-        await conversation.startSession({
-          signedUrl: data.signed_url,
-          overrides: {
-            agent: {
-              ...(data.agent_prompt ? { prompt: { prompt: data.agent_prompt } } : {}),
-              ...(data.first_message ? { firstMessage: data.first_message } : {}),
-              language: "en",
-            },
+      await conversation.startSession({
+        signedUrl: data.signed_url,
+        connectionType: "websocket",
+        dynamicVariables,
+        overrides: {
+          agent: {
+            ...(data.agent_prompt ? { prompt: { prompt: data.agent_prompt } } : {}),
+            ...(data.first_message ? { firstMessage: data.first_message } : {}),
+            language: "en",
           },
-        } as any);
-      } else {
-        await conversation.startSession({ signedUrl: data.signed_url } as any);
-      }
+        },
+      } as any);
+
 
     } catch (error) {
       console.error("Failed to start voice conversation:", error);
