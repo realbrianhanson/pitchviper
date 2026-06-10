@@ -81,6 +81,8 @@ const PROSPECT_NAMES: Record<string, { name: string; title: string; company: str
 export default function RoleplaySession() {
   const { scenarioId } = useParams<{ scenarioId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const resumeSessionId = searchParams.get("resume");
   const { user, session } = useAuth();
   
   const [scenario, setScenario] = useState<RoleplayScenario | null>(null);
