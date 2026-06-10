@@ -202,7 +202,7 @@ export default function RoleplaySession() {
     };
 
     initSession();
-  }, [scenarioId, user, navigate]);
+  }, [scenarioId, user, navigate, resumeSessionId]);
 
   // Timer
   useEffect(() => {
