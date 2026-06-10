@@ -130,6 +130,9 @@ async function fetchGhlStats(userId: string): Promise<GhlStats> {
   return computeStats((data ?? []) as GhlRow[]);
 }
 
+// Module-level registry so multiple consumers share ONE realtime channel per user.
+const ghlChannelRefs = new Map<string, { count: number; channel: ReturnType<typeof supabase.channel> }>();
+
 export function useGhlStats() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -143,24 +146,35 @@ export function useGhlStats() {
     gcTime: 10 * 60 * 1000,
   });
 
-  // Single shared realtime subscription invalidates the cache for all consumers
   useEffect(() => {
     if (!userId) return;
-    const channel = supabase
-      .channel(`ghl_activities_${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "ghl_activities",
-          filter: `matched_user_id=eq.${userId}`,
-        },
-        () => queryClient.invalidateQueries({ queryKey: ["ghl-stats", userId] }),
-      )
-      .subscribe();
+    const existing = ghlChannelRefs.get(userId);
+    if (existing) {
+      existing.count++;
+    } else {
+      const channel = supabase
+        .channel(`ghl_activities_${userId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "ghl_activities",
+            filter: `matched_user_id=eq.${userId}`,
+          },
+          () => queryClient.invalidateQueries({ queryKey: ["ghl-stats", userId] }),
+        )
+        .subscribe();
+      ghlChannelRefs.set(userId, { count: 1, channel });
+    }
     return () => {
-      supabase.removeChannel(channel);
+      const ref = ghlChannelRefs.get(userId);
+      if (!ref) return;
+      ref.count--;
+      if (ref.count <= 0) {
+        supabase.removeChannel(ref.channel);
+        ghlChannelRefs.delete(userId);
+      }
     };
   }, [userId, queryClient]);
 
