@@ -104,6 +104,8 @@ serve(async (req) => {
           "The Ghosted Follow-up": "Jamie Roberts",
         };
         prospectName = nameMap[scenario.name] ?? "Chris Davis";
+        scenarioName = scenario.name ?? "";
+        scenarioDifficulty = (scenario as any).difficulty ?? "";
 
         // Enrich with the caller's company settings for product context
         let companyContext = "";
