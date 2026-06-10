@@ -61,10 +61,10 @@ export function StepComplete({ teamName, onComplete }: StepCompleteProps) {
         {/* Victory icon */}
         <div className="flex justify-center mb-6">
           <div className="relative">
-            <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-magenta shadow-glow-lg animate-glow-pulse">
+            <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-magenta">
               <Trophy className="h-12 w-12 text-white" />
             </div>
-            <div className="absolute -top-2 -right-2 flex h-10 w-10 items-center justify-center rounded-full bg-success shadow-glow-success">
+            <div className="absolute -top-2 -right-2 flex h-10 w-10 items-center justify-center rounded-full bg-success">
               <Zap className="h-5 w-5 text-success-foreground" />
             </div>
           </div>

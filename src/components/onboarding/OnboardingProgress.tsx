@@ -30,7 +30,7 @@ export function OnboardingProgress({ currentStep, totalSteps }: OnboardingProgre
               className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300",
                 i + 1 < currentStep && "bg-success text-success-foreground",
-                i + 1 === currentStep && "bg-primary text-primary-foreground shadow-glow-sm",
+                i + 1 === currentStep && "bg-primary text-primary-foreground",
                 i + 1 > currentStep && "bg-muted text-muted-foreground"
               )}
             >

@@ -231,7 +231,7 @@ export function TeamMembersManager() {
 
   if (isLoading) {
     return (
-      <Card className="glass-card">
+      <Card className="">
         <CardContent className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </CardContent>
@@ -241,7 +241,7 @@ export function TeamMembersManager() {
 
   return (
     <div className="space-y-6">
-      <Card className="glass-card">
+      <Card className="">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -407,7 +407,7 @@ export function TeamMembersManager() {
 
       {/* Recently Created Accounts */}
       {createdUsers.length > 0 && (
-        <Card className="glass-card border-green-500/20">
+        <Card className=" border-green-500/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-green-600">
               <CheckCircle2 className="h-5 w-5" />

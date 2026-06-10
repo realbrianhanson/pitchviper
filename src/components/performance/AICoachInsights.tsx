@@ -13,7 +13,7 @@ interface AICoachInsightsProps {
 export function AICoachInsights({ insights, loading, onRefresh }: AICoachInsightsProps) {
   if (!insights && !loading) {
     return (
-      <ViperCard variant="glass" className="gradient-border">
+      <ViperCard variant="glass" className="">
         <ViperCardHeader>
           <ViperCardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -40,7 +40,7 @@ export function AICoachInsights({ insights, loading, onRefresh }: AICoachInsight
 
   if (loading) {
     return (
-      <ViperCard variant="glass" className="gradient-border">
+      <ViperCard variant="glass" className="">
         <ViperCardHeader>
           <ViperCardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -57,7 +57,7 @@ export function AICoachInsights({ insights, loading, onRefresh }: AICoachInsight
   }
 
   return (
-    <ViperCard variant="glass" className="gradient-border">
+    <ViperCard variant="glass" className="">
       <ViperCardHeader className="flex flex-row items-center justify-between">
         <ViperCardTitle className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
