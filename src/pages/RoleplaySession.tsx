@@ -477,12 +477,9 @@ export default function RoleplaySession() {
     if (agentText) newLines.push({ role: "assistant", content: agentText, timestamp: now });
     if (newLines.length === 0) return;
 
-    setMessages((prev) => {
-      const next = [...prev, ...newLines];
-      // Fire-and-forget persist with the up-to-date array
-      void persistTranscript(next);
-      return next;
-    });
+    setMessages((prev) => [...prev, ...newLines]);
+    // Atomically append only the new lines to the DB transcript.
+    void persistVoiceLines(newLines);
 
     // Pair user→agent turns for live analysis
     if (userText) {
