@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { FloatingParticles } from "@/components/auth/FloatingParticles";
+import { FilmGrain } from "@/components/ui/film-grain";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 import { StepAccess } from "@/components/onboarding/StepAccess";
 import { StepProfile } from "@/components/onboarding/StepProfile";
