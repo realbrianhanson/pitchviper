@@ -405,22 +405,18 @@ export default function RoleplaySession() {
     toast.info("Hint revealed! This will cost 10 XP from your final score.");
   };
 
-  // Handle voice transcript updates — persist each line to DB as it arrives
-  // so a closed tab mid-call doesn't lose the transcript.
-  const persistTranscript = async (nextMessages: Message[]) => {
-    if (!sessionId) return;
+  // Atomically append voice transcript lines via the edge function (uses
+  // append_roleplay_messages RPC under the hood). Sending only the new lines
+  // avoids any read-then-overwrite race; the JWT/ownership check lives server-side.
+  const persistVoiceLines = async (newLines: Message[]) => {
+    if (!sessionId || newLines.length === 0) return;
     try {
-      // Add speaker labels alongside role for downstream readability
-      const enriched = nextMessages.map((m) => ({
-        ...m,
-        speaker: m.role === "user" ? "rep" : "prospect",
-      }));
-      await supabase
-        .from("roleplay_sessions")
-        .update({ transcript: JSON.parse(JSON.stringify(enriched)) })
-        .eq("id", sessionId);
+      const { error } = await supabase.functions.invoke("roleplay-append-transcript", {
+        body: { session_id: sessionId, messages: newLines },
+      });
+      if (error) console.error("Failed to append voice transcript:", error);
     } catch (err) {
-      console.error("Failed to persist voice transcript line:", err);
+      console.error("Failed to append voice transcript:", err);
     }
   };
 
