@@ -21,9 +21,37 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+    // Auth
+    const authHeader = req.headers.get('Authorization') ?? '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const token = authHeader.replace('Bearer ', '');
+    const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
+    const { data: userData, error: userErr } = await authClient.auth.getUser();
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const authedUserId = userData.user.id;
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { user_id, team_id, start_date, end_date }: CallAnalyticsRequest = await req.json();
+
+    // Scope: a rep can only see their own data; team-scoped queries require manager role on that team
+    if (team_id) {
+      const { data: callerProfile } = await supabase
+        .from('profiles').select('team_id').eq('user_id', authedUserId).maybeSingle();
+      const { data: isManager } = await supabase.rpc('has_role', { _user_id: authedUserId, _role: 'manager' });
+      if (callerProfile?.team_id !== team_id || !isManager) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    } else if (user_id && user_id !== authedUserId) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const scopedUserId = user_id ?? authedUserId;
 
     // Build query based on whether we're filtering by user or team
     let query = supabase
@@ -34,8 +62,8 @@ serve(async (req) => {
 
     if (team_id) {
       query = query.eq('team_id', team_id);
-    } else if (user_id) {
-      query = query.eq('user_id', user_id);
+    } else {
+      query = query.eq('user_id', scopedUserId);
     }
 
     const { data: calls, error } = await query;
@@ -57,8 +85,8 @@ serve(async (req) => {
 
     if (team_id) {
       prevQuery = prevQuery.eq('team_id', team_id);
-    } else if (user_id) {
-      prevQuery = prevQuery.eq('user_id', user_id);
+    } else {
+      prevQuery = prevQuery.eq('user_id', scopedUserId);
     }
 
     const { data: prevCalls } = await prevQuery;

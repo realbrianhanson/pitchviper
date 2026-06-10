@@ -33,15 +33,47 @@ serve(async (req) => {
       );
     }
 
-    // Validate user is authenticated
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
-      throw new Error("Missing authorization header");
+    // Validate caller's JWT — this endpoint mints signed URLs that burn ElevenLabs credits.
+    const authHeader = req.headers.get("authorization") ?? req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "unauthorized", message: "Missing bearer token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+    const token = authHeader.replace("Bearer ", "");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: userData, error: userErr } = await authClient.auth.getUser();
+    if (userErr || !userData?.user) {
+      return new Response(
+        JSON.stringify({ error: "unauthorized", message: "Invalid or expired session" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const authedUserId = userData.user.id;
+
+    // If scenario_id given, ensure it exists and is active (scenarios are shared, not per-user)
+    if (scenario_id) {
+      const { data: scenarioCheck } = await supabase
+        .from("roleplay_scenarios")
+        .select("id, is_active")
+        .eq("id", scenario_id)
+        .maybeSingle();
+      if (!scenarioCheck || scenarioCheck.is_active === false) {
+        return new Response(
+          JSON.stringify({ error: "forbidden", message: "Scenario not available" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
 
     // Get scenario details if provided
     let scenarioContext = "";
@@ -69,37 +101,26 @@ serve(async (req) => {
         };
         prospectName = nameMap[scenario.name] ?? "Chris Davis";
 
-        // Try to enrich with the caller's company settings for product context
+        // Enrich with the caller's company settings for product context
         let companyContext = "";
         try {
-          const authHeader = req.headers.get("authorization") ?? "";
-          const token = authHeader.replace("Bearer ", "");
-          if (token) {
-            const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-            const authClient = createClient(supabaseUrl, anonKey, {
-              global: { headers: { Authorization: `Bearer ${token}` } },
-            });
-            const { data: userData } = await authClient.auth.getUser();
-            if (userData?.user) {
-              const { data: profile } = await supabase
-                .from("profiles")
-                .select("team_id")
-                .eq("user_id", userData.user.id)
-                .maybeSingle();
-              if (profile?.team_id) {
-                const { data: cs } = await supabase
-                  .from("company_settings")
-                  .select("company_name, product_description, value_propositions, common_use_cases, industry, target_audience")
-                  .eq("team_id", profile.team_id)
-                  .maybeSingle();
-                if (cs) {
-                  companyContext = `
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("team_id")
+            .eq("user_id", authedUserId)
+            .maybeSingle();
+          if (profile?.team_id) {
+            const { data: cs } = await supabase
+              .from("company_settings")
+              .select("company_name, product_description, value_propositions, common_use_cases, industry, target_audience")
+              .eq("team_id", profile.team_id)
+              .maybeSingle();
+            if (cs) {
+              companyContext = `
 
 PRODUCT/COMPANY THE SALESPERSON IS SELLING (react to it realistically):
 - Company: ${cs.company_name ?? "Unknown"}
 ${cs.industry ? `- Industry: ${cs.industry}\n` : ""}${cs.target_audience ? `- Target audience: ${cs.target_audience}\n` : ""}${cs.product_description ? `- Product: ${cs.product_description}\n` : ""}${Array.isArray(cs.value_propositions) && cs.value_propositions.length ? `- Value propositions: ${cs.value_propositions.join("; ")}\n` : ""}${Array.isArray(cs.common_use_cases) && cs.common_use_cases.length ? `- Common use cases: ${cs.common_use_cases.join("; ")}\n` : ""}`.trimEnd();
-                }
-              }
             }
           }
         } catch (e) {

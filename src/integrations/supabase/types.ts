@@ -2040,6 +2040,7 @@ export type Database = {
       }
     }
     Functions: {
+      abandon_stale_roleplay_sessions: { Args: never; Returns: number }
       append_roleplay_messages: {
         Args: { p_messages: Json; p_session_id: string }
         Returns: Json

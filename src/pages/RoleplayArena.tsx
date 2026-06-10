@@ -6,6 +6,7 @@ import { useRoleplayData } from "@/hooks/useRoleplayData";
 import { Gamepad2, Swords } from "lucide-react";
 import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 import { EditorialEmpty } from "@/components/ui/editorial-empty";
+import { UnfinishedSessionPrompt } from "@/components/roleplay/UnfinishedSessionPrompt";
 
 export default function RoleplayArena() {
   const { scenarios, userStats, isLoading } = useRoleplayData();
@@ -21,6 +22,7 @@ export default function RoleplayArena() {
   return (
     <AppLayout title="Roleplay Arena">
       <div className="animate-fade-in space-y-8">
+        <UnfinishedSessionPrompt />
         {/* Hero Section */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card via-card/80 to-primary/10 border border-border/50 p-8 md:p-12">
           {/* Background Glow */}

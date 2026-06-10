@@ -70,6 +70,24 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // Webhook signature verification (if secret is configured)
+  const expectedSecret = Deno.env.get("GHL_WEBHOOK_SECRET");
+  if (expectedSecret) {
+    const provided =
+      req.headers.get("x-ghl-secret") ||
+      req.headers.get("x-webhook-secret") ||
+      req.headers.get("authorization")?.replace("Bearer ", "") ||
+      "";
+    if (provided !== expectedSecret) {
+      return new Response(
+        JSON.stringify({ ok: false, error: "Invalid signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+  } else {
+    console.warn("GHL_WEBHOOK_SECRET not configured — webhook is unauthenticated");
+  }
+
   try {
     const payload = await req.json().catch(() => ({}));
     const email = pickEmail(payload);

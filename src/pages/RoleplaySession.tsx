@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleplayScenario } from "@/hooks/useRoleplayData";
@@ -81,6 +81,8 @@ const PROSPECT_NAMES: Record<string, { name: string; title: string; company: str
 export default function RoleplaySession() {
   const { scenarioId } = useParams<{ scenarioId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const resumeSessionId = searchParams.get("resume");
   const { user, session } = useAuth();
   
   const [scenario, setScenario] = useState<RoleplayScenario | null>(null);
@@ -132,35 +134,63 @@ export default function RoleplaySession() {
 
         setScenario(scenarioData as RoleplayScenario);
 
-        // Create new session
-        const { data: sessionData, error: sessionError } = await supabase
-          .from("roleplay_sessions")
-          .insert({
-            user_id: user.id,
-            scenario_id: scenarioId,
-            status: "in_progress",
-            transcript: [],
-          })
-          .select()
-          .single();
+        // Resume existing session if requested and valid; otherwise create a new one
+        let sessionRow: { id: string; transcript: unknown } | null = null;
+        if (resumeSessionId) {
+          const { data: existing } = await supabase
+            .from("roleplay_sessions")
+            .select("id, transcript, user_id, scenario_id, status, started_at")
+            .eq("id", resumeSessionId)
+            .maybeSingle();
+          const startedMs = existing?.started_at ? new Date(existing.started_at).getTime() : 0;
+          const isFresh = Date.now() - startedMs < 24 * 60 * 60 * 1000;
+          if (
+            existing &&
+            existing.user_id === user.id &&
+            existing.scenario_id === scenarioId &&
+            existing.status === "in_progress" &&
+            isFresh
+          ) {
+            sessionRow = { id: existing.id, transcript: existing.transcript };
+          }
+        }
 
-        if (sessionError) throw sessionError;
-        setSessionId(sessionData.id);
+        if (!sessionRow) {
+          const { data: sessionData, error: sessionError } = await supabase
+            .from("roleplay_sessions")
+            .insert({
+              user_id: user.id,
+              scenario_id: scenarioId,
+              status: "in_progress",
+              transcript: [],
+            })
+            .select()
+            .single();
+          if (sessionError) throw sessionError;
+          sessionRow = { id: sessionData.id, transcript: sessionData.transcript };
+        }
 
-        // Add opening message from prospect
+        setSessionId(sessionRow.id);
+
         const prospect = PROSPECT_NAMES[scenarioData.name] || { name: "Prospect", title: "Business Professional", company: "ABC Corp" };
-        const openingMessage = {
-          role: "assistant" as const,
-          content: getOpeningMessage(scenarioData.name, prospect.name),
-          timestamp: new Date().toISOString(),
-        };
-        setMessages([openingMessage]);
+        const persistedTranscript = Array.isArray(sessionRow.transcript)
+          ? (sessionRow.transcript as Message[])
+          : [];
 
-        // Save opening message to transcript
-        await supabase
-          .from("roleplay_sessions")
-          .update({ transcript: JSON.parse(JSON.stringify([openingMessage])) })
-          .eq("id", sessionData.id);
+        if (persistedTranscript.length > 0) {
+          setMessages(persistedTranscript);
+        } else {
+          const openingMessage: Message = {
+            role: "assistant",
+            content: getOpeningMessage(scenarioData.name, prospect.name),
+            timestamp: new Date().toISOString(),
+          };
+          setMessages([openingMessage]);
+          await supabase
+            .from("roleplay_sessions")
+            .update({ transcript: JSON.parse(JSON.stringify([openingMessage])) })
+            .eq("id", sessionRow.id);
+        }
 
         setIsLoading(false);
       } catch (error) {
@@ -172,7 +202,7 @@ export default function RoleplaySession() {
     };
 
     initSession();
-  }, [scenarioId, user, navigate]);
+  }, [scenarioId, user, navigate, resumeSessionId]);
 
   // Timer
   useEffect(() => {
