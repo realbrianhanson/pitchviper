@@ -234,4 +234,25 @@
     100% { transform: translateX(-50%); }
   }
   .animate-marquee { animation: marquee 40s linear infinite; }
+
+  /* Lacquered Obsidian — radial gold vignette behind page H1s only.
+     Apply with: <div class="gold-vignette"> ... <h1>...</h1> ... </div> */
+  .gold-vignette {
+    position: relative;
+    isolation: isolate;
+  }
+  .gold-vignette::before {
+    content: "";
+    position: absolute;
+    inset: -10% -10% auto -10%;
+    height: 320px;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 60% 80% at 30% 30%,
+      hsl(var(--primary) / 0.05) 0%,
+      hsl(var(--primary) / 0.025) 35%,
+      transparent 70%
+    );
+  }
 }
