@@ -40,6 +40,7 @@ export function VoiceRoleplay({
   const [isConnecting, setIsConnecting] = useState(false);
   const [micPermission, setMicPermission] = useState<"pending" | "granted" | "denied">("pending");
   const [agentNotConfigured, setAgentNotConfigured] = useState(false);
+  const [overridesBlocked, setOverridesBlocked] = useState(false);
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
 
   const conversation = useConversation({
@@ -66,9 +67,17 @@ export function VoiceRoleplay({
         onTranscriptUpdate("", text);
       }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("ElevenLabs error:", error);
-      toast.error("Voice connection error. Please try again.");
+      const msg = typeof error === "string" ? error : (error?.message || error?.reason || JSON.stringify(error ?? {}));
+      // ElevenLabs rejects connections when conversation overrides are sent
+      // but disabled in the agent's Security settings. Surface that explicitly.
+      if (/override/i.test(msg) || /not allowed/i.test(msg) || /security/i.test(msg)) {
+        setOverridesBlocked(true);
+        toast.error("Voice agent rejected scenario overrides. Enable overrides in the ElevenLabs agent settings.");
+      } else {
+        toast.error("Voice connection error. Please try again.");
+      }
     },
   });
 
@@ -156,23 +165,28 @@ export function VoiceRoleplay({
         throw new Error("No signed URL received");
       }
 
-      const overridesEnabled = data.overrides_enabled === true;
-      const hasOverrides = overridesEnabled && Boolean(data.agent_prompt || data.first_message);
+      // Always send overrides + dynamic variables — the scenario MUST drive the agent.
+      // If ElevenLabs rejects them because overrides are disabled on the agent, onError
+      // sets overridesBlocked and surfaces the editorial error card below.
+      const dynamicVariables = data.dynamic_variables ?? {
+        prospect_name: prospectName,
+        scenario_name: scenario.name,
+        difficulty: scenario.difficulty,
+      };
 
-      if (hasOverrides) {
-        await conversation.startSession({
-          signedUrl: data.signed_url,
-          overrides: {
-            agent: {
-              ...(data.agent_prompt ? { prompt: { prompt: data.agent_prompt } } : {}),
-              ...(data.first_message ? { firstMessage: data.first_message } : {}),
-              language: "en",
-            },
+      await conversation.startSession({
+        signedUrl: data.signed_url,
+        connectionType: "websocket",
+        dynamicVariables,
+        overrides: {
+          agent: {
+            ...(data.agent_prompt ? { prompt: { prompt: data.agent_prompt } } : {}),
+            ...(data.first_message ? { firstMessage: data.first_message } : {}),
+            language: "en",
           },
-        } as any);
-      } else {
-        await conversation.startSession({ signedUrl: data.signed_url } as any);
-      }
+        },
+      } as any);
+
 
     } catch (error) {
       console.error("Failed to start voice conversation:", error);
@@ -202,6 +216,26 @@ export function VoiceRoleplay({
           </p>
         </div>
       </ViperCard>
+    );
+  }
+
+  if (overridesBlocked) {
+    return (
+      <div className="editorial-tile p-8 text-center">
+        <p className="eyebrow text-muted-foreground mb-3">— Voice Agent Misconfigured</p>
+        <h3 className="font-display italic text-2xl text-foreground mb-3">
+          Scenario overrides are disabled.
+        </h3>
+        <p className="font-body text-sm text-foreground/70 max-w-md mx-auto mb-4">
+          This scenario sends a custom prospect prompt and first message to the ElevenLabs agent.
+          The agent currently rejects them. In the ElevenLabs dashboard, open the agent's{" "}
+          <span className="text-primary">Security</span> tab and enable{" "}
+          <span className="text-primary">First message</span>,{" "}
+          <span className="text-primary">System prompt</span>, and{" "}
+          <span className="text-primary">Language</span> under Overrides. Then try again.
+        </p>
+        <ViperButton onClick={() => setOverridesBlocked(false)}>Try Again</ViperButton>
+      </div>
     );
   }
 

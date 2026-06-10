@@ -16,8 +16,9 @@ serve(async (req) => {
     
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     const ELEVENLABS_AGENT_ID = Deno.env.get("ELEVENLABS_AGENT_ID");
-    const ELEVENLABS_OVERRIDES_ENABLED = Deno.env.get("ELEVENLABS_OVERRIDES_ENABLED");
-    const overridesEnabled = ELEVENLABS_OVERRIDES_ENABLED?.trim().toLowerCase() === "true";
+    // Overrides are always returned. If the ElevenLabs agent has overrides disabled,
+    // the client will surface an editorial error telling the manager to enable
+    // "Security → Overrides" in the agent dashboard.
     
     if (!ELEVENLABS_API_KEY) {
       throw new Error("ELEVENLABS_API_KEY is not configured");
@@ -81,10 +82,13 @@ serve(async (req) => {
     let firstMessage = "";
     let prospectName = "";
 
+    let scenarioName = "";
+    let scenarioDifficulty = "";
+
     if (scenario_id) {
       const { data: scenario } = await supabase
         .from("roleplay_scenarios")
-        .select("name, prospect_persona, prospect_situation, objections_to_include, win_conditions")
+        .select("name, difficulty, prospect_persona, prospect_situation, objections_to_include, win_conditions")
         .eq("id", scenario_id)
         .maybeSingle();
 
@@ -100,6 +104,8 @@ serve(async (req) => {
           "The Ghosted Follow-up": "Jamie Roberts",
         };
         prospectName = nameMap[scenario.name] ?? "Chris Davis";
+        scenarioName = scenario.name ?? "";
+        scenarioDifficulty = (scenario as any).difficulty ?? "";
 
         // Enrich with the caller's company settings for product context
         let companyContext = "";
@@ -194,17 +200,19 @@ If they earn one through skilled conversation, acknowledge it naturally ("Alrigh
     const { signed_url } = await response.json();
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         signed_url,
         scenario_context: scenarioContext,
         prospect_name: prospectName,
-        overrides_enabled: overridesEnabled,
-        ...(overridesEnabled
-          ? {
-              agent_prompt: agentPrompt,
-              first_message: firstMessage,
-            }
-          : {}),
+        scenario_name: scenarioName,
+        difficulty: scenarioDifficulty,
+        agent_prompt: agentPrompt,
+        first_message: firstMessage,
+        dynamic_variables: {
+          prospect_name: prospectName,
+          scenario_name: scenarioName,
+          difficulty: scenarioDifficulty,
+        },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
