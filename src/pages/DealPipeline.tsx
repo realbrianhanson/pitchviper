@@ -12,6 +12,7 @@ import { CreateDealModal } from "@/components/pipeline/CreateDealModal";
 import { EditDealModal } from "@/components/pipeline/EditDealModal";
 import { useDealPipeline, STAGES_ORDER, type Deal, type DealStage } from "@/hooks/useDealPipeline";
 import { toast } from "sonner";
+import { fireGoldCelebration } from "@/components/ui/gold-celebration";
 
 export default function DealPipeline() {
   const {
@@ -83,6 +84,7 @@ export default function DealPipeline() {
         try {
           await moveDealToStage.mutateAsync({ dealId: draggedDeal.id, newStage: stage });
           toast.success(`Deal moved to ${stage.replace("_", " ")}`);
+          if (stage === "closed_won") fireGoldCelebration();
         } catch {}
       }
       setDraggedDeal(null);

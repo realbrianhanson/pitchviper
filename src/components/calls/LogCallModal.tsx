@@ -134,8 +134,10 @@ export function LogCallModal({ open, onOpenChange }: LogCallModalProps) {
       improvementNotes: improvementNotes || undefined,
     };
 
+    const isWin = disposition === 'deal_closed';
     logCall(formData, {
       onSuccess: () => {
+        if (isWin) fireGoldCelebration();
         handleClose();
       }
     });
