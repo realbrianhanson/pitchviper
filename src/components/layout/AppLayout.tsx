@@ -8,6 +8,7 @@ import { ClosersToolkit } from "@/components/toolkit/ClosersToolkit";
 import { ManagerFAB } from "@/components/manager/ManagerFAB";
 import { BroadcastModal } from "@/components/manager/BroadcastModal";
 import { LogCallModal } from "@/components/calls/LogCallModal";
+import { FilmGrain } from "@/components/ui/film-grain";
 
 interface AppLayoutProps {
   children: ReactNode;
