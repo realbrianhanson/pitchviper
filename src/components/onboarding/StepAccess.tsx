@@ -63,21 +63,10 @@ export function StepAccess({ initialData, onComplete }: StepAccessProps) {
         .eq("user_id", user.id);
       if (profileError) throw profileError;
 
-      // Update role if manager (trigger created 'rep' by default)
-      if (role === "manager") {
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .update({ role: "manager" })
-          .eq("user_id", user.id);
-        if (roleError) throw roleError;
-      } else {
-        // Ensure rep (in case user came back and switched)
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .update({ role: "rep" })
-          .eq("user_id", user.id);
-        if (roleError) throw roleError;
-      }
+      // NOTE: The manager role is NOT self-assignable. Users who select
+      // "Sales Manager" here are granted the manager role automatically by
+      // the database when they create a team in the next step. Reps remain
+      // the default role set by the handle_new_user trigger.
 
       await refreshProfile();
       onComplete({ promoCode: promoCode.trim(), role });
