@@ -124,10 +124,23 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { metric_type = 'overall', time_period = 'week', view_mode = 'individual', team_id } = await req.json();
+    const { metric_type = 'overall', time_period = 'week', view_mode = 'individual' } = await req.json();
+    // NOTE: any client-supplied team_id is intentionally ignored below. The
+    // caller may only ever see their own team's leaderboard.
     const { start, prevStart, prevEnd } = calculateDateRanges(time_period);
 
-    // Fetch profiles with team info
+    // Determine the caller's team server-side (never trust the request body).
+    const { data: callerProfile, error: callerProfileErr } = await supabase
+      .from('profiles')
+      .select('user_id, team_id')
+      .eq('user_id', userData.user.id)
+      .maybeSingle();
+    if (callerProfileErr) throw callerProfileErr;
+
+    const callerTeamId: string | null = callerProfile?.team_id ?? null;
+
+    // Fetch profiles with team info, always scoped to the caller's team.
+    // If the caller has no team, return only themselves — never the global roster.
     let profilesQuery = supabase
       .from('profiles')
       .select(`
@@ -140,8 +153,10 @@ serve(async (req) => {
         team_id
       `);
 
-    if (team_id) {
-      profilesQuery = profilesQuery.eq('team_id', team_id);
+    if (callerTeamId) {
+      profilesQuery = profilesQuery.eq('team_id', callerTeamId);
+    } else {
+      profilesQuery = profilesQuery.eq('user_id', userData.user.id);
     }
 
     const { data: profiles, error: profilesError } = await profilesQuery;

@@ -831,6 +831,30 @@ export type Database = {
           },
         ]
       }
+      edge_rate_limits: {
+        Row: {
+          count: number
+          function_name: string
+          updated_at: string
+          user_id: string
+          window_key: string
+        }
+        Insert: {
+          count?: number
+          function_name: string
+          updated_at?: string
+          user_id: string
+          window_key: string
+        }
+        Update: {
+          count?: number
+          function_name?: string
+          updated_at?: string
+          user_id?: string
+          window_key?: string
+        }
+        Relationships: []
+      }
       gauntlet_challenges: {
         Row: {
           challenge_date: string
@@ -2046,6 +2070,15 @@ export type Database = {
         Returns: Json
       }
       calculate_streak: { Args: { p_user_id: string }; Returns: number }
+      check_and_increment_rate_limit: {
+        Args: {
+          _function_name: string
+          _per_day?: number
+          _per_minute?: number
+          _user_id: string
+        }
+        Returns: Json
+      }
       find_team_by_code: {
         Args: { _code: string }
         Returns: {

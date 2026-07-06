@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,6 +62,9 @@ serve(async (req) => {
       });
     }
     const currentUserId = userData.user.id;
+
+    const rl = await enforceRateLimit(currentUserId, 'generate-ai-coach-insights', { serviceClient: admin });
+    if (!rl.allowed) return rl.response!;
 
     // Resolve current user's role + team
     const [{ data: roleRow }, { data: meProfile }] = await Promise.all([

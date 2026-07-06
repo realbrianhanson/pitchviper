@@ -6,6 +6,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Constant-time string equality. Hash both sides with SHA-256 first so the
+// comparison always runs over equal-length buffers, hiding both value and
+// length differences from timing side channels.
+async function timingSafeEqualStrings(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  const [ha, hb] = await Promise.all([
+    crypto.subtle.digest('SHA-256', enc.encode(a)),
+    crypto.subtle.digest('SHA-256', enc.encode(b)),
+  ]);
+  const va = new Uint8Array(ha);
+  const vb = new Uint8Array(hb);
+  let diff = 0;
+  for (let i = 0; i < va.length; i++) diff |= va[i] ^ vb[i];
+  return diff === 0;
+}
+
+
 // Map Aloware dispositions to our disposition values
 const DISPOSITION_MAP: Record<string, string> = {
   'Appointment Set': 'appointment_set',
@@ -47,25 +64,23 @@ serve(async (req) => {
     );
   }
 
-  // Webhook signature verification (if secret is configured)
+  // Webhook signature verification — FAIL CLOSED. Without the shared secret we
+  // cannot verify the sender, and this endpoint writes to the DB with the
+  // service role, so unauthenticated calls MUST be rejected.
   const expectedSecret = Deno.env.get('ALOWARE_WEBHOOK_SECRET');
-  if (expectedSecret) {
-    const provided = req.headers.get('X-Aloware-Signature') ?? '';
-    // Constant-time compare
-    const a = new TextEncoder().encode(provided);
-    const b = new TextEncoder().encode(expectedSecret);
-    let ok = a.length === b.length;
-    const len = Math.max(a.length, b.length);
-    let diff = a.length ^ b.length;
-    for (let i = 0; i < len; i++) diff |= (a[i] ?? 0) ^ (b[i] ?? 0);
-    ok = ok && diff === 0;
-    if (!ok) {
-      return new Response(JSON.stringify({ error: 'Invalid signature' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-  } else {
-    console.warn('ALOWARE_WEBHOOK_SECRET not configured — webhook is unauthenticated');
+  if (!expectedSecret) {
+    console.error('ALOWARE_WEBHOOK_SECRET not configured — rejecting webhook');
+    return new Response(
+      JSON.stringify({ error: 'Webhook not configured' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
+  const provided = req.headers.get('X-Aloware-Signature') ?? '';
+  if (!(await timingSafeEqualStrings(provided, expectedSecret))) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid signature' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
