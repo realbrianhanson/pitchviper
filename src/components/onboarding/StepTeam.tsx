@@ -37,13 +37,11 @@ export function StepTeam({ isManager, onComplete, onBack }: StepTeamProps) {
     setError(null);
 
     try {
-      // Find team by code
-      const { data: team, error: findError } = await supabase
-        .from("teams")
-        .select("id, name")
-        .eq("team_code", teamCode.toUpperCase())
-        .maybeSingle();
+      // Lookup team by code via SECURITY DEFINER RPC (avoids exposing full teams table)
+      const { data: rows, error: findError } = await supabase
+        .rpc("find_team_by_code", { _code: teamCode.trim() });
 
+      const team = Array.isArray(rows) ? rows[0] : rows;
       if (findError || !team) {
         setError("Team not found. Check the code and try again.");
         return;
