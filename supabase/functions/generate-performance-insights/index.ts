@@ -36,6 +36,9 @@ serve(async (req) => {
       });
     }
 
+    const rl = await enforceRateLimit(user.id, 'generate-performance-insights', { serviceClient: supabase });
+    if (!rl.allowed) return rl.response!;
+
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const startDate = thirtyDaysAgo.toISOString();
