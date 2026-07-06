@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,24 +23,56 @@ serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
     const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
     if (!token) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    const userResp = await fetch(`${Deno.env.get('SUPABASE_URL')}/auth/v1/user`, { headers: { apikey: Deno.env.get('SUPABASE_ANON_KEY')!, Authorization: `Bearer ${token}` } });
-    if (!userResp.ok) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
+    const { data: userData, error: userErr } = await authClient.auth.getUser();
+    if (userErr || !userData.user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const userId = userData.user.id;
+
+    const admin = createClient(supabaseUrl, serviceKey);
 
     const { query_type, company_name, industry, contact_name, competitor_name }: ResearchRequest = await req.json();
+    if (!query_type) throw new Error('Query type is required');
+
+    // Cache lookup BEFORE spending an API call. Cache is keyed per-user by
+    // (query_type, query_key), TTL enforced via expires_at.
+    const queryKey = [company_name ?? '', industry ?? '', contact_name ?? '', competitor_name ?? ''].join('|');
+    const { data: cached } = await admin
+      .from('perplexity_cache')
+      .select('research_data, citations, expires_at')
+      .eq('user_id', userId)
+      .eq('query_type', query_type)
+      .eq('query_key', queryKey)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (cached?.research_data) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          content: (cached.research_data as any)?.content ?? '',
+          citations: cached.citations ?? [],
+          query_type,
+          cached: true,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    // Rate-limit ONLY the paid path (cache hits should not consume budget).
+    const rl = await enforceRateLimit(userId, 'perplexity-research', { serviceClient: admin });
+    if (!rl.allowed) return rl.response!;
 
     const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY');
+    if (!PERPLEXITY_API_KEY) throw new Error('Perplexity API key not configured');
 
-    if (!PERPLEXITY_API_KEY) {
-      throw new Error('Perplexity API key not configured');
-    }
-
-    if (!query_type) {
-      throw new Error('Query type is required');
-    }
-
-    // Build the query based on type
     let query: string;
     let systemPrompt: string;
 
@@ -111,18 +145,20 @@ serve(async (req) => {
     const content = data.choices?.[0]?.message?.content || '';
     const citations = data.citations || [];
 
+    // Populate cache for future hits.
+    await admin.from('perplexity_cache').insert({
+      user_id: userId,
+      query_type,
+      query_key: queryKey,
+      research_data: { content },
+      citations,
+    });
+
     console.log('Perplexity research completed, citations:', citations.length);
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        content,
-        citations,
-        query_type,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ success: true, content, citations, query_type, cached: false }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (error) {
     console.error('Error in Perplexity research:', error);
@@ -131,10 +167,7 @@ serve(async (req) => {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 });
