@@ -2046,6 +2046,13 @@ export type Database = {
         Returns: Json
       }
       calculate_streak: { Args: { p_user_id: string }; Returns: number }
+      find_team_by_code: {
+        Args: { _code: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
       generate_team_code: { Args: never; Returns: string }
       get_or_create_daily_stats: {
         Args: { p_user_id: string }
