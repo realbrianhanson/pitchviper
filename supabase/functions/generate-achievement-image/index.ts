@@ -34,6 +34,9 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    const rl = await enforceRateLimit(userData.user.id, 'generate-achievement-image');
+    if (!rl.allowed) return rl.response!;
+
 
     const { badge_name, badge_icon, badge_rarity, user_name, achievement_date } = await req.json();
 
