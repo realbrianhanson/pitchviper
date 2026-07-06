@@ -52,6 +52,9 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    const rl = await enforceRateLimit(_userData.user.id, 'generate-objection-speech');
+    if (!rl.allowed) return rl.response!;
+
     const { text, persona_type, category } = await req.json();
     const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
 
