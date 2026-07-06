@@ -31,6 +31,9 @@ serve(async (req) => {
     const { data: userData, error: userErr } = await authClient.auth.getUser();
     if (userErr || !userData.user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
+    const rl = await enforceRateLimit(userData.user.id, 'generate-coaching-insights', { serviceClient: supabase });
+    if (!rl.allowed) return rl.response!;
+
     const { rep_id } = await req.json();
     if (!rep_id) throw new Error('rep_id is required');
 
