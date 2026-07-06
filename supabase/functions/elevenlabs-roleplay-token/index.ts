@@ -62,6 +62,10 @@ serve(async (req) => {
     }
     const authedUserId = userData.user.id;
 
+    // Rate-limit paid voice-token minting (per-user).
+    const rl = await enforceRateLimit(authedUserId, 'elevenlabs-roleplay-token', { serviceClient: supabase });
+    if (!rl.allowed) return rl.response!;
+
     // If scenario_id given, ensure it exists and is active (scenarios are shared, not per-user)
     if (scenario_id) {
       const { data: scenarioCheck } = await supabase
