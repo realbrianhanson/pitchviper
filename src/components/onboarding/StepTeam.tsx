@@ -23,7 +23,7 @@ interface StepTeamProps {
 }
 
 export function StepTeam({ isManager, onComplete, onBack }: StepTeamProps) {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const [option, setOption] = useState<TeamOption>(null);
   const [teamCode, setTeamCode] = useState("");
   const [teamName, setTeamName] = useState("");
