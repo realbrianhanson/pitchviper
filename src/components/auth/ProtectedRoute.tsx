@@ -7,10 +7,11 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, profileLoaded } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  // Still resolving session or profile — never render the app yet
+  if (loading || (user && !profileLoaded)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -25,10 +26,17 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/sign-in" replace />;
   }
 
-  // Gate: must have validated promo code AND completed onboarding before reaching the app
-  const needsOnboarding =
-    profile && (!profile.promo_validated || !profile.onboarding_completed);
-  if (needsOnboarding && location.pathname !== "/onboarding") {
+  // Onboarding itself must always be reachable so a brand-new user (or one
+  // whose profile row is missing) can create/repair it.
+  if (location.pathname === "/onboarding") {
+    return <>{children}</>;
+  }
+
+  // Fail closed: no profile OR either gate flag missing = force onboarding.
+  const passesGate =
+    !!profile && profile.promo_validated === true && profile.onboarding_completed === true;
+
+  if (!passesGate) {
     return <Navigate to="/onboarding" replace />;
   }
 

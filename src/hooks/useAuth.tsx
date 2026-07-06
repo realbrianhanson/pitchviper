@@ -22,6 +22,8 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   isLoading: boolean;
+  profileLoaded: boolean;
+  profileError: string | null;
   isManager: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -34,26 +36,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [isManager, setIsManager] = useState(false);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const [{ data: profileData }, { data: roleData }] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle(),
-      supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle(),
-    ]);
+    try {
+      const [{ data: profileData, error: pErr }, { data: roleData, error: rErr }] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle(),
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .maybeSingle(),
+      ]);
 
-    if (profileData) {
-      setProfile(profileData as Profile);
+      if (pErr) {
+        console.error('[useAuth] profile fetch error', pErr);
+        setProfileError(pErr.message);
+      } else {
+        setProfileError(null);
+      }
+      if (rErr) {
+        console.error('[useAuth] role fetch error', rErr);
+      }
+
+      setProfile((profileData as Profile) ?? null);
+      setIsManager(roleData?.role === 'manager');
+    } catch (err: any) {
+      console.error('[useAuth] fetchProfile threw', err);
+      setProfileError(err?.message ?? 'Failed to load profile');
+      setProfile(null);
+      setIsManager(false);
+    } finally {
+      setProfileLoaded(true);
     }
-    setIsManager(roleData?.role === 'manager');
   }, []);
 
   const refreshProfile = useCallback(async () => {
@@ -72,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
+          setProfileLoaded(false);
           // Use setTimeout to avoid Supabase deadlock on auth state change
           setTimeout(() => {
             if (mounted) fetchProfile(session.user.id);
@@ -79,6 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setProfile(null);
           setIsManager(false);
+          setProfileLoaded(true);
+          setProfileError(null);
         }
         setLoading(false);
       }
@@ -91,6 +115,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
+      } else {
+        setProfileLoaded(true);
       }
       setLoading(false);
     });
@@ -106,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, isLoading: loading, isManager, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, isLoading: loading, profileLoaded, profileError, isManager, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
