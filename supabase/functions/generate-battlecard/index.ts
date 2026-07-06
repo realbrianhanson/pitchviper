@@ -29,6 +29,10 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    const rl = await enforceRateLimit(_userData.user.id, 'generate-battlecard');
+    if (!rl.allowed) return rl.response!;
+
+
     const { competitor_name, our_company_name } = await req.json();
 
     const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY');
