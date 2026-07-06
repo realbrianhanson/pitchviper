@@ -49,6 +49,15 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Rate-limit paid AI calls per user. Chat turns are frequent, so allow a
+    // higher per-minute burst than the shared default.
+    const rl = await enforceRateLimit(userData.user.id, 'roleplay-chat', {
+      serviceClient: supabase,
+      perMinute: 30,
+      perDay: 500,
+    });
+    if (!rl.allowed) return rl.response!;
+
     const { data: sessionOwner } = await supabase
       .from('roleplay_sessions')
       .select('user_id')
