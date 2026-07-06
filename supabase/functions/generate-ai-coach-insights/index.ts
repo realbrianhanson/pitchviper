@@ -63,6 +63,9 @@ serve(async (req) => {
     }
     const currentUserId = userData.user.id;
 
+    const rl = await enforceRateLimit(currentUserId, 'generate-ai-coach-insights', { serviceClient: admin });
+    if (!rl.allowed) return rl.response!;
+
     // Resolve current user's role + team
     const [{ data: roleRow }, { data: meProfile }] = await Promise.all([
       admin.from("user_roles").select("role").eq("user_id", currentUserId).maybeSingle(),
