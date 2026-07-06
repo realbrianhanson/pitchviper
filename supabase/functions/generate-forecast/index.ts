@@ -43,6 +43,9 @@ serve(async (req) => {
     const { data: userData, error: userErr } = await authClient.auth.getUser();
     if (userErr || !userData.user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
+    const rl = await enforceRateLimit(userData.user.id, 'generate-forecast', { serviceClient: supabase });
+    if (!rl.allowed) return rl.response!;
+
     const { team_id, user_id } = await req.json();
 
     // Authorization: user must be self, or member of requested team
