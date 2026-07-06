@@ -83,6 +83,11 @@ export function StepTeam({ isManager, onComplete, onBack }: StepTeamProps) {
 
       if (createError) throw createError;
 
+      // AFTER INSERT trigger on teams promotes the creator to manager and
+      // attaches the team to their profile. Refresh auth state so the client
+      // picks up the new role.
+      await refreshProfile();
+
       setSuccess(`Team created! Code: ${team.team_code}`);
       setTimeout(() => {
         onComplete({ teamId: team.id, teamName: team.name, teamCode: team.team_code });
