@@ -85,22 +85,27 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Webhook signature verification (if secret is configured)
+  // Webhook signature verification — FAIL CLOSED. Without the shared secret we
+  // cannot verify the sender, and this endpoint writes to the DB with the
+  // service role, so unauthenticated calls MUST be rejected.
   const expectedSecret = Deno.env.get("GHL_WEBHOOK_SECRET");
-  if (expectedSecret) {
-    const provided =
-      req.headers.get("x-ghl-secret") ||
-      req.headers.get("x-webhook-secret") ||
-      req.headers.get("authorization")?.replace("Bearer ", "") ||
-      "";
-    if (provided !== expectedSecret) {
-      return new Response(
-        JSON.stringify({ ok: false, error: "Invalid signature" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-  } else {
-    console.warn("GHL_WEBHOOK_SECRET not configured — webhook is unauthenticated");
+  if (!expectedSecret) {
+    console.error("GHL_WEBHOOK_SECRET not configured — rejecting webhook");
+    return new Response(
+      JSON.stringify({ ok: false, error: "Webhook not configured" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+  const provided =
+    req.headers.get("x-ghl-secret") ||
+    req.headers.get("x-webhook-secret") ||
+    req.headers.get("authorization")?.replace("Bearer ", "") ||
+    "";
+  if (!(await timingSafeEqualStrings(provided, expectedSecret))) {
+    return new Response(
+      JSON.stringify({ ok: false, error: "Invalid signature" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
 
   try {
