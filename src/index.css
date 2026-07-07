@@ -178,9 +178,9 @@
     @apply font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground;
   }
 
-  /* Gold underline on hover */
+  /* Gold underline on hover — with a visible focus ring for keyboard users. */
   .gold-underline {
-    @apply relative after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-primary after:transition-all hover:after:w-full;
+    @apply relative after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-primary after:transition-all hover:after:w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm;
   }
 
   /* Legacy alias for older components */
