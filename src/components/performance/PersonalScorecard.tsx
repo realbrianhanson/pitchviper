@@ -57,13 +57,13 @@ export function PersonalScorecard({ profile, careerStats, xpToNextLevel }: Perso
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider">Streak</p>
-              <p className="text-3xl font-display font-bold text-foreground">{profile.currentStreak}</p>
+              <p className="text-3xl font-display font-bold text-foreground">{currentStreak}</p>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
             Best: {profile.longestStreak} days
           </p>
-          {profile.currentStreak >= 7 && (
+          {currentStreak >= 7 && (
             <div className="mt-2 px-2 py-1 rounded-full bg-warning/20 text-warning text-xs font-medium text-center">
               🔥 On Fire!
             </div>
