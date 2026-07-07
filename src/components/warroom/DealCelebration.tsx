@@ -41,12 +41,13 @@ export function DealCelebration({
   };
 
   const fireConfetti = useCallback(() => {
+    if (prefersReducedMotion()) return;
     // Gold confetti from the left
     confetti({
       particleCount: 100,
       spread: 70,
       origin: { x: 0.1, y: 0.6 },
-      colors: ["#FFD700", "#FFA500", "#00ff88", "#00f0ff"],
+      colors: BRAND_CONFETTI_VICTORY,
       angle: 60,
     });
 
@@ -55,7 +56,7 @@ export function DealCelebration({
       particleCount: 100,
       spread: 70,
       origin: { x: 0.9, y: 0.6 },
-      colors: ["#FFD700", "#FFA500", "#00ff88", "#00f0ff"],
+      colors: BRAND_CONFETTI_VICTORY,
       angle: 120,
     });
 
@@ -65,7 +66,7 @@ export function DealCelebration({
         particleCount: 150,
         spread: 100,
         origin: { x: 0.5, y: 0.5 },
-        colors: ["#FFD700", "#FFA500", "#00ff88", "#00f0ff", "#ff00aa"],
+        colors: BRAND_CONFETTI_VICTORY,
       });
     }, 300);
   }, []);
