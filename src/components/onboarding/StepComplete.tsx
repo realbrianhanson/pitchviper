@@ -39,7 +39,7 @@ export function StepComplete({ teamName, onComplete }: StepCompleteProps) {
         angle: 60,
         spread: 55,
         origin: { x: 0, y: 0.7 },
-        colors: ["#00f0ff", "#ff00aa", "#00ff88", "#ffaa00"],
+        colors: BRAND_CONFETTI_VICTORY,
       });
 
       // Right side
@@ -48,7 +48,7 @@ export function StepComplete({ teamName, onComplete }: StepCompleteProps) {
         angle: 120,
         spread: 55,
         origin: { x: 1, y: 0.7 },
-        colors: ["#00f0ff", "#ff00aa", "#00ff88", "#ffaa00"],
+        colors: BRAND_CONFETTI_VICTORY,
       });
     }, 250);
 
