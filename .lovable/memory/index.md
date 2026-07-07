@@ -2,7 +2,7 @@
 
 ## Core
 - Always use `.maybeSingle()` instead of `.single()` for Supabase SELECT queries to avoid 406 errors.
-- Google OAuth is disabled. Registration requires mandatory promo code "Viper" (validated server-side).
+- Google OAuth is ENABLED (Google sign-in via Lovable managed auth). Both email and Google signups go through onboarding, where the promo code "Viper" is validated server-side and the user picks Rep vs Manager.
 - Dashboard access requires `onboarding_completed` flag to be true (enforced via `ProtectedRoute`).
 - `ghl_activities` is the canonical source for headline KPIs (calls today, pipeline, deals/revenue won this week) and the day streak. `daily_stats`/`activities`/Aloware calls remain for detail/history only.
 
