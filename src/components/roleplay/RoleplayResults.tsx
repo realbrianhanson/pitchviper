@@ -24,7 +24,7 @@ import {
   Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import confetti from "canvas-confetti";
+import { fireConfetti, BRAND_CONFETTI_VICTORY } from "@/lib/confetti";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface ScoreCategory {
