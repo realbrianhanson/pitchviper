@@ -158,11 +158,11 @@ export function useDashboardData() {
             const userName = activityUser?.full_name?.split(" ")[0] || "A teammate";
 
             // Fire confetti
-            confetti({
+            fireConfetti({
               particleCount: 100,
               spread: 70,
               origin: { y: 0.6 },
-              colors: ["#00f0ff", "#ff00aa", "#00ff88", "#ffaa00"],
+              colors: BRAND_CONFETTI_VICTORY,
             });
 
             toast({
