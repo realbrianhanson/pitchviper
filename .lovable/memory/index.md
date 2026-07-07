@@ -2,13 +2,13 @@
 
 ## Core
 - Always use `.maybeSingle()` instead of `.single()` for Supabase SELECT queries to avoid 406 errors.
-- Google OAuth is disabled. Registration requires mandatory promo code "Viper" (validated server-side).
+- Google OAuth is ENABLED (Google sign-in via Lovable managed auth). Both email and Google signups go through onboarding, where the promo code "Viper" is validated server-side and the user picks Rep vs Manager.
 - Dashboard access requires `onboarding_completed` flag to be true (enforced via `ProtectedRoute`).
 - `ghl_activities` is the canonical source for headline KPIs (calls today, pipeline, deals/revenue won this week) and the day streak. `daily_stats`/`activities`/Aloware calls remain for detail/history only.
 
 ## Memories
 - [ElevenLabs Integration](mem://integrations/elevenlabs) — ElevenLabs agent settings, API key permissions, and WebRTC connection method
-- [Registration Gate](mem://auth/registration-gate) — Mandatory promo code validation and disabled OAuth
+- [Registration Gate](mem://auth/registration-gate) — Promo code validation in onboarding; Google OAuth enabled
 - [Supabase Query Pattern](mem://architecture/supabase-query-pattern) — Prefer .maybeSingle() over .single() for SELECT queries
 - [RLS Hardening](mem://security/rls-hardening) — RLS policies for manager roles and sensitive profile data
 - [Onboarding Flow](mem://features/onboarding-flow) — Dashboard access restrictions based on onboarding status
