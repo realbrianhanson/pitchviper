@@ -15,6 +15,7 @@ export function StepComplete({ teamName, onComplete }: StepCompleteProps) {
   useEffect(() => {
     if (confettiTriggered.current) return;
     confettiTriggered.current = true;
+    if (prefersReducedMotion()) return;
 
     // Fire confetti!
     const duration = 3000;
