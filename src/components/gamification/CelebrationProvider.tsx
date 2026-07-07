@@ -39,12 +39,14 @@ export function useCelebration() {
   return context;
 }
 
+// Rarity-tiered palettes stay strictly on-brand: brushed gold + acid green.
+// Distinction between tiers is by particle count/velocity, never by hue.
 const rarityConfettiConfig: Record<BadgeRarity, { particleCount: number; colors: string[] }> = {
-  common: { particleCount: 30, colors: ['#94a3b8', '#64748b'] },
-  uncommon: { particleCount: 50, colors: ['#22c55e', '#16a34a'] },
-  rare: { particleCount: 80, colors: ['#3b82f6', '#2563eb', '#00f0ff'] },
-  epic: { particleCount: 120, colors: ['#a855f7', '#9333ea', '#ff00aa'] },
-  legendary: { particleCount: 200, colors: ['#f59e0b', '#fbbf24', '#fcd34d', '#00f0ff', '#ff00aa'] },
+  common:    { particleCount: 30,  colors: ["#E8C76F", "#D4A84A", "#F5D982"] },
+  uncommon:  { particleCount: 50,  colors: BRAND_CONFETTI_COLORS },
+  rare:      { particleCount: 80,  colors: BRAND_CONFETTI_COLORS },
+  epic:      { particleCount: 120, colors: BRAND_CONFETTI_VICTORY },
+  legendary: { particleCount: 200, colors: BRAND_CONFETTI_VICTORY },
 };
 
 const rarityGlowStyles: Record<BadgeRarity, string> = {
