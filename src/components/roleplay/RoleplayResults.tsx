@@ -94,11 +94,11 @@ export function RoleplayResults({
         
         // Confetti for high scores
         if (analysis.overall_score >= 90 || analysis.outcome === "won") {
-          confetti({
+          fireConfetti({
             particleCount: 150,
             spread: 100,
             origin: { y: 0.5 },
-            colors: ["#00ff88", "#00f0ff", "#ffaa00", "#ff00aa"],
+            colors: BRAND_CONFETTI_VICTORY,
           });
         }
       } else {
