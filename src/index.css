@@ -256,3 +256,32 @@
     );
   }
 }
+
+/* ============================================
+   Accessibility — Reduced Motion
+   Silence continuous / looping animations for
+   users who ask for it. One-shot transitions
+   (fade-in, scale-in) remain — they're brief
+   and improve orientation, not distract.
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-flame-flicker,
+  .animate-shimmer,
+  .animate-glow-pulse,
+  .pulse-glow,
+  .animate-pulse {
+    animation: none !important;
+  }
+
+  /* Neutralize any element still doing an infinite loop we didn't name. */
+  *,
+  *::before,
+  *::after {
+    animation-iteration-count: 1 !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
