@@ -1,29 +1,20 @@
 // Shared per-user rate limiter for paid edge functions.
-// Uses the SECURITY DEFINER RPC public.check_and_increment_rate_limit.
-//
-// Default limits are intentionally conservative starting points; adjust in one
-// place by passing perMinute/perDay to enforceRateLimit.
+// Delegates the pure decision logic to rateLimit.core.ts (unit-tested) and
+// only supplies the live Supabase service-role client here.
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  DEFAULT_RATE_LIMIT,
+  enforceRateLimitCore,
+  type RateLimitCoreOptions,
+  type RateLimitResult,
+} from "./rateLimit.core.ts";
 
-export const DEFAULT_RATE_LIMIT = { perMinute: 10, perDay: 100 };
+export { DEFAULT_RATE_LIMIT };
+export type { RateLimitResult };
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-export interface RateLimitOptions {
-  perMinute?: number;
-  perDay?: number;
+export interface RateLimitOptions extends RateLimitCoreOptions {
   /** Optional pre-built service-role client to reuse. */
   serviceClient?: SupabaseClient;
-}
-
-export interface RateLimitResult {
-  allowed: boolean;
-  /** Ready-to-return 429 Response when !allowed. */
-  response?: Response;
-  info?: Record<string, unknown>;
 }
 
 /**
@@ -37,9 +28,6 @@ export async function enforceRateLimit(
   functionName: string,
   opts: RateLimitOptions = {},
 ): Promise<RateLimitResult> {
-  const perMinute = opts.perMinute ?? DEFAULT_RATE_LIMIT.perMinute;
-  const perDay = opts.perDay ?? DEFAULT_RATE_LIMIT.perDay;
-
   const client =
     opts.serviceClient ??
     createClient(
@@ -47,47 +35,7 @@ export async function enforceRateLimit(
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-  const { data, error } = await client.rpc("check_and_increment_rate_limit", {
-    _user_id: userId,
-    _function_name: functionName,
-    _per_minute: perMinute,
-    _per_day: perDay,
-  });
-
-  // Fail-open on infrastructure errors (do not block legitimate traffic when
-  // the limiter itself is broken) but log loudly.
-  if (error) {
-    console.error(`[rateLimit] ${functionName} check failed:`, error.message);
-    return { allowed: true, info: { error: error.message } };
-  }
-
-  const result = (data ?? {}) as Record<string, unknown>;
-  if (result.allowed === false) {
-    const retryAfter = Number(result.retry_after_seconds ?? 60);
-    return {
-      allowed: false,
-      info: result,
-      response: new Response(
-        JSON.stringify({
-          error: "rate_limited",
-          message:
-            result.limit_type === "per_day"
-              ? "Daily limit reached for this feature. Try again tomorrow."
-              : "You're moving too fast. Try again in a minute.",
-          limit_type: result.limit_type,
-          retry_after_seconds: retryAfter,
-        }),
-        {
-          status: 429,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-            "Retry-After": String(retryAfter),
-          },
-        },
-      ),
-    };
-  }
-
-  return { allowed: true, info: result };
+  return enforceRateLimitCore(userId, functionName, opts, (name, args) =>
+    client.rpc(name, args) as ReturnType<Parameters<typeof enforceRateLimitCore>[3]>,
+  );
 }
