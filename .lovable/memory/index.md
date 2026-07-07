@@ -8,7 +8,7 @@
 
 ## Memories
 - [ElevenLabs Integration](mem://integrations/elevenlabs) — ElevenLabs agent settings, API key permissions, and WebRTC connection method
-- [Registration Gate](mem://auth/registration-gate) — Mandatory promo code validation and disabled OAuth
+- [Registration Gate](mem://auth/registration-gate) — Promo code validation in onboarding; Google OAuth enabled
 - [Supabase Query Pattern](mem://architecture/supabase-query-pattern) — Prefer .maybeSingle() over .single() for SELECT queries
 - [RLS Hardening](mem://security/rls-hardening) — RLS policies for manager roles and sensitive profile data
 - [Onboarding Flow](mem://features/onboarding-flow) — Dashboard access restrictions based on onboarding status
