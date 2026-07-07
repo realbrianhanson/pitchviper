@@ -2,6 +2,7 @@ import { Flame, Trophy, Phone, DollarSign, Target } from "lucide-react";
 import { ViperCard, ViperCardContent } from "@/components/ui/viper-card";
 import { Progress } from "@/components/ui/progress";
 import { PerformanceProfile, CareerStats } from "@/hooks/usePerformanceData";
+import { useGhlStats } from "@/hooks/useGhlStats";
 
 interface PersonalScorecardProps {
   profile: PerformanceProfile;
@@ -10,6 +11,12 @@ interface PersonalScorecardProps {
 }
 
 export function PersonalScorecard({ profile, careerStats, xpToNextLevel }: PersonalScorecardProps) {
+  // Streak is a headline KPI — read from the canonical ghl_activities source
+  // so it always matches Command Center and the LiveTicker. `profile.currentStreak`
+  // (daily_stats-derived) is only used as a graceful fallback while ghl loads.
+  const { stats: ghl, loading: ghlLoading } = useGhlStats();
+  const currentStreak = ghlLoading ? profile.currentStreak : ghl.currentStreak;
+
   const nextLevelXp = xpToNextLevel(profile.currentLevel);
   const currentLevelXp = xpToNextLevel(profile.currentLevel - 1);
   const xpProgress = ((profile.xpPoints - currentLevelXp) / (nextLevelXp - currentLevelXp)) * 100;
@@ -50,13 +57,13 @@ export function PersonalScorecard({ profile, careerStats, xpToNextLevel }: Perso
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider">Streak</p>
-              <p className="text-3xl font-display font-bold text-foreground">{profile.currentStreak}</p>
+              <p className="text-3xl font-display font-bold text-foreground">{currentStreak}</p>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
             Best: {profile.longestStreak} days
           </p>
-          {profile.currentStreak >= 7 && (
+          {currentStreak >= 7 && (
             <div className="mt-2 px-2 py-1 rounded-full bg-warning/20 text-warning text-xs font-medium text-center">
               🔥 On Fire!
             </div>
