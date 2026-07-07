@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ViperButton } from '@/components/ui/viper-button';
 import confetti from 'canvas-confetti';
+import { BRAND_CONFETTI_COLORS, BRAND_CONFETTI_VICTORY, prefersReducedMotion } from '@/lib/confetti';
 import { Trophy, Sparkles, ArrowUp, Award, Share2, Download, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge as BadgeType, BadgeRarity, Level } from '@/hooks/useGamification';
