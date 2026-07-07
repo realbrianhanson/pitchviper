@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { X, Trophy, Flame, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
+import { BRAND_CONFETTI_VICTORY, prefersReducedMotion } from "@/lib/confetti";
 
 interface DealCelebrationProps {
   isOpen: boolean;
