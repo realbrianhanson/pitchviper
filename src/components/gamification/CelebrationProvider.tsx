@@ -94,9 +94,10 @@ export function CelebrationProvider({ children }: CelebrationProviderProps) {
   });
 
   const triggerConfetti = (celebration: CelebrationData) => {
+    if (prefersReducedMotion()) return;
     if (celebration.type === 'badge') {
       const config = rarityConfettiConfig[celebration.data.badge.rarity];
-      
+
       // Main burst
       confetti({
         particleCount: config.particleCount,
@@ -145,7 +146,7 @@ export function CelebrationProvider({ children }: CelebrationProviderProps) {
         particleCount: 150,
         spread: 100,
         origin: { y: 0.5 },
-        colors: ['#00f0ff', '#00ff88', '#ffaa00', '#ff00aa']
+        colors: BRAND_CONFETTI_VICTORY,
       });
     }
   };
