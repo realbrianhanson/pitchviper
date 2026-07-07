@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import confetti from "canvas-confetti";
+import { fireConfetti, BRAND_CONFETTI_VICTORY } from "@/lib/confetti";
 
 interface DashboardProfile {
   full_name: string;
