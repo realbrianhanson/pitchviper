@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import confetti from "canvas-confetti";
+import { fireConfetti, BRAND_CONFETTI_VICTORY } from "@/lib/confetti";
 
 interface DashboardProfile {
   full_name: string;
@@ -158,11 +158,11 @@ export function useDashboardData() {
             const userName = activityUser?.full_name?.split(" ")[0] || "A teammate";
 
             // Fire confetti
-            confetti({
+            fireConfetti({
               particleCount: 100,
               spread: 70,
               origin: { y: 0.6 },
-              colors: ["#00f0ff", "#ff00aa", "#00ff88", "#ffaa00"],
+              colors: BRAND_CONFETTI_VICTORY,
             });
 
             toast({

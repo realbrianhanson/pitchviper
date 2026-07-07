@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
+import { BRAND_CONFETTI_VICTORY, prefersReducedMotion } from "@/lib/confetti";
 import { ViperButton } from "@/components/ui/viper-button";
 import { Rocket, Trophy, Zap } from "lucide-react";
 
@@ -14,6 +15,7 @@ export function StepComplete({ teamName, onComplete }: StepCompleteProps) {
   useEffect(() => {
     if (confettiTriggered.current) return;
     confettiTriggered.current = true;
+    if (prefersReducedMotion()) return;
 
     // Fire confetti!
     const duration = 3000;
@@ -39,7 +41,7 @@ export function StepComplete({ teamName, onComplete }: StepCompleteProps) {
         angle: 60,
         spread: 55,
         origin: { x: 0, y: 0.7 },
-        colors: ["#00f0ff", "#ff00aa", "#00ff88", "#ffaa00"],
+        colors: BRAND_CONFETTI_VICTORY,
       });
 
       // Right side
@@ -48,7 +50,7 @@ export function StepComplete({ teamName, onComplete }: StepCompleteProps) {
         angle: 120,
         spread: 55,
         origin: { x: 1, y: 0.7 },
-        colors: ["#00f0ff", "#ff00aa", "#00ff88", "#ffaa00"],
+        colors: BRAND_CONFETTI_VICTORY,
       });
     }, 250);
 

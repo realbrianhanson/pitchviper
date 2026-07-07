@@ -178,9 +178,9 @@
     @apply font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground;
   }
 
-  /* Gold underline on hover */
+  /* Gold underline on hover — with a visible focus ring for keyboard users. */
   .gold-underline {
-    @apply relative after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-primary after:transition-all hover:after:w-full;
+    @apply relative after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-primary after:transition-all hover:after:w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm;
   }
 
   /* Legacy alias for older components */
@@ -256,3 +256,32 @@
     );
   }
 }
+
+/* ============================================
+   Accessibility — Reduced Motion
+   Silence continuous / looping animations for
+   users who ask for it. One-shot transitions
+   (fade-in, scale-in) remain — they're brief
+   and improve orientation, not distract.
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-flame-flicker,
+  .animate-shimmer,
+  .animate-glow-pulse,
+  .pulse-glow,
+  .animate-pulse {
+    animation: none !important;
+  }
+
+  /* Neutralize any element still doing an infinite loop we didn't name. */
+  *,
+  *::before,
+  *::after {
+    animation-iteration-count: 1 !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

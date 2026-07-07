@@ -24,7 +24,7 @@ import {
   Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import confetti from "canvas-confetti";
+import { fireConfetti, BRAND_CONFETTI_VICTORY } from "@/lib/confetti";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface ScoreCategory {
@@ -94,11 +94,11 @@ export function RoleplayResults({
         
         // Confetti for high scores
         if (analysis.overall_score >= 90 || analysis.outcome === "won") {
-          confetti({
+          fireConfetti({
             particleCount: 150,
             spread: 100,
             origin: { y: 0.5 },
-            colors: ["#00ff88", "#00f0ff", "#ffaa00", "#ff00aa"],
+            colors: BRAND_CONFETTI_VICTORY,
           });
         }
       } else {

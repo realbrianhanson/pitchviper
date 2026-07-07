@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 // Legacy `glass` and `glow` variants are kept as aliases of the editorial
 // default so older call sites quietly adopt the new aesthetic without edits.
 const viperInputVariants = cva(
-  "flex w-full rounded-[2px] border bg-input px-4 py-3 text-sm font-body text-foreground transition-colors duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+  "flex w-full rounded-[2px] border bg-input px-4 py-3 text-sm font-body text-foreground transition-colors duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
