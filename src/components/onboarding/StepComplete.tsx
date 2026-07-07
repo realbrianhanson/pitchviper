@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
+import { BRAND_CONFETTI_VICTORY, prefersReducedMotion } from "@/lib/confetti";
 import { ViperButton } from "@/components/ui/viper-button";
 import { Rocket, Trophy, Zap } from "lucide-react";
 
