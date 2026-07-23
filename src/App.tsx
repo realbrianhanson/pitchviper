@@ -3,9 +3,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
@@ -38,6 +38,8 @@ import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 
 // Lazy load app pages for better performance
+const Landing = lazy(() => import("./pages/Landing"));
+const ProductDemo = lazy(() => import("./pages/ProductDemo"));
 const CommandCenter = lazy(() => import("./pages/CommandCenter"));
 const WarRoom = lazy(() => import("./pages/WarRoom"));
 const RoleplayArena = lazy(() => import("./pages/RoleplayArena"));
@@ -56,6 +58,22 @@ const ManagerDashboard = lazy(() => import("./pages/ManagerDashboard"));
 const CompetitionsManager = lazy(() => import("./pages/CompetitionsManager"));
 const Settings = lazy(() => import("./pages/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+
+function HomeGate() {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  if (user) return <Navigate to="/app" replace />;
+  return <Landing />;
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,7 +102,9 @@ const App = () => (
                   <Sonner />
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
-                      {/* Public auth routes */}
+                      {/* Public routes */}
+                      <Route path="/" element={<HomeGate />} />
+                      <Route path="/demo" element={<ProductDemo />} />
                       <Route path="/sign-up" element={<SignUp />} />
                       <Route path="/sign-in" element={<SignIn />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -93,7 +113,7 @@ const App = () => (
                       
                       {/* Protected routes */}
                       <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-                      <Route path="/" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
+                      <Route path="/app" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
                       <Route path="/war-room" element={<ProtectedRoute><WarRoom /></ProtectedRoute>} />
                       <Route path="/roleplay" element={<ProtectedRoute><RoleplayArena /></ProtectedRoute>} />
                       <Route path="/roleplay/:scenarioId" element={<ProtectedRoute><RoleplaySession /></ProtectedRoute>} />
