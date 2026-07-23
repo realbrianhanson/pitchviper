@@ -105,7 +105,7 @@ export default function ManagerDashboard() {
 
       {/* Error banner */}
       {error && (
-        <div className="flex items-start gap-3 p-4 border border-destructive/40 bg-destructive/10 rounded-lg">
+        <div className="flex items-start gap-3 p-4 border-l-2 border border-destructive/40 border-l-destructive bg-destructive/5">
           <AlertCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
           <div className="flex-1">
             <p className="font-semibold text-destructive">Couldn't load team data</p>
@@ -129,10 +129,7 @@ export default function ManagerDashboard() {
         </div>
       ) : (
       <>
-      {/* Overview strip */}
-      <TeamOverviewCards overview={overview} isLoading={isLoading} />
-
-      {/* Performance triage */}
+      {/* Performance triage — action first */}
       <div>
         <div className="flex items-baseline justify-between mb-4">
           <h2 className="font-display text-2xl">Triage</h2>
@@ -145,6 +142,17 @@ export default function ManagerDashboard() {
           onFire={onFire}
           coachingDue={coachingDue}
         />
+      </div>
+
+      {/* Floor performance */}
+      <div>
+        <div className="flex items-baseline justify-between mb-4">
+          <h2 className="font-display text-2xl">Floor Performance</h2>
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+            Today and 30-day context
+          </span>
+        </div>
+        <TeamOverviewCards overview={overview} isLoading={isLoading} />
       </div>
 
       {/* Forecast */}
