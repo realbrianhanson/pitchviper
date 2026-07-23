@@ -43,7 +43,7 @@ function SectionHeading({
 export default function Landing() {
   useDocumentMeta(
     "PitchViper — The daily execution system for high-velocity sales teams",
-    "Live floor activity, manager action, targeted practice, measurable improvement. A closed loop for sales teams that ship revenue every day.",
+    "One operating system for live floor activity, manager coaching, and rep practice — so sales teams can act on what's happening today.",
   );
 
   return (
@@ -75,7 +75,7 @@ export default function Landing() {
       </header>
 
       {/* Hero */}
-      <section className="gold-vignette border-b border-border">
+      <section className="gold-vignette border-b border-border overflow-hidden">
         <div className="mx-auto max-w-7xl px-6 md:px-10 py-24 md:py-36">
           <div className="max-w-4xl space-y-8">
             <Eyebrow>PitchViper — Sovereign Sales OS</Eyebrow>
@@ -84,9 +84,9 @@ export default function Landing() {
               <span className="italic text-primary">high-velocity sales teams</span>.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed">
-              Live activity from the floor. Manager action where it matters. Targeted practice
-              tied to the exact call that missed. A closed loop that turns today's mistakes into
-              tomorrow's revenue.
+              One operating system for the sales floor: live activity, manager coaching, and
+              targeted practice — so insight from calls, decisions from managers, and reps'
+              drills all live in the same place.
             </p>
             <div className="flex flex-wrap items-center gap-4 pt-4">
               <Link
@@ -126,7 +126,7 @@ export default function Landing() {
               they've already mastered and skip the ones costing them the deal.
             </p>
             <p>
-              The gap between a missed call and the drill that would fix it is measured in
+              The distance between a coaching insight and the right drill for it is measured in
               weeks. By then the pipeline has moved on and the lesson is lost.
             </p>
           </div>
@@ -138,8 +138,8 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-6 md:px-10 py-20 md:py-28 space-y-16">
           <SectionHeading
             eyebrow="The operating loop"
-            title={<>Four moves. <span className="italic">One closed circuit.</span></>}
-            lede="Every call feeds the next practice session. Every practice session shows up in the next call."
+            title={<>Four moves. <span className="italic">One operating system.</span></>}
+            lede="Call insight, manager action, and rep practice under one roof — so the path from a coaching moment to the relevant drill is short instead of scattered across tools."
           />
 
           <div className="bento-grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
@@ -160,13 +160,13 @@ export default function Landing() {
                 n: "03",
                 icon: Target,
                 title: "Targeted practice",
-                body: "Reps drill the exact objection or discovery gap flagged on their last call, in text or voice.",
+                body: "Roleplay and objection drills sit next to the call intelligence, so managers can point reps at the skill that matters right now.",
               },
               {
                 n: "04",
                 icon: Trophy,
-                title: "Measurable lift",
-                body: "The next call is scored against the last one. Improvement is a number, not a feeling.",
+                title: "Momentum you can see",
+                body: "Personal scorecards, streaks, leaderboards and recognition make progress visible to the whole floor.",
               },
             ].map((step) => (
               <div key={step.n} className="bento-tile space-y-4">

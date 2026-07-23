@@ -158,20 +158,20 @@ function CallToCoaching() {
           {
             step: "Call",
             icon: Phone,
-            title: "Missed on pricing",
-            body: "Recording ingested from Aloware. AI flags weak reframe at 6:12.",
+            title: "Pricing pushback surfaced",
+            body: "Call activity and recordings from the phone system land in call intelligence for review.",
           },
           {
             step: "Coaching",
             icon: Radio,
-            title: "Manager reviews the moment",
-            body: "One-click handoff: pull the clip, tag the objection, assign a drill.",
+            title: "Manager notes the gap",
+            body: "From the coaching console, the manager captures what they heard and points the rep at a relevant drill.",
           },
           {
             step: "Practice",
             icon: Target,
-            title: "Rep drills the exact objection",
-            body: "Voice roleplay with a prospect persona built from that call's context.",
+            title: "Rep runs the objection drill",
+            body: "Voice or text roleplay in the arena — the same objection type, so the reps rehearses the specific muscle.",
           },
         ].map((s) => (
           <div key={s.step} className="bg-card p-6 space-y-4">
@@ -188,13 +188,12 @@ function CallToCoaching() {
       <div className="editorial-tile p-6 flex items-start gap-6">
         <TrendingUp className="w-5 h-5 text-success mt-1 shrink-0" aria-hidden="true" />
         <div>
-          <div className="eyebrow mb-2">Sample lift</div>
+          <div className="eyebrow mb-2">Illustrative workflow — not current automation</div>
           <p className="font-display text-2xl leading-tight">
-            Next pricing objection scored <span className="text-success">+18 pts</span> over the
-            baseline call.
+            Insight, coaching, and practice sit in <span className="text-success">one operating system</span> instead of three tools.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            Illustrative example only — not a customer result.
+            Sample workspace — no customer data. Not a benchmarked outcome.
           </p>
         </div>
       </div>
@@ -286,7 +285,7 @@ export default function ProductDemo() {
       {/* Step nav */}
       <nav
         aria-label="Demo steps"
-        className="border-b border-border sticky top-0 bg-background/95 backdrop-blur z-20"
+        className="border-b border-border sticky top-0 bg-background z-20"
       >
         <div className="mx-auto max-w-7xl px-6 md:px-10">
           <ol className="flex flex-wrap gap-px">
