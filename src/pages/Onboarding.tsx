@@ -68,8 +68,12 @@ export default function Onboarding() {
         navigate("/");
         return;
       }
-      // Skip to step 2 if promo already validated
-      if (profile.promo_validated) {
+      // Invited teammates arrive with promo_validated=true AND a team_id already set.
+      // Pre-populate team data and skip the promo + team-selection steps.
+      if (profile.promo_validated && profile.team_id) {
+        setTeamData({ teamId: profile.team_id, teamName: null, teamCode: null });
+        setStep(2);
+      } else if (profile.promo_validated) {
         setStep(2);
       }
     }
