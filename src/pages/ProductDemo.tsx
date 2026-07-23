@@ -171,7 +171,7 @@ function CallToCoaching() {
             step: "Practice",
             icon: Target,
             title: "Rep runs the objection drill",
-            body: "Voice or text roleplay in the arena — the same objection type, so the reps rehearses the specific muscle.",
+            body: "Voice or text roleplay in the arena — the same objection type, so the rep rehearses the relevant skill.",
           },
         ].map((s) => (
           <div key={s.step} className="bg-card p-6 space-y-4">

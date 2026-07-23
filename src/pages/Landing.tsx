@@ -148,7 +148,7 @@ export default function Landing() {
                 n: "01",
                 icon: Activity,
                 title: "Live activity",
-                body: "Dials, connects, meetings and revenue land on the floor as they happen — no CSV, no lag.",
+                body: "Dials, connects, meetings and revenue land on the floor as they happen — without a manual CSV reporting workflow.",
               },
               {
                 n: "02",
@@ -200,8 +200,8 @@ export default function Landing() {
               {
                 label: "For the manager",
                 title: "Coaching console",
-                body: "See the team the way the floor sees itself. Intervene when it matters. Assign practice tied to a specific call.",
-                items: ["Rep deep-dives", "Call-to-coaching handoff", "AI recommendations"],
+                body: "See the team the way the floor sees itself. Intervene when it matters. Move from a rep or call insight to the right coaching and practice workflow.",
+                items: ["Rep deep-dives", "Coach-to-practice workflow", "AI recommendations"],
               },
               {
                 label: "For the floor",
@@ -261,7 +261,7 @@ export default function Landing() {
       </section>
 
       {/* Final CTA */}
-      <section className="gold-vignette">
+      <section className="gold-vignette overflow-hidden">
         <div className="mx-auto max-w-7xl px-6 md:px-10 py-24 md:py-32 text-center space-y-8">
           <Eyebrow>Enter the floor</Eyebrow>
           <h2 className="font-display text-4xl md:text-6xl leading-[1.05] tracking-tight max-w-3xl mx-auto">
