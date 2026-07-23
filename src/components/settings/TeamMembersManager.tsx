@@ -51,7 +51,11 @@ async function readFunctionErrorCode(error: unknown): Promise<string | undefined
   if (!ctx || typeof (ctx as Response).clone !== "function") return undefined;
   try {
     const body = await (ctx as Response).clone().json();
-    if (body && typeof body === "object" && typeof body.code === "string") return body.code;
+    if (body && typeof body === "object") {
+      const b = body as { code?: unknown; error?: unknown };
+      if (typeof b.code === "string") return b.code;
+      if (typeof b.error === "string") return b.error;
+    }
   } catch {
     /* not JSON */
   }
