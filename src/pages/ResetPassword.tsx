@@ -74,9 +74,13 @@ export default function ResetPassword() {
 
   return (
     <AuthLayout
-      eyebrow="Reset Password"
-      title="Set a new password."
-      subtitle="Choose something memorable but unguessable."
+      eyebrow={isInvite ? "Welcome to PitchViper" : "Reset Password"}
+      title={isInvite ? "Set your password." : "Set a new password."}
+      subtitle={
+        isInvite
+          ? "You've been invited to your team. Choose a password to get started."
+          : "Choose something memorable but unguessable."
+      }
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
