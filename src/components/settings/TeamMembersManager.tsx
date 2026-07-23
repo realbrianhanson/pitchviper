@@ -27,7 +27,7 @@ interface TeamMember {
   email: string | null;
   invited_at: string | null;
   last_sign_in_at: string | null;
-  status: "active" | "confirmed" | "invited";
+  status: "active" | "invited";
 }
 
 const ERROR_COPY: Record<string, string> = {
