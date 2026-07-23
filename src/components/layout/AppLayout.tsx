@@ -29,7 +29,7 @@ export function AppLayout({ children, title }: AppLayoutProps) {
           <AppHeader title={title} onOpenPalette={() => palette.setOpen(true)} />
           <LiveTicker />
           <main className="flex-1 relative overflow-x-hidden bg-background">
-            <div className="relative z-10 p-4 md:p-10">{children}</div>
+            <div className="relative z-10 p-4 sm:p-6 lg:p-8 xl:p-10">{children}</div>
           </main>
           <ClosersToolkit />
           <ManagerFAB onSendBroadcast={() => setShowBroadcast(true)} />

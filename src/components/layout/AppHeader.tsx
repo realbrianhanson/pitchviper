@@ -56,11 +56,11 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
   const roleLabel = role === "manager" ? "Sales Manager" : "Sales Rep";
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-2 md:gap-4 border-b border-border bg-background/90 backdrop-blur-xl px-3 md:px-8">
-      {/* Left: Mobile menu + Terminal breadcrumb */}
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-2 md:gap-4 border-b border-border bg-background px-3 md:px-8">
+      {/* Left: Mobile menu + editorial breadcrumb */}
       <div className="flex items-center gap-2 md:gap-3 min-w-0 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
         <SidebarTrigger className="md:hidden -ml-1 text-muted-foreground hover:text-primary" />
-        <span className="text-primary hidden sm:inline">Terminal v1.0</span>
+        <span className="text-primary hidden sm:inline">PITCHVIPER</span>
         <span className="opacity-30 hidden sm:inline">/</span>
         <span className="truncate text-foreground">{title || "Dashboard"}</span>
       </div>
@@ -116,7 +116,11 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 md:gap-3 px-1 md:px-2 py-1 transition-colors hover:text-primary md:border-l md:border-border md:pl-4 md:ml-2">
+            <button
+              aria-label={`Account menu for ${displayName}`}
+              className="flex items-center gap-2 md:gap-3 px-1 md:px-2 py-1 transition-colors hover:text-primary md:border-l md:border-border md:pl-4 md:ml-2"
+            >
+
 
               {profile?.avatar_url ? (
                 <img
