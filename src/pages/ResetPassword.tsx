@@ -49,10 +49,17 @@ export default function ResetPassword() {
     setLoading(true);
     setError(null);
     try {
-      const { error: updateError } = await supabase.auth.updateUser({ password });
+      const { data: updated, error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
-      toast({ title: "Password updated.", description: "Your password has been changed." });
-      navigate("/");
+      const inviteSource = updated?.user?.user_metadata?.invite_source;
+      const shouldOnboard = isInvite || inviteSource === "team_manager";
+      toast({
+        title: shouldOnboard ? "Password set." : "Password updated.",
+        description: shouldOnboard
+          ? "Welcome to PitchViper — let's finish setting up your profile."
+          : "Your password has been changed.",
+      });
+      navigate(shouldOnboard ? "/onboarding" : "/");
     } catch (err: any) {
       setError(err.message || "Failed to update password");
       toast({
