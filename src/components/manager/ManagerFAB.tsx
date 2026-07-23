@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Plus, 
-  Users, 
-  Activity, 
-  Megaphone, 
-  Trophy, 
+import {
+  Plus,
+  Users,
+  Activity,
+  Megaphone,
+  Trophy,
   X,
-  MessageCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,70 +23,63 @@ export function ManagerFAB({ onSendBroadcast, onStartCompetition }: ManagerFABPr
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Only show for managers on mobile
   if (!isManager || !isMobile) return null;
 
   const actions = [
     {
       icon: Users,
       label: "Quick Coach",
-      color: "bg-primary",
-      onClick: () => navigate("/coaching")
+      ariaLabel: "Open coaching console",
+      onClick: () => navigate("/coaching"),
     },
     {
       icon: Activity,
       label: "Team Pulse",
-      color: "bg-blue-500",
-      onClick: () => navigate("/war-room")
+      ariaLabel: "Open team pulse in war room",
+      onClick: () => navigate("/war-room"),
     },
     {
       icon: Megaphone,
       label: "Send Broadcast",
-      color: "bg-amber-500",
-      onClick: onSendBroadcast
+      ariaLabel: "Send broadcast message to team",
+      onClick: onSendBroadcast,
     },
     {
       icon: Trophy,
       label: "Start Competition",
-      color: "bg-green-500",
-      onClick: onStartCompetition || (() => navigate("/manager/competitions"))
-    }
+      ariaLabel: "Start a new team competition",
+      onClick: onStartCompetition || (() => navigate("/manager/competitions")),
+    },
   ];
 
   return (
     <>
-      {/* Backdrop */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-background/60 backdrop-blur-sm z-40"
+        <div
+          className="fixed inset-0 bg-background/80 z-40"
           onClick={() => setIsOpen(false)}
+          aria-hidden="true"
         />
       )}
 
-      {/* FAB Container */}
-      <div className="fixed bottom-20 right-4 z-50 flex flex-col-reverse items-end gap-3">
-        {/* Action buttons */}
+      <div className="fixed bottom-24 right-4 z-50 flex flex-col-reverse items-end gap-2">
         {isOpen && (
-          <div className="flex flex-col-reverse gap-3 mb-2 animate-in slide-in-from-bottom-5 duration-200">
-            {actions.map((action, index) => (
+          <div className="flex flex-col-reverse gap-2 mb-2">
+            {actions.map((action) => (
               <button
                 key={action.label}
                 onClick={() => {
                   action.onClick?.();
                   setIsOpen(false);
                 }}
+                aria-label={action.ariaLabel}
                 className={cn(
-                  "flex items-center gap-3 rounded-full pl-4 pr-5 py-3 shadow-lg",
-                  "transition-all duration-200 hover:scale-105",
-                  action.color,
-                  "text-white"
+                  "flex items-center gap-3 px-4 py-2.5 border border-border bg-card",
+                  "text-foreground hover:bg-muted transition-colors"
                 )}
-                style={{
-                  animationDelay: `${index * 50}ms`
-                }}
               >
-                <action.icon className="h-5 w-5" />
-                <span className="text-sm font-medium whitespace-nowrap">
+                <action.icon className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] whitespace-nowrap">
                   {action.label}
                 </span>
               </button>
@@ -95,21 +87,22 @@ export function ManagerFAB({ onSendBroadcast, onStartCompetition }: ManagerFABPr
           </div>
         )}
 
-        {/* Main FAB button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
+          aria-label={isOpen ? "Close manager quick actions" : "Open manager quick actions"}
+          aria-expanded={isOpen}
           className={cn(
-            "flex items-center justify-center w-14 h-14 rounded-full shadow-xl",
-            "transition-all duration-300 transform",
-            isOpen 
-              ? "bg-muted rotate-45" 
-              : "bg-primary hover:bg-primary/90"
+            "flex items-center justify-center w-12 h-12 border border-primary",
+            "transition-colors",
+            isOpen
+              ? "bg-card text-foreground"
+              : "bg-primary text-primary-foreground hover:bg-primary/90"
           )}
         >
           {isOpen ? (
-            <X className="h-6 w-6 text-foreground" />
+            <X className="h-5 w-5" strokeWidth={1.5} />
           ) : (
-            <Plus className="h-6 w-6 text-primary-foreground" />
+            <Plus className="h-5 w-5" strokeWidth={1.5} />
           )}
         </button>
       </div>

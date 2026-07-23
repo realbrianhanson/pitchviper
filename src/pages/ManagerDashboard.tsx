@@ -89,7 +89,7 @@ export default function ManagerDashboard() {
             Floor view, <span className="italic">{firstName}.</span>
           </h1>
         </div>
-        <div className="flex items-end gap-8">
+        <div className="w-full md:w-auto flex flex-col md:flex-row md:items-end gap-6 md:gap-8">
           <div className="md:border-l md:border-border md:pl-8">
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 block mb-1">
               Active
