@@ -319,9 +319,17 @@ export function TeamMembersManager() {
             </div>
           )}
 
-          {teamMembers.length > 0 ? (
+          {loadError ? (
+            <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive flex items-center justify-between gap-4">
+              <span>{loadError}</span>
+              <Button variant="outline" size="sm" onClick={loadData}>
+                Try again
+              </Button>
+            </div>
+          ) : teamMembers.length > 0 ? (
             <div className="rounded-md border overflow-hidden">
-              <Table>
+              <div className="overflow-x-auto">
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
