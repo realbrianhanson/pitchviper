@@ -51,8 +51,26 @@ export default function ResetPassword() {
     try {
       const { data: updated, error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
-      const inviteSource = updated?.user?.user_metadata?.invite_source;
+      const currentMeta = (updated?.user?.user_metadata ?? {}) as Record<string, unknown>;
+      const inviteSource = currentMeta.invite_source;
       const shouldOnboard = isInvite || inviteSource === "team_manager";
+
+      // Clear the invite marker so HomeGate stops routing back to this page.
+      // Keep every other metadata field (full_name, etc.) intact.
+      if (shouldOnboard && inviteSource) {
+        const { invite_source: _drop, ...remaining } = currentMeta;
+        const { error: metaError } = await supabase.auth.updateUser({ data: remaining });
+        if (metaError) {
+          setError("Password saved, but we couldn't finish onboarding setup. Please refresh and try again.");
+          toast({
+            title: "Almost there",
+            description: "Password saved. Please refresh and sign in again to continue.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
       toast({
         title: shouldOnboard ? "Password set." : "Password updated.",
         description: shouldOnboard
