@@ -126,7 +126,7 @@ export default function Landing() {
               they've already mastered and skip the ones costing them the deal.
             </p>
             <p>
-              The gap between a missed call and the drill that would fix it is measured in
+              The distance between a coaching insight and the right drill for it is measured in
               weeks. By then the pipeline has moved on and the lesson is lost.
             </p>
           </div>
@@ -138,8 +138,8 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-6 md:px-10 py-20 md:py-28 space-y-16">
           <SectionHeading
             eyebrow="The operating loop"
-            title={<>Four moves. <span className="italic">One closed circuit.</span></>}
-            lede="Every call feeds the next practice session. Every practice session shows up in the next call."
+            title={<>Four moves. <span className="italic">One operating system.</span></>}
+            lede="Call insight, manager action, and rep practice under one roof — so the path from a coaching moment to the relevant drill is short instead of scattered across tools."
           />
 
           <div className="bento-grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
@@ -160,13 +160,13 @@ export default function Landing() {
                 n: "03",
                 icon: Target,
                 title: "Targeted practice",
-                body: "Reps drill the exact objection or discovery gap flagged on their last call, in text or voice.",
+                body: "Roleplay and objection drills sit next to the call intelligence, so managers can point reps at the skill that matters right now.",
               },
               {
                 n: "04",
                 icon: Trophy,
-                title: "Measurable lift",
-                body: "The next call is scored against the last one. Improvement is a number, not a feeling.",
+                title: "Momentum you can see",
+                body: "Personal scorecards, streaks, leaderboards and recognition make progress visible to the whole floor.",
               },
             ].map((step) => (
               <div key={step.n} className="bento-tile space-y-4">
