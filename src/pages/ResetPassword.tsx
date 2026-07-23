@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { ViperInput } from "@/components/ui/viper-input";
@@ -11,6 +11,11 @@ import { Loader2 } from "lucide-react";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isInvite =
+    searchParams.get("flow") === "invite" ||
+    (typeof window !== "undefined" &&
+      new URLSearchParams(window.location.hash.replace(/^#/, "")).get("type") === "invite");
   const { toast } = useToast();
 
   const [password, setPassword] = useState("");
@@ -44,10 +49,17 @@ export default function ResetPassword() {
     setLoading(true);
     setError(null);
     try {
-      const { error: updateError } = await supabase.auth.updateUser({ password });
+      const { data: updated, error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
-      toast({ title: "Password updated.", description: "Your password has been changed." });
-      navigate("/");
+      const inviteSource = updated?.user?.user_metadata?.invite_source;
+      const shouldOnboard = isInvite || inviteSource === "team_manager";
+      toast({
+        title: shouldOnboard ? "Password set." : "Password updated.",
+        description: shouldOnboard
+          ? "Welcome to PitchViper — let's finish setting up your profile."
+          : "Your password has been changed.",
+      });
+      navigate(shouldOnboard ? "/onboarding" : "/");
     } catch (err: any) {
       setError(err.message || "Failed to update password");
       toast({
@@ -62,9 +74,13 @@ export default function ResetPassword() {
 
   return (
     <AuthLayout
-      eyebrow="Reset Password"
-      title="Set a new password."
-      subtitle="Choose something memorable but unguessable."
+      eyebrow={isInvite ? "Welcome to PitchViper" : "Reset Password"}
+      title={isInvite ? "Set your password." : "Set a new password."}
+      subtitle={
+        isInvite
+          ? "You've been invited to your team. Choose a password to get started."
+          : "Choose something memorable but unguessable."
+      }
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
