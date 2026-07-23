@@ -39,7 +39,24 @@ const ERROR_COPY: Record<string, string> = {
   forbidden: "Only team managers can invite members.",
   unauthorized: "Please sign in again.",
   invalid_body: "Please check the invite details and try again.",
+  list_failed: "We couldn't load your team. Please try again.",
 };
+
+// supabase-js surfaces non-2xx responses via FunctionsHttpError with the raw
+// Response on `error.context`. Extract the JSON body so opaque server codes
+// (invite_rate_limited, email_unavailable, already_active, …) map to friendly
+// copy without leaking exception text.
+async function readFunctionErrorCode(error: unknown): Promise<string | undefined> {
+  const ctx = (error as { context?: unknown })?.context;
+  if (!ctx || typeof (ctx as Response).clone !== "function") return undefined;
+  try {
+    const body = await (ctx as Response).clone().json();
+    if (body && typeof body === "object" && typeof body.code === "string") return body.code;
+  } catch {
+    /* not JSON */
+  }
+  return undefined;
+}
 
 export function TeamMembersManager() {
   const { toast } = useToast();
