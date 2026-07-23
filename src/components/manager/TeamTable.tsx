@@ -100,9 +100,9 @@ export function TeamTable({ members, isLoading }: TeamTableProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-2">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-16 bg-muted/50 rounded-lg animate-pulse" />
+          <div key={i} className="h-16 bg-muted/40 animate-pulse" />
         ))}
       </div>
     );
