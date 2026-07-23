@@ -102,7 +102,9 @@ const App = () => (
                   <Sonner />
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
-                      {/* Public auth routes */}
+                      {/* Public routes */}
+                      <Route path="/" element={<HomeGate />} />
+                      <Route path="/demo" element={<ProductDemo />} />
                       <Route path="/sign-up" element={<SignUp />} />
                       <Route path="/sign-in" element={<SignIn />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -111,7 +113,7 @@ const App = () => (
                       
                       {/* Protected routes */}
                       <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-                      <Route path="/" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
+                      <Route path="/app" element={<ProtectedRoute><CommandCenter /></ProtectedRoute>} />
                       <Route path="/war-room" element={<ProtectedRoute><WarRoom /></ProtectedRoute>} />
                       <Route path="/roleplay" element={<ProtectedRoute><RoleplayArena /></ProtectedRoute>} />
                       <Route path="/roleplay/:scenarioId" element={<ProtectedRoute><RoleplaySession /></ProtectedRoute>} />
