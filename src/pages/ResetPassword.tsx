@@ -55,11 +55,13 @@ export default function ResetPassword() {
       const inviteSource = currentMeta.invite_source;
       const shouldOnboard = isInvite || inviteSource === "team_manager";
 
-      // Clear the invite marker so HomeGate stops routing back to this page.
-      // Keep every other metadata field (full_name, etc.) intact.
+      // Explicitly null out invite_source (Supabase merges metadata keys, so
+      // omitting it from a spread does NOT clear it). null !== "team_manager"
+      // so HomeGate stops routing back here. Preserve every other field.
       if (shouldOnboard && inviteSource) {
-        const { invite_source: _drop, ...remaining } = currentMeta;
-        const { error: metaError } = await supabase.auth.updateUser({ data: remaining });
+        const { error: metaError } = await supabase.auth.updateUser({
+          data: { ...currentMeta, invite_source: null },
+        });
         if (metaError) {
           setError("Password saved, but we couldn't finish onboarding setup. Please refresh and try again.");
           toast({
@@ -70,6 +72,7 @@ export default function ResetPassword() {
           return;
         }
       }
+
 
       toast({
         title: shouldOnboard ? "Password set." : "Password updated.",

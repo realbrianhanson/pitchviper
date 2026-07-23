@@ -34,9 +34,12 @@ const AlowareSchema = z.object({ action: z.literal("get-aloware-users") });
 
 const BodySchema = z.union([InviteSchema, ResendSchema, ListSchema, AlowareSchema]);
 
+// Explicit allowlist of redirect hosts. NO wildcard on .lovable.app — any
+// other Lovable project would otherwise be a valid invite redirect target.
 const ALLOWED_REDIRECT_HOSTS = new Set([
-  "pitchviper.com",
   "pitchviper.lovable.app",
+  "id-preview--a2c3dff5-c4c0-45d6-9507-8f53e2efa38f.lovable.app",
+  "localhost",
 ]);
 
 function resolveRedirectBase(req: Request): string {
@@ -46,20 +49,16 @@ function resolveRedirectBase(req: Request): string {
   if (origin) {
     try {
       const u = new URL(origin);
-      if (
-        ALLOWED_REDIRECT_HOSTS.has(u.hostname) ||
-        u.hostname.endsWith(".lovable.app") ||
-        u.hostname === "localhost"
-      ) {
+      if (ALLOWED_REDIRECT_HOSTS.has(u.hostname)) {
         return u.origin;
       }
     } catch {
       /* ignore */
     }
   }
-  // Fallback to the real published app (verified), NOT the unverified apex domain.
   return "https://pitchviper.lovable.app";
 }
+
 
 // True if the auth user has already established credentials — either signed in
 // or confirmed their email. Either signal means we can't safely re-invite.
@@ -154,8 +153,10 @@ Deno.serve(async (req) => {
           const authUser = u?.user;
           const lastSignInAt = authUser?.last_sign_in_at ?? null;
           const emailConfirmedAt = authUser?.email_confirmed_at ?? null;
-          const status =
-            lastSignInAt ? "active" : emailConfirmedAt ? "confirmed" : "invited";
+          // Server treats either signal as "active/not resendable" — the
+          // list status must match so the UI never offers resend for a user
+          // the server will reject with already_active.
+          const status = lastSignInAt || emailConfirmedAt ? "active" : "invited";
           return {
             ...m,
             email: authUser?.email ?? null,
