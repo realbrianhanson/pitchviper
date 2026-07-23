@@ -153,6 +153,10 @@ Deno.serve(async (req) => {
           const authUser = u?.user;
           const lastSignInAt = authUser?.last_sign_in_at ?? null;
           const emailConfirmedAt = authUser?.email_confirmed_at ?? null;
+          // Server treats either signal as "active/not resendable" — the
+          // list status must match so the UI never offers resend for a user
+          // the server will reject with already_active.
+          const status = lastSignInAt || emailConfirmedAt ? "active" : "invited";
           const status =
             lastSignInAt ? "active" : emailConfirmedAt ? "confirmed" : "invited";
           return {
