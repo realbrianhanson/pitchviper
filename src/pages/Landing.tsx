@@ -43,7 +43,7 @@ function SectionHeading({
 export default function Landing() {
   useDocumentMeta(
     "PitchViper — The daily execution system for high-velocity sales teams",
-    "Live floor activity, manager action, targeted practice, measurable improvement. A closed loop for sales teams that ship revenue every day.",
+    "One operating system for live floor activity, manager coaching, and rep practice — so sales teams can act on what's happening today.",
   );
 
   return (

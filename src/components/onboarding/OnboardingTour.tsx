@@ -1,7 +1,9 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import { X, ChevronRight, ChevronLeft, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ViperButton } from "@/components/ui/viper-button";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 interface TourStep {
@@ -64,18 +66,33 @@ export function OnboardingTourProvider({ children, steps = defaultTourSteps }: O
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [hasSeenTour, setHasSeenTour] = useState(true);
+  const { user, profile, profileLoaded } = useAuth();
+  const location = useLocation();
 
   useEffect(() => {
     const seen = localStorage.getItem("onboarding-tour-completed");
-    if (!seen) {
-      setHasSeenTour(false);
-      // Auto-start tour for new users after a delay
-      const timer = setTimeout(() => {
-        setIsActive(true);
-      }, 2000);
-      return () => clearTimeout(timer);
+    if (seen) {
+      setHasSeenTour(true);
+      return;
     }
-  }, []);
+    setHasSeenTour(false);
+
+    // Auto-start ONLY for an authenticated, onboarded user on the protected /app route.
+    // Public pages ("/", "/demo") and auth pages must never auto-start the tour.
+    const eligible =
+      !!user &&
+      profileLoaded &&
+      !!profile &&
+      profile.onboarding_completed === true &&
+      location.pathname === "/app";
+
+    if (!eligible) return;
+
+    const timer = setTimeout(() => {
+      setIsActive(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [user, profile, profileLoaded, location.pathname]);
 
   const startTour = () => {
     setCurrentStep(0);

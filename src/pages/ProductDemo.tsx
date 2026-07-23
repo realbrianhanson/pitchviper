@@ -285,7 +285,7 @@ export default function ProductDemo() {
       {/* Step nav */}
       <nav
         aria-label="Demo steps"
-        className="border-b border-border sticky top-0 bg-background/95 backdrop-blur z-20"
+        className="border-b border-border sticky top-0 bg-background z-20"
       >
         <div className="mx-auto max-w-7xl px-6 md:px-10">
           <ol className="flex flex-wrap gap-px">
