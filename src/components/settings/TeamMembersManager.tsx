@@ -345,7 +345,7 @@ export function TeamMembersManager() {
                 </TableHeader>
                 <TableBody>
                   {teamMembers.map((member) => {
-                    const isPending = member.status !== "active";
+                    const isPending = member.status === "invited";
                     return (
                       <TableRow key={member.id}>
                         <TableCell className="font-medium">{member.full_name}</TableCell>
