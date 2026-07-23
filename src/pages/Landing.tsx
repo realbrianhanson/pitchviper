@@ -75,7 +75,7 @@ export default function Landing() {
       </header>
 
       {/* Hero */}
-      <section className="gold-vignette border-b border-border">
+      <section className="gold-vignette border-b border-border overflow-hidden">
         <div className="mx-auto max-w-7xl px-6 md:px-10 py-24 md:py-36">
           <div className="max-w-4xl space-y-8">
             <Eyebrow>PitchViper — Sovereign Sales OS</Eyebrow>
@@ -84,9 +84,9 @@ export default function Landing() {
               <span className="italic text-primary">high-velocity sales teams</span>.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed">
-              Live activity from the floor. Manager action where it matters. Targeted practice
-              tied to the exact call that missed. A closed loop that turns today's mistakes into
-              tomorrow's revenue.
+              One operating system for the sales floor: live activity, manager coaching, and
+              targeted practice — so insight from calls, decisions from managers, and reps'
+              drills all live in the same place.
             </p>
             <div className="flex flex-wrap items-center gap-4 pt-4">
               <Link
