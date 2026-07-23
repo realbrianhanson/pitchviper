@@ -1,0 +1,307 @@
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Activity, Radio, Target, Trophy } from "lucide-react";
+
+function useDocumentMeta(title: string, description: string) {
+  useEffect(() => {
+    const prevTitle = document.title;
+    const descEl = document.querySelector('meta[name="description"]');
+    const prevDesc = descEl?.getAttribute("content") ?? "";
+    document.title = title;
+    if (descEl) descEl.setAttribute("content", description);
+    return () => {
+      document.title = prevTitle;
+      if (descEl) descEl.setAttribute("content", prevDesc);
+    };
+  }, [title, description]);
+}
+
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return <div className="eyebrow">{children}</div>;
+}
+
+function SectionHeading({
+  eyebrow,
+  title,
+  lede,
+}: {
+  eyebrow: string;
+  title: React.ReactNode;
+  lede?: string;
+}) {
+  return (
+    <div className="max-w-3xl space-y-4">
+      <Eyebrow>{eyebrow}</Eyebrow>
+      <h2 className="font-display text-4xl md:text-5xl leading-[1.05] tracking-tight text-foreground">
+        {title}
+      </h2>
+      {lede ? <p className="text-muted-foreground text-lg leading-relaxed">{lede}</p> : null}
+    </div>
+  );
+}
+
+export default function Landing() {
+  useDocumentMeta(
+    "PitchViper — The daily execution system for high-velocity sales teams",
+    "Live floor activity, manager action, targeted practice, measurable improvement. A closed loop for sales teams that ship revenue every day.",
+  );
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Top bar */}
+      <header className="border-b border-border">
+        <div className="mx-auto max-w-7xl px-6 md:px-10 h-16 flex items-center justify-between">
+          <Link to="/" className="font-display text-xl tracking-tight">
+            PitchViper
+          </Link>
+          <nav className="flex items-center gap-6 text-sm">
+            <a href="#loop" className="text-muted-foreground hover:text-foreground transition-colors hidden md:inline">
+              The loop
+            </a>
+            <a href="#surfaces" className="text-muted-foreground hover:text-foreground transition-colors hidden md:inline">
+              Surfaces
+            </a>
+            <a href="#integrations" className="text-muted-foreground hover:text-foreground transition-colors hidden md:inline">
+              Integrations
+            </a>
+            <Link
+              to="/sign-in"
+              className="text-foreground hover:text-primary transition-colors gold-underline"
+            >
+              Sign in
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <section className="gold-vignette border-b border-border">
+        <div className="mx-auto max-w-7xl px-6 md:px-10 py-24 md:py-36">
+          <div className="max-w-4xl space-y-8">
+            <Eyebrow>PitchViper — Sovereign Sales OS</Eyebrow>
+            <h1 className="font-display text-5xl md:text-7xl leading-[1.02] tracking-tight text-foreground">
+              The daily execution system for{" "}
+              <span className="italic text-primary">high-velocity sales teams</span>.
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed">
+              Live activity from the floor. Manager action where it matters. Targeted practice
+              tied to the exact call that missed. A closed loop that turns today's mistakes into
+              tomorrow's revenue.
+            </p>
+            <div className="flex flex-wrap items-center gap-4 pt-4">
+              <Link
+                to="/demo"
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 font-mono text-xs uppercase tracking-[0.2em] hover:brightness-110 transition-all"
+              >
+                See the product
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/sign-in"
+                className="inline-flex items-center gap-2 border border-border text-foreground px-6 py-3 font-mono text-xs uppercase tracking-[0.2em] hover:border-primary transition-colors"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/sign-up"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors gold-underline ml-2"
+              >
+                Have an access code? Create account
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Problem */}
+      <section className="border-b border-border">
+        <div className="mx-auto max-w-7xl px-6 md:px-10 py-20 md:py-28 grid md:grid-cols-2 gap-12">
+          <SectionHeading
+            eyebrow="The problem"
+            title={<>Sales floors run <span className="italic">blind between reviews</span>.</>}
+          />
+          <div className="space-y-6 text-muted-foreground text-lg leading-relaxed">
+            <p>
+              Dashboards report yesterday. Managers coach on gut feel. Reps practice objections
+              they've already mastered and skip the ones costing them the deal.
+            </p>
+            <p>
+              The gap between a missed call and the drill that would fix it is measured in
+              weeks. By then the pipeline has moved on and the lesson is lost.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* The Loop */}
+      <section id="loop" className="border-b border-border">
+        <div className="mx-auto max-w-7xl px-6 md:px-10 py-20 md:py-28 space-y-16">
+          <SectionHeading
+            eyebrow="The operating loop"
+            title={<>Four moves. <span className="italic">One closed circuit.</span></>}
+            lede="Every call feeds the next practice session. Every practice session shows up in the next call."
+          />
+
+          <div className="bento-grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                n: "01",
+                icon: Activity,
+                title: "Live activity",
+                body: "Dials, connects, meetings and revenue land on the floor as they happen — no CSV, no lag.",
+              },
+              {
+                n: "02",
+                icon: Radio,
+                title: "Manager action",
+                body: "Coaches see who's stalled, who's on fire, and where a nudge changes the day — not the quarter.",
+              },
+              {
+                n: "03",
+                icon: Target,
+                title: "Targeted practice",
+                body: "Reps drill the exact objection or discovery gap flagged on their last call, in text or voice.",
+              },
+              {
+                n: "04",
+                icon: Trophy,
+                title: "Measurable lift",
+                body: "The next call is scored against the last one. Improvement is a number, not a feeling.",
+              },
+            ].map((step) => (
+              <div key={step.n} className="bento-tile space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="eyebrow">{step.n}</span>
+                  <step.icon className="w-4 h-4 text-primary" aria-hidden="true" />
+                </div>
+                <h3 className="font-display text-2xl leading-tight">{step.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{step.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Surfaces */}
+      <section id="surfaces" className="border-b border-border">
+        <div className="mx-auto max-w-7xl px-6 md:px-10 py-20 md:py-28 space-y-16">
+          <SectionHeading
+            eyebrow="Three surfaces, one system"
+            title={<>Built for the <span className="italic">rep, the manager, and the floor</span>.</>}
+          />
+          <div className="grid md:grid-cols-3 gap-px bg-border border border-border">
+            {[
+              {
+                label: "For the rep",
+                title: "Daily command",
+                body: "Today's calls, next best action, targeted drills, and a live scorecard that reflects the last hour — not last week.",
+                items: ["Voice + text roleplay", "Objection vault", "Personal scorecard"],
+              },
+              {
+                label: "For the manager",
+                title: "Coaching console",
+                body: "See the team the way the floor sees itself. Intervene when it matters. Assign practice tied to a specific call.",
+                items: ["Rep deep-dives", "Call-to-coaching handoff", "AI recommendations"],
+              },
+              {
+                label: "For the floor",
+                title: "War room",
+                body: "Live leaderboard, deal celebrations, SOS alerts. A trading-floor atmosphere without the noise.",
+                items: ["Live leaderboard", "Deal celebrations", "Team pulse"],
+              },
+            ].map((s) => (
+              <div key={s.title} className="bg-card p-8 space-y-5">
+                <Eyebrow>{s.label}</Eyebrow>
+                <h3 className="font-display text-3xl leading-tight">{s.title}</h3>
+                <p className="text-muted-foreground leading-relaxed">{s.body}</p>
+                <ul className="pt-2 space-y-2 border-t border-border">
+                  {s.items.map((it) => (
+                    <li key={it} className="font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground pt-2">
+                      — {it}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Integrations */}
+      <section id="integrations" className="border-b border-border">
+        <div className="mx-auto max-w-7xl px-6 md:px-10 py-20 md:py-28 grid md:grid-cols-2 gap-16 items-start">
+          <SectionHeading
+            eyebrow="Integrations"
+            title={<>Plugs into the <span className="italic">stack you already run</span>.</>}
+            lede="No parallel system. No manual entry. Calls and pipeline flow in from where your team already works."
+          />
+          <div className="space-y-px bg-border border border-border">
+            {[
+              {
+                name: "GoHighLevel",
+                role: "Source of truth for pipeline, opportunities and revenue activity.",
+              },
+              {
+                name: "Aloware",
+                role: "Live call and SMS telemetry — dials, connects, dispositions, recordings.",
+              },
+            ].map((i) => (
+              <div key={i.name} className="bg-card p-6 flex items-start justify-between gap-6">
+                <div>
+                  <h3 className="font-display text-2xl">{i.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{i.role}</p>
+                </div>
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary shrink-0 mt-2">
+                  Connected
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="gold-vignette">
+        <div className="mx-auto max-w-7xl px-6 md:px-10 py-24 md:py-32 text-center space-y-8">
+          <Eyebrow>Enter the floor</Eyebrow>
+          <h2 className="font-display text-4xl md:text-6xl leading-[1.05] tracking-tight max-w-3xl mx-auto">
+            See the <span className="italic text-primary">daily execution system</span> in motion.
+          </h2>
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            A four-step guided tour. No signup, no sales call, no customer data.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+            <Link
+              to="/demo"
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 font-mono text-xs uppercase tracking-[0.2em] hover:brightness-110 transition-all"
+            >
+              Walk the product
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              to="/sign-in"
+              className="inline-flex items-center gap-2 border border-border text-foreground px-6 py-3 font-mono text-xs uppercase tracking-[0.2em] hover:border-primary transition-colors"
+            >
+              Sign in
+            </Link>
+          </div>
+          <div className="pt-4">
+            <Link
+              to="/sign-up"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors gold-underline"
+            >
+              Have an access code? Create account
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-border">
+        <div className="mx-auto max-w-7xl px-6 md:px-10 py-8 flex flex-wrap items-center justify-between gap-4 text-xs font-mono uppercase tracking-[0.2em] text-muted-foreground">
+          <span>© {new Date().getFullYear()} PitchViper</span>
+          <span>Where closers are made</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
