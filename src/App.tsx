@@ -38,6 +38,8 @@ import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 
 // Lazy load app pages for better performance
+const Landing = lazy(() => import("./pages/Landing"));
+const ProductDemo = lazy(() => import("./pages/ProductDemo"));
 const CommandCenter = lazy(() => import("./pages/CommandCenter"));
 const WarRoom = lazy(() => import("./pages/WarRoom"));
 const RoleplayArena = lazy(() => import("./pages/RoleplayArena"));
@@ -56,6 +58,22 @@ const ManagerDashboard = lazy(() => import("./pages/ManagerDashboard"));
 const CompetitionsManager = lazy(() => import("./pages/CompetitionsManager"));
 const Settings = lazy(() => import("./pages/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+
+function HomeGate() {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  if (user) return <Navigate to="/app" replace />;
+  return <Landing />;
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
