@@ -89,16 +89,16 @@ export function ManagerQuickActions() {
 
   return (
     <>
-      <div className="flex flex-wrap gap-2 sm:gap-3">
-        <ViperButton onClick={() => setCompetitionOpen(true)}>
+      <div className="grid grid-cols-2 gap-2 w-full md:flex md:flex-wrap md:w-auto sm:gap-3">
+        <ViperButton onClick={() => setCompetitionOpen(true)} className="col-span-2 w-full md:w-auto">
           <Trophy className="h-4 w-4 mr-2" />
           Start Competition
         </ViperButton>
-        <ViperButton variant="outline" onClick={() => navigate('/coaching')}>
+        <ViperButton variant="outline" onClick={() => navigate('/coaching')} className="w-full md:w-auto">
           <ClipboardList className="h-4 w-4 mr-2" />
           Open Coaching
         </ViperButton>
-        <ViperButton variant="outline" onClick={() => navigate('/team-settings')}>
+        <ViperButton variant="outline" onClick={() => navigate('/team-settings')} className="w-full md:w-auto">
           <Users className="h-4 w-4 mr-2" />
           Manage Team
         </ViperButton>
