@@ -71,7 +71,15 @@ function HomeGate() {
       </div>
     );
   }
-  if (user) return <Navigate to="/app" replace />;
+  if (user) {
+    // Supabase may drop unallowlisted redirect_to values and land invitees
+    // at Site URL "/". Route them into the invite password-set flow so they
+    // don't get bounced into /app with no password.
+    if (user.user_metadata?.invite_source === "team_manager") {
+      return <Navigate to="/reset-password?flow=invite" replace />;
+    }
+    return <Navigate to="/app" replace />;
+  }
   return <Landing />;
 }
 
