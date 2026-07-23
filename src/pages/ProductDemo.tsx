@@ -70,7 +70,12 @@ function LiveFloor() {
         ))}
       </div>
 
-      <div className="editorial-tile">
+      <div
+        className="editorial-tile overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        role="region"
+        aria-label="Sample team performance table, scroll horizontally to view all columns"
+        tabIndex={0}
+      >
         <div className="p-5 border-b border-border flex items-center justify-between">
           <div className="eyebrow">Team pulse — sample</div>
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-success">Live</span>
