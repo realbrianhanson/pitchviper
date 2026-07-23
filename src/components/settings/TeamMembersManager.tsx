@@ -61,6 +61,7 @@ async function readFunctionErrorCode(error: unknown): Promise<string | undefined
 export function TeamMembersManager() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isInviting, setIsInviting] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -78,11 +79,17 @@ export function TeamMembersManager() {
 
   const loadData = async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
-      const { data: membersData } = await supabase.functions.invoke("create-team-member", {
-        body: { action: "list" },
-      });
-      if (membersData?.success) setTeamMembers(membersData.members || []);
+      const { data: membersData, error: membersErr } = await supabase.functions.invoke(
+        "create-team-member",
+        { body: { action: "list" } },
+      );
+      if (membersErr || !membersData?.success) {
+        setLoadError(ERROR_COPY.list_failed);
+      } else {
+        setTeamMembers(membersData.members || []);
+      }
 
       const { data: alowareData } = await supabase.functions.invoke("create-team-member", {
         body: { action: "get-aloware-users" },
@@ -90,6 +97,7 @@ export function TeamMembersManager() {
       if (alowareData?.success) setAlowareUsers(alowareData.users || []);
     } catch (error) {
       console.error("Error loading team data:", error);
+      setLoadError(ERROR_COPY.list_failed);
     } finally {
       setIsLoading(false);
     }
