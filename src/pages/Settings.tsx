@@ -321,15 +321,15 @@ export default function Settings() {
               <h2 className="font-display italic text-xl mb-6">Display Settings</h2>
               
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between opacity-70">
                   <div className="flex items-center gap-3">
                     <Moon className="h-5 w-5 text-primary" />
                     <div>
-                      <Label className="text-base">Dark Mode</Label>
-                      <p className="text-sm text-muted-foreground">Use dark theme (recommended)</p>
+                      <Label className="text-base">Dark Theme</Label>
+                      <p className="text-sm text-muted-foreground">PitchViper is designed dark-first. Light mode is not available.</p>
                     </div>
                   </div>
-                  <Switch checked={darkMode} onCheckedChange={setDarkMode} />
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Always on</span>
                 </div>
 
                 <Separator />
@@ -345,6 +345,7 @@ export default function Settings() {
                   <Switch checked={voiceCommands} onCheckedChange={setVoiceCommands} />
                 </div>
               </div>
+
 
               <div className="flex justify-end mt-6">
                 <ViperButton onClick={handleSavePreferences} disabled={isLoading} className="gap-2">
