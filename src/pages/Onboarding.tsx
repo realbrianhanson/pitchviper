@@ -87,7 +87,8 @@ export default function Onboarding() {
 
   const handleProfileComplete = (data: ProfileData) => {
     setProfileData(data);
-    setStep(3);
+    // Invited teammates already have a team — skip the team-selection step.
+    setStep(profile?.team_id ? 4 : 3);
   };
 
   const handleTeamComplete = (data: TeamData) => {
