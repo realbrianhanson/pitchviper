@@ -2,7 +2,6 @@ import { useState } from "react";
 import { TeamMember } from "@/hooks/useManagerDashboard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ViperBadge } from "@/components/ui/viper-badge";
-import { ViperButton } from "@/components/ui/viper-button";
 import {
   Table,
   TableBody,
@@ -19,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { MessageSquare, BarChart2, UserCog, Search, ArrowUpDown } from "lucide-react";
+import { Search, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TeamTableProps {
