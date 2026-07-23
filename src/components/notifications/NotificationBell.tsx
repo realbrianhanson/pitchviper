@@ -37,22 +37,22 @@ import { EditorialLoading } from '@/components/ui/editorial-skeleton';
 import { EditorialEmpty } from '@/components/ui/editorial-empty';
 
 const NOTIFICATION_ICONS: Record<NotificationType, React.ReactNode> = {
-  badge_earned: <Trophy className="h-4 w-4 text-amber-400" />,
+  badge_earned: <Trophy className="h-4 w-4 text-primary" />,
   level_up: <Star className="h-4 w-4 text-primary" />,
-  streak_milestone: <Flame className="h-4 w-4 text-orange-400" />,
-  deal_closed: <DollarSign className="h-4 w-4 text-emerald-400" />,
-  sos_alert: <AlertTriangle className="h-4 w-4 text-red-400" />,
-  mentioned: <AtSign className="h-4 w-4 text-blue-400" />,
-  coaching_notes: <BookOpen className="h-4 w-4 text-purple-400" />,
-  training_assigned: <GraduationCap className="h-4 w-4 text-cyan-400" />,
-  roleplay_feedback: <Gamepad2 className="h-4 w-4 text-pink-400" />,
-  followup_due: <Clock className="h-4 w-4 text-amber-400" />,
-  challenge_reminder: <Target className="h-4 w-4 text-orange-400" />,
-  deal_cold: <Snowflake className="h-4 w-4 text-blue-300" />,
+  streak_milestone: <Flame className="h-4 w-4 text-warning" />,
+  deal_closed: <DollarSign className="h-4 w-4 text-success" />,
+  sos_alert: <AlertTriangle className="h-4 w-4 text-destructive" />,
+  mentioned: <AtSign className="h-4 w-4 text-primary" />,
+  coaching_notes: <BookOpen className="h-4 w-4 text-magenta" />,
+  training_assigned: <GraduationCap className="h-4 w-4 text-primary" />,
+  roleplay_feedback: <Gamepad2 className="h-4 w-4 text-magenta" />,
+  followup_due: <Clock className="h-4 w-4 text-warning" />,
+  challenge_reminder: <Target className="h-4 w-4 text-warning" />,
+  deal_cold: <Snowflake className="h-4 w-4 text-muted-foreground" />,
   competition_starting: <Swords className="h-4 w-4 text-primary" />,
-  competition_ending: <Flag className="h-4 w-4 text-amber-400" />,
-  leaderboard_overtaken: <TrendingDown className="h-4 w-4 text-red-400" />,
-  leaderboard_leading: <TrendingUp className="h-4 w-4 text-emerald-400" />,
+  competition_ending: <Flag className="h-4 w-4 text-warning" />,
+  leaderboard_overtaken: <TrendingDown className="h-4 w-4 text-destructive" />,
+  leaderboard_leading: <TrendingUp className="h-4 w-4 text-success" />,
 };
 
 export function NotificationBell() {
