@@ -187,7 +187,11 @@ export function TeamMembersManager() {
       const { data, error } = await supabase.functions.invoke("create-team-member", {
         body: { action: "resend-invite", userId: member.user_id },
       });
-      if (error) throw error;
+      if (error) {
+        const code = await readFunctionErrorCode(error);
+        showError(code, "Failed to resend invitation.");
+        return;
+      }
       if (data?.success) {
         toast({
           title: "Invitation resent",
@@ -195,10 +199,11 @@ export function TeamMembersManager() {
         });
         loadData();
       } else {
-        showError(data?.code, data?.error);
+        showError(data?.code, "Failed to resend invitation.");
       }
     } catch (err: any) {
-      showError(undefined, err?.message || "Failed to resend invitation.");
+      const code = await readFunctionErrorCode(err);
+      showError(code, "Failed to resend invitation.");
     } finally {
       setResendingId(null);
     }
