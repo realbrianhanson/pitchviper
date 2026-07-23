@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Plus,
   Users,
@@ -21,9 +21,10 @@ export function ManagerFAB({ onSendBroadcast, onStartCompetition }: ManagerFABPr
   const { isManager } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
-  if (!isManager || !isMobile) return null;
+  if (!isManager || !isMobile || location.pathname === "/manager") return null;
 
   const actions = [
     {

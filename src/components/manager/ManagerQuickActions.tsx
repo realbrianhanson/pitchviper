@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -111,6 +112,9 @@ export function ManagerQuickActions() {
               <Trophy className="h-5 w-5 text-primary" />
               Start Team Competition
             </DialogTitle>
+            <DialogDescription>
+              Set a metric, duration, and prize to launch a team-wide competition.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
