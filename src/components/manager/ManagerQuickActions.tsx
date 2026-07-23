@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Trophy, MessageSquare, Calendar, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Trophy, Users, ClipboardList } from "lucide-react";
 import { ViperButton } from "@/components/ui/viper-button";
 import {
   Dialog,
@@ -22,30 +23,29 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-type ModalType = 'competition' | 'message' | 'huddle' | null;
-
 export function ManagerQuickActions() {
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const [modalType, setModalType] = useState<ModalType>(null);
+  const [competitionOpen, setCompetitionOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Competition form state
   const [competitionName, setCompetitionName] = useState('');
   const [competitionDesc, setCompetitionDesc] = useState('');
   const [competitionMetric, setCompetitionMetric] = useState('calls');
   const [competitionDays, setCompetitionDays] = useState('7');
   const [competitionPrize, setCompetitionPrize] = useState('');
 
-  // Message form state
-  const [messageText, setMessageText] = useState('');
-
-  // Huddle form state
-  const [huddleTitle, setHuddleTitle] = useState('');
-  const [huddleTime, setHuddleTime] = useState('');
+  const resetCompetitionForm = () => {
+    setCompetitionName('');
+    setCompetitionDesc('');
+    setCompetitionMetric('calls');
+    setCompetitionDays('7');
+    setCompetitionPrize('');
+  };
 
   const handleCreateCompetition = async () => {
     if (!profile?.team_id || !user) return;
-    
+
     setIsSubmitting(true);
     try {
       const startDate = new Date();
@@ -73,8 +73,8 @@ export function ManagerQuickActions() {
         description: `${competitionName} is now live!`,
       });
 
-      setModalType(null);
-      resetForms();
+      setCompetitionOpen(false);
+      resetCompetitionForm();
     } catch (error) {
       console.error('Error creating competition:', error);
       toast({
@@ -87,56 +87,24 @@ export function ManagerQuickActions() {
     }
   };
 
-  const handleSendMessage = async () => {
-    // In a real app, this would send to a messaging system
-    toast({
-      title: '📢 Message Sent!',
-      description: 'Your message has been broadcast to the team.',
-    });
-    setModalType(null);
-    resetForms();
-  };
-
-  const handleScheduleHuddle = async () => {
-    // In a real app, this would create a calendar event
-    toast({
-      title: '📅 Huddle Scheduled!',
-      description: `${huddleTitle} has been added to the team calendar.`,
-    });
-    setModalType(null);
-    resetForms();
-  };
-
-  const resetForms = () => {
-    setCompetitionName('');
-    setCompetitionDesc('');
-    setCompetitionMetric('calls');
-    setCompetitionDays('7');
-    setCompetitionPrize('');
-    setMessageText('');
-    setHuddleTitle('');
-    setHuddleTime('');
-  };
-
   return (
     <>
-      <div className="flex flex-wrap gap-3">
-        <ViperButton onClick={() => setModalType('competition')}>
+      <div className="flex flex-wrap gap-2 sm:gap-3">
+        <ViperButton onClick={() => setCompetitionOpen(true)}>
           <Trophy className="h-4 w-4 mr-2" />
           Start Competition
         </ViperButton>
-        <ViperButton variant="outline" onClick={() => setModalType('message')}>
-          <MessageSquare className="h-4 w-4 mr-2" />
-          Team Message
+        <ViperButton variant="outline" onClick={() => navigate('/coaching')}>
+          <ClipboardList className="h-4 w-4 mr-2" />
+          Open Coaching
         </ViperButton>
-        <ViperButton variant="outline" onClick={() => setModalType('huddle')}>
-          <Calendar className="h-4 w-4 mr-2" />
-          Schedule Huddle
+        <ViperButton variant="outline" onClick={() => navigate('/team-settings')}>
+          <Users className="h-4 w-4 mr-2" />
+          Manage Team
         </ViperButton>
       </div>
 
-      {/* Create Competition Modal */}
-      <Dialog open={modalType === 'competition'} onOpenChange={() => setModalType(null)}>
+      <Dialog open={competitionOpen} onOpenChange={setCompetitionOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -202,83 +170,14 @@ export function ManagerQuickActions() {
             </div>
           </div>
           <DialogFooter>
-            <ViperButton variant="outline" onClick={() => setModalType(null)}>
+            <ViperButton variant="outline" onClick={() => setCompetitionOpen(false)}>
               Cancel
             </ViperButton>
-            <ViperButton 
-              onClick={handleCreateCompetition} 
+            <ViperButton
+              onClick={handleCreateCompetition}
               disabled={!competitionName || !competitionDesc || isSubmitting}
             >
               {isSubmitting ? 'Creating...' : 'Launch Competition'}
-            </ViperButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Send Message Modal */}
-      <Dialog open={modalType === 'message'} onOpenChange={() => setModalType(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" />
-              Send Team Message
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Message</Label>
-              <Textarea
-                placeholder="Your message to the team..."
-                rows={4}
-                value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <ViperButton variant="outline" onClick={() => setModalType(null)}>
-              Cancel
-            </ViperButton>
-            <ViperButton onClick={handleSendMessage} disabled={!messageText}>
-              Send to Team
-            </ViperButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Schedule Huddle Modal */}
-      <Dialog open={modalType === 'huddle'} onOpenChange={() => setModalType(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              Schedule Team Huddle
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Huddle Title</Label>
-              <Input
-                placeholder="e.g., Morning Standup"
-                value={huddleTitle}
-                onChange={(e) => setHuddleTitle(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Date & Time</Label>
-              <Input
-                type="datetime-local"
-                value={huddleTime}
-                onChange={(e) => setHuddleTime(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <ViperButton variant="outline" onClick={() => setModalType(null)}>
-              Cancel
-            </ViperButton>
-            <ViperButton onClick={handleScheduleHuddle} disabled={!huddleTitle || !huddleTime}>
-              Schedule Huddle
             </ViperButton>
           </DialogFooter>
         </DialogContent>
