@@ -147,7 +147,11 @@ export function TeamMembersManager() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        const code = await readFunctionErrorCode(error);
+        showError(code, "Failed to send invitation.");
+        return;
+      }
 
       if (data?.success) {
         const status = data.status;
@@ -167,10 +171,11 @@ export function TeamMembersManager() {
         setShowForm(false);
         loadData();
       } else {
-        showError(data?.code, data?.error);
+        showError(data?.code, "Failed to send invitation.");
       }
     } catch (err: any) {
-      showError(undefined, err?.message || "Failed to send invitation.");
+      const code = await readFunctionErrorCode(err);
+      showError(code, "Failed to send invitation.");
     } finally {
       setIsInviting(false);
     }
