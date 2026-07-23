@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { ViperInput } from "@/components/ui/viper-input";
@@ -11,6 +11,11 @@ import { Loader2 } from "lucide-react";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isInvite =
+    searchParams.get("flow") === "invite" ||
+    (typeof window !== "undefined" &&
+      new URLSearchParams(window.location.hash.replace(/^#/, "")).get("type") === "invite");
   const { toast } = useToast();
 
   const [password, setPassword] = useState("");
