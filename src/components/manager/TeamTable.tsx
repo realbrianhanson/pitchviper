@@ -149,8 +149,8 @@ export function TeamTable({ members, isLoading }: TeamTableProps) {
       </div>
 
       {/* Table */}
-      <div className="rounded-lg border border-border overflow-hidden">
-        <Table>
+      <div className="border border-border overflow-x-auto">
+        <Table className="min-w-[900px]">
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
               <TableHead className="w-[200px]">
@@ -192,7 +192,6 @@ export function TeamTable({ members, isLoading }: TeamTableProps) {
               </TableHead>
               <TableHead className="text-center">Flags</TableHead>
               <TableHead className="text-center">Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -261,7 +260,7 @@ export function TeamTable({ members, isLoading }: TeamTableProps) {
                       {member.coaching_flags.slice(0, 2).map((flag) => (
                         <span
                           key={flag}
-                          className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/30"
+                          className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 bg-destructive/10 text-destructive border border-destructive/30"
                         >
                           {flag}
                         </span>
@@ -278,16 +277,6 @@ export function TeamTable({ members, isLoading }: TeamTableProps) {
                     <span className={cn("text-sm", statusColors[member.status].text)}>
                       {statusColors[member.status].label}
                     </span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <ViperButton size="sm" variant="ghost" title="Quick Coach">
-                      <MessageSquare className="h-4 w-4" />
-                    </ViperButton>
-                    <ViperButton size="sm" variant="ghost" title="View Stats">
-                      <BarChart2 className="h-4 w-4" />
-                    </ViperButton>
                   </div>
                 </TableCell>
               </TableRow>
