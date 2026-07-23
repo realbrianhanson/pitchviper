@@ -57,7 +57,40 @@ function resolveRedirectBase(req: Request): string {
       /* ignore */
     }
   }
-  return "https://pitchviper.com";
+  // Fallback to the real published app (verified), NOT the unverified apex domain.
+  return "https://pitchviper.lovable.app";
+}
+
+// True if the auth user has already established credentials — either signed in
+// or confirmed their email. Either signal means we can't safely re-invite.
+function isAuthUserActive(u: { last_sign_in_at?: string | null; email_confirmed_at?: string | null }) {
+  return Boolean(u.last_sign_in_at) || Boolean(u.email_confirmed_at);
+}
+
+// Ensure the given user's ONLY role is exactly 'rep'.
+// Returns:
+//   "ok"       — role is rep (already or newly inserted)
+//   "wrong"    — user has some non-rep role; caller must refuse and not touch it
+//   "error"    — DB failure; caller must refuse
+async function ensureRepRole(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+): Promise<"ok" | "wrong" | "error"> {
+  const { data: roles, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+  if (error) return "error";
+  if (!roles || roles.length === 0) {
+    const { error: insErr } = await supabase
+      .from("user_roles")
+      .insert({ user_id: userId, role: "rep" });
+    if (insErr) return "error";
+    return "ok";
+  }
+  const nonRep = roles.some((r: { role: string }) => r.role !== "rep");
+  if (nonRep) return "wrong";
+  return "ok";
 }
 
 Deno.serve(async (req) => {
@@ -181,10 +214,14 @@ Deno.serve(async (req) => {
       if (!targetProfile || targetProfile.team_id !== teamId) {
         return json({ success: false, code: "not_found" }, 404);
       }
-      const { data: authLookup } = await supabase.auth.admin.getUserById(body.userId);
+      const { data: authLookup, error: lookupErr } = await supabase.auth.admin.getUserById(body.userId);
+      if (lookupErr) {
+        console.log(JSON.stringify({ managerId: manager.id, action: "resend-invite", status: "lookup_failed" }));
+        return json({ success: false, code: "invite_failed" }, 500);
+      }
       const authUser = authLookup?.user;
       if (!authUser?.email) return json({ success: false, code: "not_found" }, 404);
-      if (authUser.last_sign_in_at) {
+      if (isAuthUserActive(authUser)) {
         return json({ success: false, code: "already_active" }, 409);
       }
       const { error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(
@@ -203,13 +240,25 @@ Deno.serve(async (req) => {
     const { email, fullName, alowareUserId } = body;
 
     // Look up existing auth user by email (paginated scan capped for safety).
-    let existingUser: { id: string; email?: string | null; last_sign_in_at?: string | null } | null = null;
+    // On ANY listUsers error we must abort — silently continuing would risk
+    // double-creating an account or leaking existence info via race.
+    let existingUser:
+      | { id: string; email?: string | null; last_sign_in_at?: string | null; email_confirmed_at?: string | null }
+      | null = null;
     for (let page = 1; page <= 20; page++) {
       const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
-      if (error) break;
+      if (error) {
+        console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "list_users_failed" }));
+        return json({ success: false, code: "invite_failed" }, 500);
+      }
       const match = data.users.find((u) => (u.email ?? "").toLowerCase() === email);
       if (match) {
-        existingUser = { id: match.id, email: match.email, last_sign_in_at: match.last_sign_in_at ?? null };
+        existingUser = {
+          id: match.id,
+          email: match.email,
+          last_sign_in_at: match.last_sign_in_at ?? null,
+          email_confirmed_at: match.email_confirmed_at ?? null,
+        };
         break;
       }
       if (data.users.length < 200) break;
@@ -230,13 +279,21 @@ Deno.serve(async (req) => {
         console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "email_unavailable" }));
         return json({ success: false, code: "email_unavailable" }, 409);
       }
-      if (existingUser.last_sign_in_at) {
-        // Confirmed & signed in before but no profile team — treat as unavailable.
+      if (isAuthUserActive(existingUser)) {
+        // Signed in or confirmed but no profile team — treat as unavailable.
         console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "email_unavailable" }));
         return json({ success: false, code: "email_unavailable" }, 409);
       }
 
-      // Unconfirmed / never-signed-in user: attach to team and re-send invite.
+      // Unconfirmed / never-signed-in user with no team. Before attaching,
+      // guarantee they are a plain 'rep'. If they carry any elevated role,
+      // refuse without touching them — same opaque response.
+      const roleState = await ensureRepRole(supabase, existingUser.id);
+      if (roleState !== "ok") {
+        console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "email_unavailable" }));
+        return json({ success: false, code: "email_unavailable" }, 409);
+      }
+
       const { error: upsertErr } = await supabase
         .from("profiles")
         .upsert(
@@ -254,7 +311,11 @@ Deno.serve(async (req) => {
         console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "profile_upsert_failed" }));
         return json({ success: false, code: "invite_failed" }, 500);
       }
-      const { error: reInviteErr } = await supabase.auth.admin.inviteUserByEmail(email, { redirectTo });
+      const { error: reInviteErr } = await supabase.auth.admin.inviteUserByEmail(email, {
+        redirectTo,
+        // Only user-visible metadata the client flow needs.
+        data: { full_name: fullName, invite_source: "team_manager" },
+      });
       if (reInviteErr) {
         console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "resend_failed" }));
         return json({ success: false, code: "invite_failed" }, 500);
@@ -263,16 +324,13 @@ Deno.serve(async (req) => {
       return json({ success: true, status: "resent" });
     }
 
-    // Fresh invite.
+    // Fresh invite. Team + Aloware + role assignment happen server-side.
+    // Metadata carries ONLY what the client flow reads.
     const { data: invited, error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(email, {
       redirectTo,
       data: {
         full_name: fullName,
-        invited_team_id: teamId,
-        invited_role: "rep",
         invite_source: "team_manager",
-        invited_by: manager.id,
-        aloware_user_id: alowareUserId ?? null,
       },
     });
 
@@ -283,9 +341,23 @@ Deno.serve(async (req) => {
 
     const newUserId = invited.user.id;
     const invitedAt = invited.user.created_at ?? new Date().toISOString();
+    const cleanupIfFresh = async () => {
+      const createdRecently =
+        Date.parse(invitedAt) > Date.now() - 60_000 && !invited.user!.last_sign_in_at;
+      if (createdRecently) {
+        await supabase.auth.admin.deleteUser(newUserId).catch(() => {});
+      }
+    };
 
-    // handle_new_user trigger has inserted a base profile + rep role.
-    // Upsert to add team_id / aloware / promo_validated.
+    // handle_new_user trigger should have inserted role='rep'. Verify.
+    // If missing → insert. If any non-rep role exists → refuse and cleanup.
+    const roleState = await ensureRepRole(supabase, newUserId);
+    if (roleState !== "ok") {
+      await cleanupIfFresh();
+      console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "role_guarantee_failed" }));
+      return json({ success: false, code: "invite_failed" }, 500);
+    }
+
     const { error: upsertErr } = await supabase
       .from("profiles")
       .upsert(
@@ -301,13 +373,7 @@ Deno.serve(async (req) => {
       );
 
     if (upsertErr) {
-      // Best-effort cleanup: only delete the auth user if we JUST created it
-      // and it has never signed in. Guard against nuking pre-existing users.
-      const createdRecently =
-        Date.parse(invitedAt) > Date.now() - 60_000 && !invited.user.last_sign_in_at;
-      if (createdRecently) {
-        await supabase.auth.admin.deleteUser(newUserId).catch(() => {});
-      }
+      await cleanupIfFresh();
       console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "profile_upsert_failed" }));
       return json({ success: false, code: "invite_failed" }, 500);
     }

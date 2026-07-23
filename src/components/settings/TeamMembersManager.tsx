@@ -39,11 +39,29 @@ const ERROR_COPY: Record<string, string> = {
   forbidden: "Only team managers can invite members.",
   unauthorized: "Please sign in again.",
   invalid_body: "Please check the invite details and try again.",
+  list_failed: "We couldn't load your team. Please try again.",
 };
+
+// supabase-js surfaces non-2xx responses via FunctionsHttpError with the raw
+// Response on `error.context`. Extract the JSON body so opaque server codes
+// (invite_rate_limited, email_unavailable, already_active, …) map to friendly
+// copy without leaking exception text.
+async function readFunctionErrorCode(error: unknown): Promise<string | undefined> {
+  const ctx = (error as { context?: unknown })?.context;
+  if (!ctx || typeof (ctx as Response).clone !== "function") return undefined;
+  try {
+    const body = await (ctx as Response).clone().json();
+    if (body && typeof body === "object" && typeof body.code === "string") return body.code;
+  } catch {
+    /* not JSON */
+  }
+  return undefined;
+}
 
 export function TeamMembersManager() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isInviting, setIsInviting] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -61,11 +79,17 @@ export function TeamMembersManager() {
 
   const loadData = async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
-      const { data: membersData } = await supabase.functions.invoke("create-team-member", {
-        body: { action: "list" },
-      });
-      if (membersData?.success) setTeamMembers(membersData.members || []);
+      const { data: membersData, error: membersErr } = await supabase.functions.invoke(
+        "create-team-member",
+        { body: { action: "list" } },
+      );
+      if (membersErr || !membersData?.success) {
+        setLoadError(ERROR_COPY.list_failed);
+      } else {
+        setTeamMembers(membersData.members || []);
+      }
 
       const { data: alowareData } = await supabase.functions.invoke("create-team-member", {
         body: { action: "get-aloware-users" },
@@ -73,6 +97,7 @@ export function TeamMembersManager() {
       if (alowareData?.success) setAlowareUsers(alowareData.users || []);
     } catch (error) {
       console.error("Error loading team data:", error);
+      setLoadError(ERROR_COPY.list_failed);
     } finally {
       setIsLoading(false);
     }
@@ -122,7 +147,11 @@ export function TeamMembersManager() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        const code = await readFunctionErrorCode(error);
+        showError(code, "Failed to send invitation.");
+        return;
+      }
 
       if (data?.success) {
         const status = data.status;
@@ -142,10 +171,11 @@ export function TeamMembersManager() {
         setShowForm(false);
         loadData();
       } else {
-        showError(data?.code, data?.error);
+        showError(data?.code, "Failed to send invitation.");
       }
     } catch (err: any) {
-      showError(undefined, err?.message || "Failed to send invitation.");
+      const code = await readFunctionErrorCode(err);
+      showError(code, "Failed to send invitation.");
     } finally {
       setIsInviting(false);
     }
@@ -157,7 +187,11 @@ export function TeamMembersManager() {
       const { data, error } = await supabase.functions.invoke("create-team-member", {
         body: { action: "resend-invite", userId: member.user_id },
       });
-      if (error) throw error;
+      if (error) {
+        const code = await readFunctionErrorCode(error);
+        showError(code, "Failed to resend invitation.");
+        return;
+      }
       if (data?.success) {
         toast({
           title: "Invitation resent",
@@ -165,10 +199,11 @@ export function TeamMembersManager() {
         });
         loadData();
       } else {
-        showError(data?.code, data?.error);
+        showError(data?.code, "Failed to resend invitation.");
       }
     } catch (err: any) {
-      showError(undefined, err?.message || "Failed to resend invitation.");
+      const code = await readFunctionErrorCode(err);
+      showError(code, "Failed to resend invitation.");
     } finally {
       setResendingId(null);
     }
@@ -284,9 +319,17 @@ export function TeamMembersManager() {
             </div>
           )}
 
-          {teamMembers.length > 0 ? (
+          {loadError ? (
+            <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive flex items-center justify-between gap-4">
+              <span>{loadError}</span>
+              <Button variant="outline" size="sm" onClick={loadData}>
+                Try again
+              </Button>
+            </div>
+          ) : teamMembers.length > 0 ? (
             <div className="rounded-md border overflow-hidden">
-              <Table>
+              <div className="overflow-x-auto">
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
@@ -322,7 +365,12 @@ export function TeamMembersManager() {
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                aria-label={`Actions for ${member.full_name || member.email || "teammate"}`}
+                              >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -342,6 +390,7 @@ export function TeamMembersManager() {
                   })}
                 </TableBody>
               </Table>
+              </div>
               <p className="text-xs text-muted-foreground px-4 py-3 border-t bg-muted/20">
                 Teammates reset their own passwords from the sign-in page. Managers can't view or change
                 passwords for security.
