@@ -385,6 +385,7 @@ export function TeamMembersManager() {
                   })}
                 </TableBody>
               </Table>
+              </div>
               <p className="text-xs text-muted-foreground px-4 py-3 border-t bg-muted/20">
                 Teammates reset their own passwords from the sign-in page. Managers can't view or change
                 passwords for security.
