@@ -22,6 +22,7 @@ export function DialModal() {
     pendingDial,
     isDialing,
     initiateCall,
+    openManualLog,
   } = useClickToDial();
 
   if (!pendingDial) return null;
@@ -29,6 +30,22 @@ export function DialModal() {
   const handleOpenDialer = () => {
     void initiateCall({ ...pendingDial });
   };
+
+  const handleLogManually = () => {
+    // Snapshot the pending details before we close the dial dialog so we
+    // can hand them to LogCallModal without racing state resets.
+    const initial = {
+      contactName: pendingDial.contactName ?? '',
+      companyName: pendingDial.companyName ?? '',
+      phoneNumber: pendingDial.phoneNumber,
+      direction: 'outbound' as const,
+    };
+    closeDialModal();
+    // Defer opening the second dialog by a frame so Radix can release focus
+    // from the first one — prevents nested-dialog focus-trap warnings.
+    setTimeout(() => openManualLog(initial), 0);
+  };
+
 
   return (
     <Dialog open={isDialModalOpen} onOpenChange={(open) => !open && closeDialModal()}>
@@ -64,7 +81,7 @@ export function DialModal() {
               <ExternalLink className="h-4 w-4" />
               Open in phone system
             </Button>
-            <Button variant="outline" className="w-full gap-2" onClick={closeDialModal}>
+            <Button variant="outline" className="w-full gap-2" onClick={handleLogManually}>
               <ClipboardList className="h-4 w-4" />
               Log call manually
             </Button>

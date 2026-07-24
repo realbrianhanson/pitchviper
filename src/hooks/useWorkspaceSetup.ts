@@ -55,22 +55,20 @@ export function useWorkspaceSetup(): UseWorkspaceSetupResult {
     enabled: Boolean(teamId),
     queryFn: async () => {
       if (!teamId) throw new Error("No team");
-      const [{ data: settings, error: sErr }, { count: memberCount, error: mErr }, { count: mappedCount, error: aErr }] = await Promise.all([
+      // Provider-neutral: legacy Aloware per-rep mapping has been retired.
+      // Until a real neutral external-rep mapping table exists we report
+      // mappedRepCount as 0 to keep the public result shape stable without
+      // querying provider-specific columns on profiles.
+      const [{ data: settings, error: sErr }, { count: memberCount, error: mErr }] = await Promise.all([
         supabase.from("company_settings").select("*").eq("team_id", teamId).maybeSingle(),
         supabase.from("team_profiles_safe").select("id", { count: "exact", head: true }).eq("team_id", teamId),
-        supabase
-          .from("profiles")
-          .select("id", { count: "exact", head: true })
-          .eq("team_id", teamId)
-          .not("aloware_user_id", "is", null),
       ]);
       if (sErr) throw sErr;
       if (mErr) throw mErr;
-      if (aErr) throw aErr;
       return {
         settings: (settings ?? null) as CompanySettingsRow | null,
         teamMemberCount: memberCount ?? 0,
-        mappedRepCount: mappedCount ?? 0,
+        mappedRepCount: 0,
       };
     },
   });

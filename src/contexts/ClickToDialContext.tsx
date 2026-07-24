@@ -34,25 +34,38 @@ interface PowerDialerContact {
   email?: string;
 }
 
+export interface ManualLogInitialData {
+  contactName?: string;
+  companyName?: string;
+  phoneNumber?: string;
+  direction?: 'outbound' | 'inbound';
+}
+
 interface ClickToDialContextType {
   // Dial modal
   isDialModalOpen: boolean;
   openDialModal: (params: DialParams) => void;
   closeDialModal: () => void;
   pendingDial: DialParams | null;
-  
+
   // Call initiation
   isDialing: boolean;
   initiateCall: (params: DialParams) => Promise<{ success: boolean; error?: string }>;
-  
+
   // Active call
   callState: CallState;
   endCall: () => Promise<void>;
   updateCallNotes: (notes: string) => void;
-  
+
   // Power dialer
   addToPowerDialer: (contacts: PowerDialerContact[], position?: 'top' | 'bottom') => Promise<{ success: boolean; added?: any[]; failed?: any[]; error?: string }>;
-  
+
+  // Manual call logging (opened from DialModal handoff)
+  isManualLogOpen: boolean;
+  manualLogInitial: ManualLogInitialData | null;
+  openManualLog: (initial?: ManualLogInitialData) => void;
+  closeManualLog: () => void;
+
   // SMS
   isSMSModalOpen: boolean;
   openSMSModal: (params: SMSParams) => void;
@@ -83,6 +96,23 @@ export function ClickToDialProvider({ children }: { children: React.ReactNode })
   const [isSMSModalOpen, setIsSMSModalOpen] = useState(false);
   const [pendingSMS, setPendingSMS] = useState<SMSParams | null>(null);
   const [isSendingSMS, setIsSendingSMS] = useState(false);
+
+  // Manual call log handoff state
+  const [isManualLogOpen, setIsManualLogOpen] = useState(false);
+  const [manualLogInitial, setManualLogInitial] = useState<ManualLogInitialData | null>(null);
+
+  const openManualLog = useCallback((initial?: ManualLogInitialData) => {
+    setManualLogInitial(initial ?? null);
+    setIsManualLogOpen(true);
+  }, []);
+
+  const closeManualLog = useCallback(() => {
+    setIsManualLogOpen(false);
+    // Keep the initial data around briefly so the closing animation still
+    // shows the hydrated fields; the modal owns its own reset on close.
+    setManualLogInitial(null);
+  }, []);
+
 
   // Check for active call on mount
   useEffect(() => {
@@ -230,6 +260,11 @@ export function ClickToDialProvider({ children }: { children: React.ReactNode })
         endCall,
         updateCallNotes,
         addToPowerDialer,
+        // Manual log handoff
+        isManualLogOpen,
+        manualLogInitial,
+        openManualLog,
+        closeManualLog,
         // SMS
         isSMSModalOpen,
         openSMSModal,

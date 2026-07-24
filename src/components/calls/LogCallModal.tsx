@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,9 +29,17 @@ import { useCallLogging, CallFormData, CallDirection, CallOutcome, CallPurpose }
 import { ResearchButton } from '@/components/research/ResearchButton';
 import { fireGoldCelebration } from '@/components/ui/gold-celebration';
 
+export interface LogCallInitialData {
+  contactName?: string;
+  companyName?: string;
+  phoneNumber?: string;
+  direction?: CallDirection;
+}
+
 interface LogCallModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialData?: LogCallInitialData;
 }
 
 const QUICK_DURATIONS = [
@@ -61,7 +69,7 @@ const CALL_PURPOSES: { value: CallPurpose; label: string }[] = [
   { value: 'support', label: 'Support' },
 ];
 
-export function LogCallModal({ open, onOpenChange }: LogCallModalProps) {
+export function LogCallModal({ open, onOpenChange, initialData }: LogCallModalProps) {
   const { logCall, isLogging, commonObjections } = useCallLogging();
   const [step, setStep] = useState(1);
   
@@ -87,6 +95,20 @@ export function LogCallModal({ open, onOpenChange }: LogCallModalProps) {
   const [selfRating, setSelfRating] = useState(0);
   const [selectedObjections, setSelectedObjections] = useState<string[]>([]);
   const [improvementNotes, setImprovementNotes] = useState('');
+
+  // Hydrate from initialData when the modal opens. We only apply it on the
+  // false -> true transition so we don't clobber user input mid-session.
+  const prevOpenRef = useRef(false);
+  useEffect(() => {
+    if (open && !prevOpenRef.current && initialData) {
+      if (initialData.contactName !== undefined) setContactName(initialData.contactName);
+      if (initialData.companyName !== undefined) setCompanyName(initialData.companyName);
+      if (initialData.phoneNumber !== undefined) setPhoneNumber(initialData.phoneNumber);
+      if (initialData.direction !== undefined) setDirection(initialData.direction);
+    }
+    prevOpenRef.current = open;
+  }, [open, initialData]);
+
 
   const resetForm = () => {
     setStep(1);
