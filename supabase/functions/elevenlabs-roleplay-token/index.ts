@@ -1,12 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
 import { requireTeamEntitlement } from "../_shared/entitlement.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -180,8 +176,8 @@ If they earn one through skilled conversation, acknowledge it naturally ("Alrigh
     
     console.log("Using agent ID:", effectiveAgentId ? effectiveAgentId.substring(0, 8) + "..." : "none");
     
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${effectiveAgentId}`,
+    const tokenResponse = await fetch(
+      `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${effectiveAgentId}`,
       {
         headers: {
           "xi-api-key": ELEVENLABS_API_KEY,
@@ -189,27 +185,50 @@ If they earn one through skilled conversation, acknowledge it naturally ("Alrigh
       }
     );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("ElevenLabs API error:", response.status, errorText);
-      
-      // Return more specific error info
-      return new Response(
-        JSON.stringify({ 
-          error: "api_error",
-          status: response.status,
-          message: `ElevenLabs API error: ${response.status}. Please verify your Agent ID is correct.`,
-          details: errorText,
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    let conversationToken = "";
+    let signedUrl = "";
 
-    const { signed_url } = await response.json();
+    if (tokenResponse.ok) {
+      const body = await tokenResponse.json();
+      conversationToken = typeof body?.token === "string" ? body.token : "";
+    } else {
+      const tokenErrorText = await tokenResponse.text();
+      console.error("ElevenLabs WebRTC token error:", tokenResponse.status, tokenErrorText);
+
+      const signedUrlResponse = await fetch(
+        `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${effectiveAgentId}`,
+        {
+          headers: {
+            "xi-api-key": ELEVENLABS_API_KEY,
+          },
+        }
+      );
+
+      if (!signedUrlResponse.ok) {
+        const signedUrlErrorText = await signedUrlResponse.text();
+        console.error("ElevenLabs signed URL error:", signedUrlResponse.status, signedUrlErrorText);
+        
+        // Return more specific error info
+        return new Response(
+          JSON.stringify({ 
+            error: "api_error",
+            status: signedUrlResponse.status,
+            message: `ElevenLabs API error: ${signedUrlResponse.status}. Please verify your Agent ID is correct.`,
+            details: signedUrlErrorText,
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const body = await signedUrlResponse.json();
+      signedUrl = typeof body?.signed_url === "string" ? body.signed_url : "";
+    }
 
     return new Response(
       JSON.stringify({
-        signed_url,
+        conversation_token: conversationToken,
+        signed_url: signedUrl,
+        connection_type: conversationToken ? "webrtc" : "websocket",
         scenario_context: scenarioContext,
         prospect_name: prospectName,
         scenario_name: scenarioName,

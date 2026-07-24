@@ -161,8 +161,8 @@ export function VoiceRoleplay({
         return;
       }
 
-      if (!data.signed_url) {
-        throw new Error("No signed URL received");
+      if (!data.conversation_token && !data.signed_url) {
+        throw new Error("No voice connection credentials received");
       }
 
       // Always send overrides + dynamic variables — the scenario MUST drive the agent.
@@ -174,9 +174,10 @@ export function VoiceRoleplay({
         difficulty: scenario.difficulty,
       };
 
-      await conversation.startSession({
-        signedUrl: data.signed_url,
-        connectionType: "websocket",
+      const sessionOptions = {
+        ...(data.conversation_token
+          ? { conversationToken: data.conversation_token, connectionType: "webrtc" }
+          : { signedUrl: data.signed_url, connectionType: "websocket" }),
         dynamicVariables,
         overrides: {
           agent: {
@@ -185,7 +186,9 @@ export function VoiceRoleplay({
             language: "en",
           },
         },
-      } as any);
+      };
+
+      await conversation.startSession(sessionOptions as any);
 
 
     } catch (error) {
