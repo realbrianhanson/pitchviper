@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 
 const src = readFileSync(
-  new URL("../../supabase/functions/stripe-webhook/index.ts", import.meta.url),
+  require("node:path").resolve(__dirname, "../../supabase/functions/stripe-webhook/index.ts"),
   "utf8",
 );
 

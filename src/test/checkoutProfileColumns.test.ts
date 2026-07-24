@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 // We can't import the Deno function directly (Deno-only URL specifiers), so
 // assert against the source text and a whitelist of real columns.
 const src = readFileSync(
-  new URL("../../supabase/functions/create-stripe-checkout/index.ts", import.meta.url),
+  require("node:path").resolve(__dirname, "../../supabase/functions/create-stripe-checkout/index.ts"),
   "utf8",
 );
 
