@@ -134,7 +134,7 @@ describe("manage-aloware-integration — manager-only, no secret leaks", () => {
   });
   it("verifies the token against Aloware BEFORE storing", () => {
     // save-token branch must call verifyAlowareToken before saveToken RPC
-    const idxVerify = src.indexOf("verifyAlowareToken(token)");
+    const idxVerify = src.indexOf("verifyAlowareToken(apiToken)");
     const idxSave = src.indexOf('"svc_provider_integration_save_token"');
     expect(idxVerify).toBeGreaterThan(-1);
     expect(idxSave).toBeGreaterThan(-1);
