@@ -14,6 +14,8 @@ import {
 } from "../_shared/billing.ts";
 
 const MANAGEMENT_ROLES = ["owner", "admin", "manager"];
+// Bucket concurrent identical checkout attempts within this window.
+const CHECKOUT_BUCKET_SECONDS = 300;
 
 serve(async (req) => {
   const cors = corsHeadersFor(req.headers.get("origin"));
@@ -36,7 +38,6 @@ serve(async (req) => {
     if (userErr || !userData.user) return jsonResponse({ error: "unauthorized" }, { status: 401 }, cors);
     const userId = userData.user.id;
 
-    // Rate-limit: prevent repeated session creation abuse per authenticated user.
     const rl = await enforceRateLimit(userId, "create-stripe-checkout", {
       serviceClient: service,
       perMinute: 6,
@@ -59,25 +60,39 @@ serve(async (req) => {
       return jsonResponse({ error: "invalid_interval" }, { status: 400 }, cors);
     }
 
-    // Role + team check server-side (SECURITY DEFINER helpers)
-    const { data: roleRow } = await service.from("user_roles").select("role").eq("user_id", userId);
+    const { data: roleRow, error: roleErr } = await service
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    if (roleErr) {
+      console.error("checkout role lookup failed", roleErr.message);
+      return jsonResponse({ error: "internal_error" }, { status: 500 }, cors);
+    }
     const roles = (roleRow ?? []).map((r) => r.role as string);
     if (!roles.some((r) => MANAGEMENT_ROLES.includes(r))) {
       return jsonResponse({ error: "forbidden" }, { status: 403 }, cors);
     }
-    const { data: profile } = await service
+
+    const { data: profile, error: profErr } = await service
       .from("profiles")
       .select("team_id, email, full_name")
       .eq("user_id", userId)
       .maybeSingle();
+    if (profErr) {
+      console.error("checkout profile lookup failed", profErr.message);
+      return jsonResponse({ error: "internal_error" }, { status: 500 }, cors);
+    }
     const teamId = profile?.team_id;
     if (!teamId) return jsonResponse({ error: "no_team" }, { status: 400 }, cors);
 
-    // Server-computed billable quantity
-    const { count: memberCount } = await service
+    const { count: memberCount, error: countErr } = await service
       .from("profiles")
       .select("user_id", { count: "exact", head: true })
       .eq("team_id", teamId);
+    if (countErr) {
+      console.error("checkout seat count failed", countErr.message);
+      return jsonResponse({ error: "internal_error" }, { status: 500 }, cors);
+    }
     const quantity = billableSeats(memberCount ?? 0);
 
     const priceId = resolvePriceId(plan, interval);
@@ -90,14 +105,16 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20", httpClient: Stripe.createFetchHttpClient() });
 
-    // Load / prepare team billing row (SELECT is fine as service_role)
-    const { data: billing } = await service
+    const { data: billing, error: billErr } = await service
       .from("team_billing")
       .select("stripe_customer_id, stripe_subscription_id, status, trial_ends_at")
       .eq("team_id", teamId)
       .maybeSingle();
+    if (billErr) {
+      console.error("checkout billing lookup failed", billErr.message);
+      return jsonResponse({ error: "internal_error" }, { status: 500 }, cors);
+    }
 
-    // If an active subscription already exists, direct to portal.
     if (
       billing?.stripe_subscription_id &&
       billing.status &&
@@ -106,19 +123,39 @@ serve(async (req) => {
       return jsonResponse({ error: "use_billing_portal" }, { status: 409 }, cors);
     }
 
-    // Find or create Stripe customer for the team.
+    // Find or create a Stripe customer for the team, idempotently.
     let customerId = billing?.stripe_customer_id ?? null;
     if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: profile?.email ?? userData.user.email ?? undefined,
-        name: profile?.full_name ?? undefined,
-        metadata: { team_id: teamId },
-      });
+      const customer = await stripe.customers.create(
+        {
+          email: profile?.email ?? userData.user.email ?? undefined,
+          name: profile?.full_name ?? undefined,
+          metadata: { team_id: teamId },
+        },
+        { idempotencyKey: `team-customer:${teamId}` },
+      );
       customerId = customer.id;
-      await service
+      // Ensure the row exists and the customer id persists before Checkout.
+      const { error: upsertErr } = await service
         .from("team_billing")
-        .update({ stripe_customer_id: customerId })
-        .eq("team_id", teamId);
+        .upsert(
+          { team_id: teamId, stripe_customer_id: customerId },
+          { onConflict: "team_id" },
+        );
+      if (upsertErr) {
+        console.error("checkout customer persist failed", upsertErr.message);
+        return jsonResponse({ error: "internal_error" }, { status: 500 }, cors);
+      }
+      // Verify the row now carries this customer id.
+      const { data: verify, error: verifyErr } = await service
+        .from("team_billing")
+        .select("stripe_customer_id")
+        .eq("team_id", teamId)
+        .maybeSingle();
+      if (verifyErr || verify?.stripe_customer_id !== customerId) {
+        console.error("checkout customer verify failed");
+        return jsonResponse({ error: "internal_error" }, { status: 500 }, cors);
+      }
     }
 
     // Preserve remaining trial if meaningful (>=1 day).
@@ -131,36 +168,45 @@ serve(async (req) => {
       }
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      customer: customerId,
-      line_items: [{ price: priceId, quantity }],
-      client_reference_id: teamId,
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      allow_promotion_codes: true,
-      metadata: {
-        team_id: teamId,
-        plan,
-        interval,
-        seats: String(quantity),
-        initiated_by: userId,
-      },
-      subscription_data: {
+    // Short bounded time bucket → concurrent/repeated clicks return the same
+    // session, but a canceled attempt can be retried after the bucket rolls.
+    const bucket = Math.floor(Date.now() / (CHECKOUT_BUCKET_SECONDS * 1000));
+    const checkoutIdempotencyKey =
+      `checkout:${teamId}:${plan}:${interval}:${quantity}:${bucket}`;
+
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "subscription",
+        customer: customerId,
+        line_items: [{ price: priceId, quantity }],
+        client_reference_id: teamId,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        allow_promotion_codes: true,
         metadata: {
           team_id: teamId,
           plan,
           interval,
           seats: String(quantity),
+          initiated_by: userId,
         },
-        ...(trialEnd ? { trial_end: trialEnd } : {}),
+        subscription_data: {
+          metadata: {
+            team_id: teamId,
+            plan,
+            interval,
+            seats: String(quantity),
+          },
+          ...(trialEnd ? { trial_end: trialEnd } : {}),
+        },
       },
-    });
+      { idempotencyKey: checkoutIdempotencyKey },
+    );
 
     if (!session.url) return jsonResponse({ error: "checkout_failed" }, { status: 502 }, cors);
     return jsonResponse({ url: session.url, session_id: session.id }, { status: 200 }, cors);
   } catch (err) {
-    console.error("create-stripe-checkout error", err);
+    console.error("create-stripe-checkout error", (err as Error).message);
     return jsonResponse({ error: "internal_error" }, { status: 500 }, cors);
   }
 });

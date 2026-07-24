@@ -7,6 +7,7 @@ import {
   type PlanId,
   isSafeStripeUrl,
 } from "@/lib/billingPlans";
+import { parseFunctionErrorCode } from "@/lib/billingErrors";
 
 export interface TeamBillingRow {
   team_id: string;
@@ -61,9 +62,7 @@ export function useBilling() {
         error?: string;
       }>("create-stripe-checkout", { body: input });
       if (error) {
-        // functions.invoke wraps non-2xx as error; parse context
-        const ctx = (error as unknown as { context?: { error?: string } }).context;
-        throw new Error(ctx?.error ?? error.message ?? "internal_error");
+        throw new Error(await parseFunctionErrorCode(error));
       }
       if (!data?.url) throw new Error(data?.error ?? "internal_error");
       if (!isSafeStripeUrl(data.url)) throw new Error("invalid_url");
@@ -94,8 +93,7 @@ export function useBilling() {
         { body: {} },
       );
       if (error) {
-        const ctx = (error as unknown as { context?: { error?: string } }).context;
-        throw new Error(ctx?.error ?? error.message ?? "internal_error");
+        throw new Error(await parseFunctionErrorCode(error));
       }
       if (!data?.url) throw new Error(data?.error ?? "internal_error");
       if (!isSafeStripeUrl(data.url)) throw new Error("invalid_url");
