@@ -184,7 +184,11 @@ export function TeamTable({ members, isLoading }: TeamTableProps) {
               {filteredMembers.map((member) => {
                 const name = cleanName(member.full_name);
                 return (
-                  <TableRow key={member.user_id} className="hover:bg-muted/30 h-[52px] border-b border-border last:border-0">
+                  <TableRow
+                    key={member.user_id}
+                    className="hover:bg-muted/30 h-[52px] border-b border-border last:border-0 cursor-pointer"
+                    onClick={() => navigate(`/coaching?rep=${encodeURIComponent(member.user_id)}`)}
+                  >
                     <TableCell className="sticky left-0 bg-card z-10">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9 border border-border">
