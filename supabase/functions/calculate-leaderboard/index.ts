@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { calculateDateRanges, aggregateMetrics } from "../_shared/leaderboard.ts";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,6 +35,9 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -50,6 +54,8 @@ serve(async (req) => {
     if (userErr || !userData.user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+    const rl = await enforceRateLimit(userData.user.id, 'calculate-leaderboard', { serviceClient: supabase, perMinute: 20, perDay: 400 });
+    if (!rl.allowed) return rl.response!;
 
     const { metric_type = 'overall', time_period = 'week', view_mode = 'individual' } = await req.json();
     // NOTE: any client-supplied team_id is intentionally ignored below. The
