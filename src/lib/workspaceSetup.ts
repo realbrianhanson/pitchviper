@@ -5,7 +5,7 @@
  * the hook, the wizard page, and the manager-dashboard checklist card.
  */
 
-export type CrmProvider = "none" | "aloware" | "gohighlevel" | "manual";
+export type CrmProvider = "none" | "aloware" | "gohighlevel" | "manual" | "dialer_io" | "legacy_aloware";
 
 export interface WorkspaceSetupState {
   /** Manager explicitly reviewed the Team step (even if no invites sent). */
