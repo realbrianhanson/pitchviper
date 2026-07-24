@@ -132,19 +132,39 @@ export function LicensedSeats() {
           </p>
         </div>
         {canManageTeam ? (
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min={minAllowed}
-              max={MAX_SEATS}
-              value={seats}
-              onChange={(e) => setSeats(Number(e.target.value) || 0)}
-              className="w-24 h-10 border border-border bg-background px-3 font-mono text-sm text-right"
-              aria-label="Licensed seats"
-            />
-            <Button onClick={submit} disabled={disabled} size="sm">
-              {pending ? "Updating…" : "Update seats"}
-            </Button>
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step={1}
+                min={minAllowed}
+                max={MAX_SEATS}
+                value={Number.isFinite(seats) ? seats : ""}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    setSeats(Number.NaN);
+                    return;
+                  }
+                  const n = Number(raw);
+                  setSeats(Number.isFinite(n) ? n : Number.NaN);
+                }}
+                aria-invalid={!valid}
+                className="w-24 h-10 border border-border bg-background px-3 font-mono text-sm text-right"
+                aria-label="Licensed seats"
+              />
+              <Button onClick={submit} disabled={disabled} size="sm">
+                {pending ? "Updating…" : "Update seats"}
+              </Button>
+            </div>
+            {validationMessage ? (
+              <p
+                role="alert"
+                className="text-[10px] font-mono uppercase tracking-[0.12em] text-destructive"
+              >
+                {validationMessage}
+              </p>
+            ) : null}
           </div>
         ) : (
           <p className="text-xs font-mono uppercase tracking-[0.12em] text-muted-foreground">
