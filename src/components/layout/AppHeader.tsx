@@ -128,7 +128,7 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
               {profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
-                  alt={profile.full_name}
+                  alt={displayName}
                   className="h-7 w-7 rounded-full object-cover"
                 />
               ) : (
