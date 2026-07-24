@@ -21,6 +21,7 @@ import {
   Cog,
   Phone,
   Building2,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -82,6 +83,8 @@ const managerNavItems: NavItem[] = [
   { title: "Company Setup", url: "/workspace-setup", icon: Building2 },
   { title: "Team Settings", url: "/team-settings", icon: Settings },
 ];
+
+const sampleNavItem: NavItem = { title: "Sample workspace", url: "/sample-workspace", icon: Sparkles };
 
 const bottomNavItems: NavItem[] = [
   { title: "Settings", url: "/settings", icon: Cog },
