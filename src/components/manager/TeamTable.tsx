@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TeamMember } from "@/hooks/useManagerDashboard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ViperBadge } from "@/components/ui/viper-badge";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -33,11 +33,19 @@ type StatusFilter = 'all' | 'available' | 'on_call' | 'in_meeting' | 'away' | 'o
 
 const statusColors: Record<TeamMember['status'], { bg: string; text: string; label: string }> = {
   available: { bg: 'bg-success', text: 'text-success', label: 'Available' },
-  on_call: { bg: 'bg-warning', text: 'text-warning', label: 'On Call' },
-  in_meeting: { bg: 'bg-primary', text: 'text-primary', label: 'In Meeting' },
-  away: { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Away' },
-  offline: { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Offline' },
+  on_call: { bg: 'bg-warning', text: 'text-warning', label: 'On call' },
+  in_meeting: { bg: 'bg-primary', text: 'text-primary', label: 'In meeting' },
+  away: { bg: 'bg-muted-foreground/40', text: 'text-muted-foreground', label: 'Away' },
+  offline: { bg: 'bg-muted-foreground/30', text: 'text-muted-foreground', label: 'Offline' },
 };
+
+function cleanName(name: string): string {
+  return name.replace(/https?:\/\/\S+/gi, "").replace(/\s+/g, " ").trim();
+}
+
+function initials(name: string): string {
+  return cleanName(name).split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase();
+}
 
 export function TeamTable({ members, isLoading }: TeamTableProps) {
   const [search, setSearch] = useState('');
@@ -59,18 +67,10 @@ export function TeamTable({ members, isLoading }: TeamTableProps) {
 
   const filteredMembers = members
     .filter(m => {
-      if (search && !m.full_name.toLowerCase().includes(search.toLowerCase())) {
-        return false;
-      }
-      if (statusFilter !== 'all' && m.status !== statusFilter) {
-        return false;
-      }
-      if (performanceFilter === 'above' && m.today_calls < callTarget) {
-        return false;
-      }
-      if (performanceFilter === 'below' && m.today_calls >= callTarget) {
-        return false;
-      }
+      if (search && !m.full_name.toLowerCase().includes(search.toLowerCase())) return false;
+      if (statusFilter !== 'all' && m.status !== statusFilter) return false;
+      if (performanceFilter === 'above' && m.today_calls < callTarget) return false;
+      if (performanceFilter === 'below' && m.today_calls >= callTarget) return false;
       return true;
     })
     .sort((a, b) => {
@@ -88,32 +88,41 @@ export function TeamTable({ members, isLoading }: TeamTableProps) {
       }
 
       if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return sortDirection === 'asc' 
-          ? aVal.localeCompare(bVal) 
+        return sortDirection === 'asc'
+          ? aVal.localeCompare(bVal)
           : bVal.localeCompare(aVal);
       }
-
-      return sortDirection === 'asc' 
+      return sortDirection === 'asc'
         ? (aVal as number) - (bVal as number)
         : (bVal as number) - (aVal as number);
     });
 
   if (isLoading) {
     return (
-      <div className="space-y-2">
+      <div className="rounded-[12px] border border-border bg-card shadow-sm p-4 space-y-2">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-16 bg-muted/40 animate-pulse" />
+          <div key={i} className="h-12 bg-muted/40 rounded-md animate-pulse" />
         ))}
       </div>
     );
   }
 
+  const HeaderButton = ({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) => (
+    <button
+      onClick={() => handleSort(field)}
+      className={cn("inline-flex items-center gap-1 hover:text-foreground transition-colors", className)}
+    >
+      {children}
+      <ArrowUpDown className="h-3 w-3 opacity-60" />
+    </button>
+  );
+
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 items-stretch sm:items-center">
+        <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Search team members..."
             value={search}
@@ -122,170 +131,150 @@ export function TeamTable({ members, isLoading }: TeamTableProps) {
           />
         </div>
 
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="available">Available</SelectItem>
-            <SelectItem value="on_call">On Call</SelectItem>
-            <SelectItem value="in_meeting">In Meeting</SelectItem>
-            <SelectItem value="away">Away</SelectItem>
-            <SelectItem value="offline">Offline</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2 sm:gap-3">
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+            <SelectTrigger className="flex-1 sm:w-36">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="available">Available</SelectItem>
+              <SelectItem value="on_call">On call</SelectItem>
+              <SelectItem value="in_meeting">In meeting</SelectItem>
+              <SelectItem value="away">Away</SelectItem>
+              <SelectItem value="offline">Offline</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Select value={performanceFilter} onValueChange={(v) => setPerformanceFilter(v as PerformanceFilter)}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Performance" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Performance</SelectItem>
-            <SelectItem value="above">Above Target</SelectItem>
-            <SelectItem value="below">Below Target</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={performanceFilter} onValueChange={(v) => setPerformanceFilter(v as PerformanceFilter)}>
+            <SelectTrigger className="flex-1 sm:w-40">
+              <SelectValue placeholder="Performance" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All performance</SelectItem>
+              <SelectItem value="above">Above target</SelectItem>
+              <SelectItem value="below">Below target</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Table */}
-      <div className="border border-border overflow-x-auto">
-        <Table className="min-w-[900px]">
-          <TableHeader>
-            <TableRow className="bg-muted/30 hover:bg-muted/30">
-              <TableHead className="w-[200px]">
-                <button onClick={() => handleSort('name')} className="flex items-center gap-1 hover:text-foreground">
-                  Team Member
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-              </TableHead>
-              <TableHead className="text-center">Level</TableHead>
-              <TableHead className="text-center">
-                <button onClick={() => handleSort('today_calls')} className="flex items-center gap-1 hover:text-foreground mx-auto">
-                  Today
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-              </TableHead>
-              <TableHead className="text-center">
-                <button onClick={() => handleSort('period_calls')} className="flex items-center gap-1 hover:text-foreground mx-auto">
-                  Calls 30d
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-              </TableHead>
-              <TableHead className="text-center">
-                <button onClick={() => handleSort('period_deals_won')} className="flex items-center gap-1 hover:text-foreground mx-auto">
-                  Won
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-              </TableHead>
-              <TableHead className="text-center">
-                <button onClick={() => handleSort('win_rate')} className="flex items-center gap-1 hover:text-foreground mx-auto">
-                  Win %
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-              </TableHead>
-              <TableHead className="text-center">
-                <button onClick={() => handleSort('avg_roleplay_score')} className="flex items-center gap-1 hover:text-foreground mx-auto">
-                  Roleplay
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-              </TableHead>
-              <TableHead className="text-center">Flags</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredMembers.map((member) => (
-              <TableRow key={member.user_id} className="hover:bg-muted/30">
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9 border border-border">
-                      <AvatarImage src={member.avatar_url || undefined} />
-                      <AvatarFallback className="text-xs">
-                        {member.full_name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{member.full_name}</p>
-                      {member.title && (
-                        <p className="text-xs text-muted-foreground">{member.title}</p>
-                      )}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="text-center">
-                  <ViperBadge variant="default" size="sm">
-                    Lvl {member.current_level}
-                  </ViperBadge>
-                </TableCell>
-                <TableCell className="text-center">
-                  <span className={cn(
-                    "font-semibold",
-                    member.today_calls >= callTarget ? "text-success" :
-                    member.today_calls >= callTarget * 0.5 ? "text-warning" : "text-destructive"
-                  )}>
-                    {member.today_calls}
-                  </span>
-                </TableCell>
-                <TableCell className="text-center font-medium tabular-nums">
-                  {member.period_calls}
-                </TableCell>
-                <TableCell className="text-center font-medium text-success tabular-nums">
-                  {member.period_deals_won}
-                </TableCell>
-                <TableCell className="text-center">
-                  <span className={cn(
-                    "font-semibold tabular-nums",
-                    member.win_rate >= 40 ? "text-success" :
-                    member.win_rate >= 20 ? "text-warning" : "text-destructive"
-                  )}>
-                    {member.period_deals_won + member.period_pipeline_moves > 0 ? `${member.win_rate}%` : "—"}
-                  </span>
-                </TableCell>
-                <TableCell className="text-center tabular-nums">
-                  {member.avg_roleplay_score !== null ? (
-                    <span className="text-foreground/80">
-                      {member.avg_roleplay_score}
-                      <span className="text-muted-foreground text-xs"> · {member.roleplay_count}</span>
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground text-xs">No reps</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-center">
-                  {member.coaching_flags.length === 0 ? (
-                    <span className="text-success text-xs">All clear</span>
-                  ) : (
-                    <div className="flex flex-wrap gap-1 justify-center">
-                      {member.coaching_flags.slice(0, 2).map((flag) => (
-                        <span
-                          key={flag}
-                          className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 bg-destructive/10 text-destructive border border-destructive/30"
-                        >
-                          {flag}
-                        </span>
-                      ))}
-                      {member.coaching_flags.length > 2 && (
-                        <span className="text-[10px] text-muted-foreground">+{member.coaching_flags.length - 2}</span>
-                      )}
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell className="text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className={cn("w-2 h-2 rounded-full", statusColors[member.status].bg)} />
-                    <span className={cn("text-sm", statusColors[member.status].text)}>
-                      {statusColors[member.status].label}
-                    </span>
-                  </div>
-                </TableCell>
+      <div className="rounded-[12px] border border-border bg-card shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table className="min-w-[900px]">
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                <TableHead className="w-[220px] sticky left-0 bg-muted/40 z-10">
+                  <HeaderButton field="name">Team member</HeaderButton>
+                </TableHead>
+                <TableHead className="text-center">Level</TableHead>
+                <TableHead className="text-center"><HeaderButton field="today_calls" className="mx-auto">Today</HeaderButton></TableHead>
+                <TableHead className="text-center"><HeaderButton field="period_calls" className="mx-auto">Calls 30d</HeaderButton></TableHead>
+                <TableHead className="text-center"><HeaderButton field="period_deals_won" className="mx-auto">Won</HeaderButton></TableHead>
+                <TableHead className="text-center"><HeaderButton field="win_rate" className="mx-auto">Win %</HeaderButton></TableHead>
+                <TableHead className="text-center"><HeaderButton field="avg_roleplay_score" className="mx-auto">Roleplay</HeaderButton></TableHead>
+                <TableHead className="text-center">Flags</TableHead>
+                <TableHead className="text-center">Status</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filteredMembers.map((member) => {
+                const name = cleanName(member.full_name);
+                return (
+                  <TableRow key={member.user_id} className="hover:bg-muted/30 h-[52px] border-b border-border last:border-0">
+                    <TableCell className="sticky left-0 bg-card z-10">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9 border border-border">
+                          <AvatarImage src={member.avatar_url || undefined} alt={name} />
+                          <AvatarFallback className="text-xs">{initials(name)}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate text-foreground">{name}</p>
+                          {member.title && (
+                            <p className="text-xs text-muted-foreground truncate">{member.title}</p>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="secondary" className="font-normal">
+                        Lvl {member.current_level}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className={cn(
+                        "font-medium tabular-nums",
+                        member.today_calls >= callTarget ? "text-success" :
+                        member.today_calls >= callTarget * 0.5 ? "text-warning" : "text-destructive"
+                      )}>
+                        {member.today_calls}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center text-sm tabular-nums text-foreground">
+                      {member.period_calls}
+                    </TableCell>
+                    <TableCell className="text-center text-sm tabular-nums text-success font-medium">
+                      {member.period_deals_won}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className={cn(
+                        "text-sm font-medium tabular-nums",
+                        member.win_rate >= 40 ? "text-success" :
+                        member.win_rate >= 20 ? "text-warning" : "text-destructive"
+                      )}>
+                        {member.period_deals_won + member.period_pipeline_moves > 0 ? `${member.win_rate}%` : "—"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center text-sm tabular-nums">
+                      {member.avg_roleplay_score !== null ? (
+                        <span className="text-foreground">
+                          {member.avg_roleplay_score}
+                          <span className="text-muted-foreground text-xs"> · {member.roleplay_count}</span>
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {member.coaching_flags.length === 0 ? (
+                        <span className="text-xs text-success">All clear</span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1 justify-center">
+                          {member.coaching_flags.slice(0, 2).map((flag) => (
+                            <Badge
+                              key={flag}
+                              variant="outline"
+                              className="text-[10px] border-destructive/40 text-destructive font-normal"
+                            >
+                              {flag}
+                            </Badge>
+                          ))}
+                          {member.coaching_flags.length > 2 && (
+                            <span className="text-[10px] text-muted-foreground self-center">
+                              +{member.coaching_flags.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <span className={cn("w-2 h-2 rounded-full", statusColors[member.status].bg)} />
+                        <span className={cn("text-sm", statusColors[member.status].text)}>
+                          {statusColors[member.status].label}
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
 
         {filteredMembers.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-10 text-sm text-muted-foreground">
             No team members match your filters.
           </div>
         )}

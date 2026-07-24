@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trophy, Users, ClipboardList } from "lucide-react";
-import { ViperButton } from "@/components/ui/viper-button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -70,8 +70,8 @@ export function ManagerQuickActions() {
       if (error) throw error;
 
       toast({
-        title: '🏆 Competition Created!',
-        description: `${competitionName} is now live!`,
+        title: 'Competition created',
+        description: `${competitionName} is now live.`,
       });
 
       setCompetitionOpen(false);
@@ -90,19 +90,30 @@ export function ManagerQuickActions() {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-2 w-full md:flex md:flex-wrap md:w-auto sm:gap-3">
-        <ViperButton onClick={() => setCompetitionOpen(true)} className="col-span-2 w-full md:w-auto">
+      <div className="flex flex-wrap gap-2 w-full lg:w-auto">
+        <Button
+          onClick={() => setCompetitionOpen(true)}
+          className="min-h-[40px] flex-1 lg:flex-none"
+        >
           <Trophy className="h-4 w-4 mr-2" />
-          Start Competition
-        </ViperButton>
-        <ViperButton variant="outline" onClick={() => navigate('/coaching')} className="w-full md:w-auto">
+          Start competition
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => navigate('/coaching')}
+          className="min-h-[40px] flex-1 lg:flex-none"
+        >
           <ClipboardList className="h-4 w-4 mr-2" />
-          Open Coaching
-        </ViperButton>
-        <ViperButton variant="outline" onClick={() => navigate('/team-settings')} className="w-full md:w-auto">
+          Open coaching
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => navigate('/team-settings')}
+          className="min-h-[40px] flex-1 lg:flex-none"
+        >
           <Users className="h-4 w-4 mr-2" />
-          Manage Team
-        </ViperButton>
+          Manage team
+        </Button>
       </div>
 
       <Dialog open={competitionOpen} onOpenChange={setCompetitionOpen}>
@@ -110,7 +121,7 @@ export function ManagerQuickActions() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-primary" />
-              Start Team Competition
+              Start team competition
             </DialogTitle>
             <DialogDescription>
               Set a metric, duration, and prize to launch a team-wide competition.
@@ -118,7 +129,7 @@ export function ManagerQuickActions() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Competition Name</Label>
+              <Label>Competition name</Label>
               <Input
                 placeholder="e.g., January Sprint"
                 value={competitionName}
@@ -141,10 +152,10 @@ export function ManagerQuickActions() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="calls">Most Calls</SelectItem>
-                    <SelectItem value="appointments">Most Appointments</SelectItem>
-                    <SelectItem value="revenue">Highest Revenue</SelectItem>
-                    <SelectItem value="roleplay">Best Roleplay Score</SelectItem>
+                    <SelectItem value="calls">Most calls</SelectItem>
+                    <SelectItem value="appointments">Most appointments</SelectItem>
+                    <SelectItem value="revenue">Highest revenue</SelectItem>
+                    <SelectItem value="roleplay">Best roleplay score</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -155,11 +166,11 @@ export function ManagerQuickActions() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1 Day</SelectItem>
-                    <SelectItem value="3">3 Days</SelectItem>
-                    <SelectItem value="7">1 Week</SelectItem>
-                    <SelectItem value="14">2 Weeks</SelectItem>
-                    <SelectItem value="30">1 Month</SelectItem>
+                    <SelectItem value="1">1 day</SelectItem>
+                    <SelectItem value="3">3 days</SelectItem>
+                    <SelectItem value="7">1 week</SelectItem>
+                    <SelectItem value="14">2 weeks</SelectItem>
+                    <SelectItem value="30">1 month</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -174,15 +185,15 @@ export function ManagerQuickActions() {
             </div>
           </div>
           <DialogFooter>
-            <ViperButton variant="outline" onClick={() => setCompetitionOpen(false)}>
+            <Button variant="outline" onClick={() => setCompetitionOpen(false)}>
               Cancel
-            </ViperButton>
-            <ViperButton
+            </Button>
+            <Button
               onClick={handleCreateCompetition}
               disabled={!competitionName || !competitionDesc || isSubmitting}
             >
-              {isSubmitting ? 'Creating...' : 'Launch Competition'}
-            </ViperButton>
+              {isSubmitting ? 'Creating...' : 'Launch competition'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
