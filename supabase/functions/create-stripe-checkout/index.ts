@@ -14,6 +14,8 @@ import {
 } from "../_shared/billing.ts";
 
 const MANAGEMENT_ROLES = ["owner", "admin", "manager"];
+// Only columns that actually exist on public.profiles. Email lives on auth.users.
+export const PROFILE_CHECKOUT_COLUMNS = "team_id, full_name" as const;
 // Bucket concurrent identical checkout attempts within this window.
 const CHECKOUT_BUCKET_SECONDS = 300;
 
