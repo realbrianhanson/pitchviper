@@ -103,7 +103,7 @@ export default function Billing() {
               />
             </div>
           )}
-          {hasActiveSub && (
+          {snapshot?.billing?.stripe_customer_id ? (
             <div className="mt-6">
               <button
                 type="button"
@@ -115,7 +115,7 @@ export default function Billing() {
                 {billing.portalPending ? "Opening…" : "Manage billing"}
               </button>
             </div>
-          )}
+          ) : null}
         </section>
 
         {/* Interval toggle */}
@@ -133,7 +133,14 @@ export default function Billing() {
                   interval === i ? "bg-primary text-primary-foreground" : "hover:bg-muted"
                 }`}
               >
-                {i === "monthly" ? "Monthly" : "Annual · 2 months free"}
+                {i === "monthly" ? (
+                  "Monthly"
+                ) : (
+                  <>
+                    <span className="sm:hidden">Annual · save 17%</span>
+                    <span className="hidden sm:inline">Annual · 2 months free</span>
+                  </>
+                )}
               </button>
             ))}
           </div>

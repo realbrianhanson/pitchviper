@@ -11,6 +11,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== 'POST') { return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
 
   try {
     // Auth
@@ -81,8 +82,7 @@ Provide specific examples and be detailed.`,
     });
 
     if (!perplexityResponse.ok) {
-      const errorText = await perplexityResponse.text();
-      console.error('Perplexity API error:', perplexityResponse.status, errorText);
+      console.error("provider_error", { status: perplexityResponse.status });
       throw new Error(`Perplexity research failed: ${perplexityResponse.status}`);
     }
 
@@ -196,8 +196,7 @@ Create a battlecard with:
     });
 
     if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API error:', aiResponse.status, errorText);
+      console.error("provider_error", { status: aiResponse.status });
       throw new Error(`AI processing failed: ${aiResponse.status}`);
     }
 
@@ -224,11 +223,11 @@ Create a battlecard with:
       }
     );
   } catch (error) {
-    console.error('Error generating battlecard:', error);
+    console.error("internal_error");
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: "internal_error",
       }),
       {
         status: 500,

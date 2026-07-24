@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +17,9 @@ interface BadgeCheck {
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
   try {
@@ -34,6 +38,8 @@ serve(async (req) => {
     if (userErr || !userData.user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+    const rl = await enforceRateLimit(userData.user.id, 'check-badge-eligibility', { serviceClient: supabase, perMinute: 30, perDay: 500 });
+    if (!rl.allowed) return rl.response!;
 
     const { user_id, trigger_type } = await req.json();
 
@@ -227,10 +233,10 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Badge check error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error("internal_error");
+    // error scrubbed
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "internal_error" }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

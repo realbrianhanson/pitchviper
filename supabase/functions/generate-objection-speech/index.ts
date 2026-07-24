@@ -34,6 +34,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== 'POST') { return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
 
   try {
     // Auth
@@ -93,8 +94,7 @@ serve(async (req) => {
     );
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('ElevenLabs error:', response.status, errorText);
+      console.error("provider_error", { status: response.status });
       throw new Error(`ElevenLabs API error: ${response.status}`);
     }
 
@@ -107,9 +107,9 @@ serve(async (req) => {
       },
     });
   } catch (error) {
-    console.error('Error generating speech:', error);
+    console.error("internal_error");
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: "internal_error" }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

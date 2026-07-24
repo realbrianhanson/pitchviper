@@ -11,6 +11,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== 'POST') { return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
 
   try {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -196,11 +197,11 @@ Be specific, actionable, and data-driven. If there's insufficient data for a fie
     });
 
   } catch (error) {
-    console.error('Error generating manager insights:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error("internal_error");
+    // error scrubbed
     return new Response(JSON.stringify({ 
       success: false,
-      error: errorMessage 
+      error: "internal_error" 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

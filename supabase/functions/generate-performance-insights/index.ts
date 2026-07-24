@@ -11,6 +11,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== 'POST') { return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
 
   try {
     const authHeader = req.headers.get('Authorization');
@@ -230,8 +231,7 @@ Rules:
     });
 
     if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI Gateway error:', aiResponse.status, errorText);
+      console.error("provider_error", { status: aiResponse.status });
       
       if (aiResponse.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
@@ -260,7 +260,7 @@ Rules:
       const jsonStr = jsonMatch[1].trim();
       insights = JSON.parse(jsonStr);
     } catch (parseError) {
-      console.error('Failed to parse AI response:', content);
+      console.error("ai_parse_failed");
       // Return default insights
       insights = {
         bigWin: {
@@ -288,9 +288,9 @@ Rules:
     });
 
   } catch (error) {
-    console.error('Error generating insights:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    console.error("internal_error");
+    // error scrubbed
+    return new Response(JSON.stringify({ error: "internal_error" }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
