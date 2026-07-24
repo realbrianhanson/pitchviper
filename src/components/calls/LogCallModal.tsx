@@ -186,6 +186,9 @@ export function LogCallModal({ open, onOpenChange, initialData }: LogCallModalPr
             <Phone className="h-5 w-5 text-primary" />
             Log a Call
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Record details for a completed call, including contact, outcome, and follow-up notes.
+          </DialogDescription>
           {/* Progress indicator */}
           <div className="flex items-center gap-2 pt-2">
             {Array.from({ length: totalSteps }).map((_, i) => (
