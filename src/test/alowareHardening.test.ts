@@ -70,13 +70,17 @@ function ALLOWED_ACTION_ENDPOINTS() {
   return ALOWARE_ACTION_FUNCTIONS;
 }
 
-describe("Aloware webhook — signature + POST + body cap", () => {
+describe("Aloware webhook — per-tenant vault-backed auth", () => {
   const src = F("supabase/functions/aloware-webhook-receiver/index.ts");
-  it("requires ALOWARE_WEBHOOK_SECRET", () => {
-    expect(src).toMatch(/ALOWARE_WEBHOOK_SECRET/);
+  it("requires a webhook_key query parameter (opaque tenant identifier)", () => {
+    expect(src).toMatch(/searchParams\.get\("key"\)/);
+    expect(src).toMatch(/resolveWebhookKey/);
   });
-  it("uses timingSafeEqualStrings against the header", () => {
-    expect(src).toMatch(/timingSafeEqualStrings\(provided,\s*expectedSecret\)/);
+  it("verifies auth via team vault secret (Bearer or signature)", () => {
+    expect(src).toMatch(/verifyWebhookAuth\(supabase,\s*lookup\.teamId,\s*req\.headers\)/);
+  });
+  it("has no global ALOWARE_WEBHOOK_SECRET fallback", () => {
+    expect(src).not.toMatch(/ALOWARE_WEBHOOK_SECRET/);
   });
   it("rejects non-POST", () => {
     expect(src).toMatch(/method_not_allowed/);
@@ -87,7 +91,11 @@ describe("Aloware webhook — signature + POST + body cap", () => {
   it("never persists raw payload", () => {
     expect(/aloware_sync_log[\s\S]{0,400}?payload:\s*payload\b/.test(src)).toBe(false);
   });
+  it("constrains profile + call lookups to the resolved team", () => {
+    expect(src).toMatch(/\.eq\("team_id",\s*teamId\)/);
+  });
 });
+
 
 describe("process-aloware-transcription — service-only, timing-safe, bounded", () => {
   const src = F("supabase/functions/process-aloware-transcription/index.ts");
