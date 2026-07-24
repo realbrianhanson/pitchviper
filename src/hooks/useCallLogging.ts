@@ -124,9 +124,19 @@ export const useCallLogging = () => {
         });
       }
 
-      // Add XP through the trusted RPC (direct writes to xp_points are revoked).
-      const xpEarned = 10;
-      await supabase.rpc('award_user_xp', { _delta: xpEarned });
+      // Event-bound XP award. Server derives the amount from the calls row.
+      let xpEarned = 0;
+      if (call?.id) {
+        const { data: awardData, error: awardError } = await supabase.rpc(
+          'award_event_xp',
+          { _reason: 'call_logged', _source_id: call.id },
+        );
+        if (awardError) {
+          console.error('[useCallLogging] award_event_xp failed');
+        } else if (awardData && (awardData as any).awarded) {
+          xpEarned = (awardData as any).amount ?? 0;
+        }
+      }
 
       return { call, xpEarned };
     },
