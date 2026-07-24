@@ -46,14 +46,15 @@ describe("sales system registry", () => {
 // -----------------------------------------------------------------------------
 const CLIENT_ROOTS = ["src/pages", "src/components", "src/contexts", "src/hooks"];
 const IGNORE_FILES = new Set([
-  // dormant legacy code intentionally preserved for rollback
+  // dormant legacy code intentionally preserved for rollback / history
   "src/hooks/useAlowareConnection.ts",
   "src/hooks/useAlowareLead.ts",
   "src/hooks/useAlowareIntegration.ts",
-  "src/hooks/useContactLookup.ts", // legacy contact search, no longer surfaced
+  "src/hooks/useContactLookup.ts",
   "src/components/settings/AlowareSyncPanel.tsx",
   "src/components/settings/AlowareCompanyConnection.tsx",
   "src/components/settings/AlowareWebhookSetup.tsx",
+  "src/components/settings/AlowareTeamConfig.tsx",
 ]);
 
 function walk(dir: string, out: string[] = []) {
