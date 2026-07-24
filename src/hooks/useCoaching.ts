@@ -177,7 +177,7 @@ export function useCoaching() {
         if (error) throw error;
         return data || [];
       },
-      enabled: !!repId,
+      enabled: !!repId && canManageTeam,
     });
 
   const useRepRoleplaySessions = (repId: string | null) =>
@@ -195,7 +195,7 @@ export function useCoaching() {
         if (error) throw error;
         return data || [];
       },
-      enabled: !!repId,
+      enabled: !!repId && canManageTeam,
     });
 
   const useRepRecentBadges = (repId: string | null) =>
