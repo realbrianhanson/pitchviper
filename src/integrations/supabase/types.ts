@@ -581,6 +581,7 @@ export type Database = {
           monthly_revenue_target: number
           product_description: string
           setup_completed_at: string | null
+          setup_state: Json
           target_audience: string | null
           team_id: string | null
           timezone: string
@@ -604,6 +605,7 @@ export type Database = {
           monthly_revenue_target?: number
           product_description?: string
           setup_completed_at?: string | null
+          setup_state?: Json
           target_audience?: string | null
           team_id?: string | null
           timezone?: string
@@ -627,6 +629,7 @@ export type Database = {
           monthly_revenue_target?: number
           product_description?: string
           setup_completed_at?: string | null
+          setup_state?: Json
           target_audience?: string | null
           team_id?: string | null
           timezone?: string
