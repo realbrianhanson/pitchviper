@@ -119,7 +119,7 @@ export function MyCoachingActions() {
                             size="sm"
                             variant={next === "completed" ? "default" : "outline"}
                             disabled={isPending}
-                            onClick={() => updateActionStatus.mutate({ action_id: a.id, status: next })}
+                            onClick={() => updateActionStatus.mutate({ action_id: a.id, status: next, current_status: a.status })}
                             className="shrink-0"
                           >
                             {next === "in_progress" ? (
