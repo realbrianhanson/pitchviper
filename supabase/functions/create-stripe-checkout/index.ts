@@ -130,7 +130,7 @@ serve(async (req) => {
     if (!customerId) {
       const customer = await stripe.customers.create(
         {
-          email: profile?.email ?? userData.user.email ?? undefined,
+          email: userData.user.email ?? undefined,
           name: profile?.full_name ?? undefined,
           metadata: { team_id: teamId },
         },
