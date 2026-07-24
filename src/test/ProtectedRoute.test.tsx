@@ -208,3 +208,77 @@ describe("ProtectedRoute · entitlement gate", () => {
     expect(screen.getByText(/Retry/i)).toBeInTheDocument();
   });
 });
+
+describe("ProtectedRoute · growth route gate", () => {
+  it("blocks a Starter user from /ai-coach with an Upgrade state", () => {
+    reset();
+    authState.user = { id: "u1" };
+    authState.profileLoaded = true;
+    authState.profile = { promo_validated: true, onboarding_completed: true };
+    entState.data = {
+      access: true,
+      reason: "active",
+      tier: "starter",
+      can_manage: false,
+      seat_limit: 10,
+      used_seats: 3,
+    };
+    renderAt("/ai-coach");
+    expect(screen.getByTestId("growth-upgrade-required")).toBeInTheDocument();
+    expect(screen.queryByText("AI COACH")).not.toBeInTheDocument();
+  });
+
+  it("blocks a Starter manager from /manager/competitions and offers Upgrade CTA", () => {
+    reset();
+    authState.user = { id: "u1" };
+    authState.profileLoaded = true;
+    authState.canManageTeam = true;
+    authState.profile = { promo_validated: true, onboarding_completed: true };
+    entState.data = {
+      access: true,
+      reason: "active",
+      tier: "starter",
+      can_manage: true,
+      seat_limit: 10,
+      used_seats: 3,
+    };
+    renderAt("/manager/competitions");
+    expect(screen.getByTestId("growth-upgrade-required")).toBeInTheDocument();
+    expect(screen.getByText(/Upgrade to Growth/i)).toBeInTheDocument();
+  });
+
+  it("allows a Growth-tier user through to /ai-coach", () => {
+    reset();
+    authState.user = { id: "u1" };
+    authState.profileLoaded = true;
+    authState.profile = { promo_validated: true, onboarding_completed: true };
+    entState.data = {
+      access: true,
+      reason: "active",
+      tier: "growth",
+      can_manage: false,
+      seat_limit: 10,
+      used_seats: 3,
+    };
+    renderAt("/ai-coach");
+    expect(screen.getByText("AI COACH")).toBeInTheDocument();
+  });
+
+  it("allows Trial users (server sets tier=growth) through Growth routes", () => {
+    reset();
+    authState.user = { id: "u1" };
+    authState.profileLoaded = true;
+    authState.profile = { promo_validated: true, onboarding_completed: true };
+    entState.data = {
+      access: true,
+      reason: "trial",
+      tier: "growth",
+      can_manage: false,
+      seat_limit: 25,
+      used_seats: 1,
+    };
+    renderAt("/ai-coach");
+    expect(screen.getByText("AI COACH")).toBeInTheDocument();
+  });
+});
+
