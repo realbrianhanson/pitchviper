@@ -32,27 +32,34 @@ export function StepTeam({ isManager, onComplete, onBack }: StepTeamProps) {
   const [success, setSuccess] = useState<string | null>(null);
 
   const handleJoinTeam = async () => {
-    if (!teamCode.trim()) return;
+    const code = teamCode.trim().toUpperCase();
+    if (!/^[A-Z0-9]{6,10}$/.test(code)) {
+      setError("Team code must be 6-10 letters or digits.");
+      return;
+    }
     setLoading(true);
     setError(null);
 
     try {
-      // Lookup team by code via SECURITY DEFINER RPC (avoids exposing full teams table)
-      const { data: rows, error: findError } = await supabase
-        .rpc("find_team_by_code", { _code: teamCode.trim() });
-
-      const team = Array.isArray(rows) ? rows[0] : rows;
-      if (findError || !team) {
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "team-membership",
+        { body: { action: "join", teamCode: code } },
+      );
+      if (fnError || !data?.team_id) {
         setError("Team not found. Check the code and try again.");
         return;
       }
-
-      setSuccess(`Found team: ${team.name}`);
+      await refreshProfile();
+      setSuccess(`Found team: ${data.team_name}`);
       setTimeout(() => {
-        onComplete({ teamId: team.id, teamName: team.name, teamCode: teamCode.toUpperCase() });
-      }, 1000);
-    } catch (err: any) {
-      setError(err.message);
+        onComplete({
+          teamId: data.team_id,
+          teamName: data.team_name,
+          teamCode: data.team_code,
+        });
+      }, 800);
+    } catch {
+      setError("Could not join team. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -64,36 +71,27 @@ export function StepTeam({ isManager, onComplete, onBack }: StepTeamProps) {
     setError(null);
 
     try {
-      // Generate unique team code
-      const { data: generatedCode, error: codeError } = await supabase
-        .rpc("generate_team_code");
-
-      if (codeError) throw codeError;
-
-      // Create team
-      const { data: team, error: createError } = await supabase
-        .from("teams")
-        .insert({
-          name: teamName,
-          team_code: generatedCode,
-          created_by: user.id,
-        })
-        .select()
-        .single();
-
-      if (createError) throw createError;
-
-      // AFTER INSERT trigger on teams promotes the creator to manager and
-      // attaches the team to their profile. Refresh auth state so the client
-      // picks up the new role.
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "team-membership",
+        { body: { action: "create", name: teamName.trim() } },
+      );
+      if (fnError || !data?.team_id) {
+        setError("Could not create team. Please try again.");
+        return;
+      }
+      // Trigger on teams promotes the creator to manager and attaches team.
       await refreshProfile();
 
-      setSuccess(`Team created! Code: ${team.team_code}`);
+      setSuccess(`Team created! Code: ${data.team_code}`);
       setTimeout(() => {
-        onComplete({ teamId: team.id, teamName: team.name, teamCode: team.team_code });
-      }, 1500);
-    } catch (err: any) {
-      setError(err.message);
+        onComplete({
+          teamId: data.team_id,
+          teamName: data.team_name,
+          teamCode: data.team_code,
+        });
+      }, 1200);
+    } catch {
+      setError("Could not create team. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -167,13 +165,14 @@ export function StepTeam({ isManager, onComplete, onBack }: StepTeamProps) {
             <label className="text-sm font-medium text-foreground">Team Code</label>
             <ViperInput
               type="text"
-              placeholder="Enter 6-character code"
+              placeholder="Enter your team code"
               value={teamCode}
-              onChange={(e) => setTeamCode(e.target.value.toUpperCase())}
-              maxLength={6}
+              onChange={(e) => setTeamCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+              maxLength={10}
               className="text-center text-2xl font-mono tracking-widest uppercase"
               variant="glow"
             />
+            <p className="text-xs text-muted-foreground">6-10 letters or digits.</p>
           </div>
 
           {error && (
@@ -194,7 +193,11 @@ export function StepTeam({ isManager, onComplete, onBack }: StepTeamProps) {
             <ViperButton variant="ghost" onClick={() => setOption(null)} className="flex-1">
               Back
             </ViperButton>
-            <ViperButton onClick={handleJoinTeam} disabled={teamCode.length !== 6 || loading} className="flex-1">
+            <ViperButton
+              onClick={handleJoinTeam}
+              disabled={teamCode.length < 6 || teamCode.length > 10 || loading}
+              className="flex-1"
+            >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Join Team"}
             </ViperButton>
           </div>
