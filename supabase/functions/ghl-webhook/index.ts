@@ -6,6 +6,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { timingSafeEqualStrings } from "../_shared/timingSafe.ts";
+import { checkTeamEntitlementByTeamId } from "../_shared/entitlement.ts";
+
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
