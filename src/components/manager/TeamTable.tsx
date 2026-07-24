@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { TeamMember } from "@/hooks/useManagerDashboard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +49,7 @@ function initials(name: string): string {
 }
 
 export function TeamTable({ members, isLoading }: TeamTableProps) {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [performanceFilter, setPerformanceFilter] = useState<PerformanceFilter>('all');
@@ -182,7 +184,11 @@ export function TeamTable({ members, isLoading }: TeamTableProps) {
               {filteredMembers.map((member) => {
                 const name = cleanName(member.full_name);
                 return (
-                  <TableRow key={member.user_id} className="hover:bg-muted/30 h-[52px] border-b border-border last:border-0">
+                  <TableRow
+                    key={member.user_id}
+                    className="hover:bg-muted/30 h-[52px] border-b border-border last:border-0 cursor-pointer"
+                    onClick={() => navigate(`/coaching?rep=${encodeURIComponent(member.user_id)}`)}
+                  >
                     <TableCell className="sticky left-0 bg-card z-10">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9 border border-border">

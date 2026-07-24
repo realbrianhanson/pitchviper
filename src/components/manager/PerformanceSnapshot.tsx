@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AlertTriangle, Flame, MessageSquare, ArrowUpRight } from "lucide-react";
 import { TeamMember } from "@/hooks/useManagerDashboard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,6 +30,12 @@ function initials(name: string): string {
 
 export function PerformanceSnapshot({ needsAttention, onFire, coachingDue }: PerformanceSnapshotProps) {
   const [modalType, setModalType] = useState<ModalType>(null);
+  const navigate = useNavigate();
+
+  const gotoCoaching = (userId: string) => {
+    setModalType(null);
+    navigate(`/coaching?rep=${encodeURIComponent(userId)}`);
+  };
 
   const tiles = [
     {
@@ -135,9 +142,11 @@ export function PerformanceSnapshot({ needsAttention, onFire, coachingDue }: Per
             {modalData?.members.map((member) => {
               const name = cleanName(member.full_name);
               return (
-                <div
+                <button
                   key={member.user_id}
-                  className="flex items-center gap-3 p-3 rounded-[10px] border border-border bg-card"
+                  type="button"
+                  onClick={() => gotoCoaching(member.user_id)}
+                  className="w-full text-left flex items-center gap-3 p-3 rounded-[10px] border border-border bg-card hover:bg-accent transition-colors"
                 >
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={member.avatar_url || undefined} alt={name} />
@@ -149,7 +158,8 @@ export function PerformanceSnapshot({ needsAttention, onFire, coachingDue }: Per
                       {member.today_calls} calls · {member.today_appointments} appts · ${member.today_revenue.toLocaleString()}
                     </p>
                   </div>
-                </div>
+                  <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                </button>
               );
             })}
             {modalData?.members.length === 0 && (

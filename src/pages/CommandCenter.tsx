@@ -4,6 +4,7 @@ import { DailyChallenge } from "@/components/dashboard/DailyChallenge";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { TeamPulse } from "@/components/dashboard/TeamPulse";
+import { MyCoachingActions } from "@/components/coaching/MyCoachingActions";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUpcomingFollowUps } from "@/hooks/useUpcomingFollowUps";
 import { useGhlStats } from "@/hooks/useGhlStats";
@@ -182,6 +183,9 @@ export default function CommandCenter() {
             />
           </div>
         </div>
+
+        {/* Row 3: My coaching actions */}
+        <MyCoachingActions />
       </div>
     </AppLayout>
   );

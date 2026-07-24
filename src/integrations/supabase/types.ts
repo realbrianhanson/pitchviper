@@ -2308,6 +2308,16 @@ export type Database = {
         }
         Returns: Json
       }
+      create_coaching_session_with_actions: {
+        Args: {
+          p_actions?: Json
+          p_due_date?: string
+          p_focus_areas?: string[]
+          p_notes: string
+          p_rep_id: string
+        }
+        Returns: Json
+      }
       find_team_by_code: {
         Args: { _code: string }
         Returns: {
@@ -2402,6 +2412,10 @@ export type Database = {
       match_ghl_user: {
         Args: { _email: string; _ghl_user_id: string }
         Returns: string
+      }
+      update_coaching_action_status: {
+        Args: { p_action_id: string; p_status: string }
+        Returns: Json
       }
       update_user_status: {
         Args: {
