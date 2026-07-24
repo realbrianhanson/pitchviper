@@ -90,40 +90,32 @@ function OpenDialButton() {
 
 describe("DialModal → LogCallModal manual handoff", () => {
   it("opens LogCallModal with contact, company, phone, and outbound direction pre-filled", async () => {
-    vi.useFakeTimers();
-    try {
-      render(
-        <ClickToDialProvider>
-          <OpenDialButton />
-          <DialModal />
-          <GlobalLogCallModal />
-        </ClickToDialProvider>,
-      );
+    render(
+      <ClickToDialProvider>
+        <OpenDialButton />
+        <DialModal />
+        <GlobalLogCallModal />
+      </ClickToDialProvider>,
+    );
 
-      fireEvent.click(screen.getByText("trigger"));
-      // DialModal is now visible with the "Log call manually" button
-      const manualBtn = await screen.findByRole("button", { name: /log call manually/i });
-      fireEvent.click(manualBtn);
+    fireEvent.click(screen.getByText("trigger"));
+    const manualBtn = await screen.findByRole("button", { name: /log call manually/i });
+    fireEvent.click(manualBtn);
 
-      // Handoff is deferred via setTimeout(0) to avoid nested-dialog focus races.
-      await act(async () => {
-        vi.runAllTimers();
-      });
+    // Handoff is deferred via setTimeout(0); waitFor polls until the manual
+    // form renders with hydrated fields.
+    const contactInput = (await screen.findByLabelText(/contact name/i, {}, { timeout: 2000 })) as HTMLInputElement;
+    const companyInput = screen.getByLabelText(/company/i) as HTMLInputElement;
+    const phoneInput = screen.getByLabelText(/phone number/i) as HTMLInputElement;
 
-      // The real manual form is now rendered with hydrated fields.
-      const contactInput = (await screen.findByLabelText(/contact name/i)) as HTMLInputElement;
-      const companyInput = screen.getByLabelText(/company/i) as HTMLInputElement;
-      const phoneInput = screen.getByLabelText(/phone number/i) as HTMLInputElement;
-
+    await waitFor(() => {
       expect(contactInput.value).toBe("Jane Prospect");
-      expect(companyInput.value).toBe("Acme Widgets");
-      expect(phoneInput.value).toBe("+15550001111");
+    });
+    expect(companyInput.value).toBe("Acme Widgets");
+    expect(phoneInput.value).toBe("+15550001111");
 
-      // Outbound direction button reflects the pre-filled selection.
-      const outbound = screen.getByRole("button", { name: /outbound/i });
-      expect(outbound.className).toMatch(/border-primary/);
-    } finally {
-      vi.useRealTimers();
-    }
+    // Outbound direction button reflects the pre-filled selection.
+    const outbound = screen.getByRole("button", { name: /outbound/i });
+    expect(outbound.className).toMatch(/border-primary/);
   });
 });
