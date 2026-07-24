@@ -107,14 +107,6 @@ export function TeamMembersManager() {
     });
   };
 
-  const handleSelectAlowareUser = (alowareId: string) => {
-    setSelectedAlowareUser(alowareId);
-    const user = alowareUsers.find((u) => String(u.id) === alowareId);
-    if (user) {
-      setFullName(user.name);
-      setEmail(user.email);
-    }
-  };
 
   const resetForm = () => {
     setEmail("");
