@@ -35,14 +35,28 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
     navigate("/sign-in");
   };
 
+  // Display-only cleaner: strip URL substrings, trim, uppercase first visible char.
+  const cleanDisplay = (raw?: string | null) => {
+    if (!raw) return "";
+    const stripped = raw
+      .replace(/\bhttps?:\/\/\S+/gi, "")
+      .replace(/\bwww\.\S+/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!stripped) return "";
+    return stripped.charAt(0).toUpperCase() + stripped.slice(1);
+  };
+
+  const cleanedName = cleanDisplay(profile?.full_name) || cleanDisplay(user?.email?.split("@")[0]) || "User";
+
   const getInitials = () => {
-    if (profile?.full_name) {
-      return profile.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    if (cleanedName && cleanedName !== "User") {
+      return cleanedName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
     }
     return user?.email?.substring(0, 2).toUpperCase() || "??";
   };
 
-  const displayName = profile?.full_name || user?.email?.split("@")[0] || "User";
+  const displayName = cleanedName;
   const roleLabel = role === "manager" ? "Sales Manager" : "Sales Rep";
 
   return (
