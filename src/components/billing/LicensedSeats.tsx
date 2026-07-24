@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,9 +20,10 @@ const SEAT_ERROR_LABELS: Record<string, string> = {
   seats_below_used: "You can't reduce below current team size.",
   seats_above_max: `Maximum is ${MAX_SEATS} seats.`,
   no_subscription: "No active subscription.",
-  subscription_inactive: "Subscription is not active.",
+  subscription_inactive: "Subscription is not active. Manage it in the Billing Portal.",
   subscription_item_missing: "Subscription setup issue. Contact support.",
   invalid_plan: "Subscription price isn't recognized. Contact support.",
+  provider_mismatch: "Stripe returned an unexpected result. Try again.",
   forbidden: "Only managers can update seats.",
   unauthorized: "Please sign in again.",
   invalid_body: "Enter a valid seat count.",
