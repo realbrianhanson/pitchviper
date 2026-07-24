@@ -50,6 +50,19 @@ export default function ManagerDashboard() {
     refreshInsights,
   } = useManagerDashboard();
 
+  // Resolve the AI-provided rep_name to a real same-team user_id via exact
+  // normalized match. If the name is missing or ambiguous, coachingRepId stays
+  // null and the deep-link is hidden. Never trust an AI-supplied id.
+  const coachingRepId = useMemo(() => {
+    const name = insights?.coaching_opportunity?.rep_name;
+    if (!name) return null;
+    return resolveTeamMemberByName(
+      name,
+      teamMembers.map((m) => ({ user_id: m.user_id, full_name: m.full_name }))
+    );
+  }, [insights, teamMembers]);
+
+
   useEffect(() => {
     if (!authLoading && !isManager) navigate("/");
   }, [authLoading, isManager, navigate]);
