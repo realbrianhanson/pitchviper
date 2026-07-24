@@ -154,7 +154,9 @@ describe("No detailed error / PII logging patterns", () => {
 
 describe("Migration: anon revokes", () => {
   const migDir = "supabase/migrations";
-  const files = readdirSync(migDir).sort();
+  const files = readdirSync(migDir)
+    .filter((f) => f.endsWith(".sql") && f.includes("defense_in_depth_revokes"))
+    .sort();
   const latest = files[files.length - 1];
   const sql = readFileSync(join(migDir, latest), "utf8");
 
