@@ -31,20 +31,20 @@ export default function TeamSettings() {
     <AppLayout title="Settings">
       <div className="animate-fade-in">
         <Tabs value={value} onValueChange={setTab} className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="team" className="gap-2">
+          <TabsList className="grid w-full grid-cols-2 gap-1 h-auto sm:inline-flex sm:w-auto sm:h-10 sm:grid-cols-none sm:gap-0">
+            <TabsTrigger value="team" className="gap-2 min-h-10">
               <Users className="h-4 w-4" />
               Team
             </TabsTrigger>
-            <TabsTrigger value="phone" className="gap-2">
+            <TabsTrigger value="phone" className="gap-2 min-h-10">
               <Phone className="h-4 w-4" />
               Phone system
             </TabsTrigger>
-            <TabsTrigger value="data-import" className="gap-2">
+            <TabsTrigger value="data-import" className="gap-2 min-h-10">
               <Upload className="h-4 w-4" />
               Data import
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="gap-2">
+            <TabsTrigger value="notifications" className="gap-2 min-h-10">
               <Bell className="h-4 w-4" />
               Notifications
             </TabsTrigger>
