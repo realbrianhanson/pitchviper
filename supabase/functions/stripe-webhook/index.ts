@@ -1,4 +1,4 @@
-// Stripe webhook: signed raw-body verification, idempotent processing.
+// Stripe webhook: signed raw-body verification, atomic idempotent processing.
 // verify_jwt = false (configured in supabase/config.toml).
 // Only trusts Stripe-signed payloads; never trusts client input.
 
@@ -14,6 +14,9 @@ const HANDLED_TYPES = new Set([
   "customer.subscription.deleted",
 ]);
 
+// deno-lint-ignore no-explicit-any
+type Svc = any;
+
 serve(async (req) => {
   if (req.method !== "POST") return new Response("method_not_allowed", { status: 405 });
 
@@ -27,7 +30,6 @@ serve(async (req) => {
   const signature = req.headers.get("stripe-signature");
   if (!signature) return new Response("missing_signature", { status: 400 });
 
-  // Raw body must be read before parsing.
   const rawBody = await req.text();
 
   const stripe = new Stripe(stripeKey, {
@@ -49,90 +51,140 @@ serve(async (req) => {
     return new Response("invalid_signature", { status: 400 });
   }
 
-  const service = createClient(
+  const service: Svc = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  // Idempotency: upsert event row. If already completed, ack immediately.
-  const { data: existing } = await service
-    .from("stripe_webhook_events")
-    .select("status, attempts")
-    .eq("event_id", event.id)
-    .maybeSingle();
+  const objectId = ((event.data.object as { id?: string })?.id) ?? null;
 
-  if (existing?.status === "completed") return new Response("ok", { status: 200 });
-
+  // Ignore unhandled event types via an atomic upsert; no processing needed.
   if (!HANDLED_TYPES.has(event.type)) {
-    await service.from("stripe_webhook_events").upsert(
+    const { error } = await service.from("stripe_webhook_events").upsert(
       {
         event_id: event.id,
         event_type: event.type,
+        object_id: objectId,
         status: "ignored",
         processed_at: new Date().toISOString(),
       },
       { onConflict: "event_id" },
     );
+    if (error) {
+      console.error("stripe-webhook ignored-upsert failed", error.message);
+      return new Response("processing_error", { status: 500 });
+    }
     return new Response("ok", { status: 200 });
   }
 
-  const objectId = ((event.data.object as { id?: string })?.id) ?? null;
-
-  await service.from("stripe_webhook_events").upsert(
-    {
-      event_id: event.id,
-      event_type: event.type,
-      object_id: objectId,
-      status: "processing",
-      attempts: (existing?.attempts ?? 0) + 1,
-    },
-    { onConflict: "event_id" },
-  );
+  // Atomic claim: at most one caller processes at a time.
+  const { data: claim, error: claimErr } = await service.rpc("claim_stripe_webhook_event", {
+    p_event_id: event.id,
+    p_event_type: event.type,
+    p_object_id: objectId,
+  });
+  if (claimErr) {
+    console.error("stripe-webhook claim failed", claimErr.message);
+    return new Response("processing_error", { status: 500 });
+  }
+  const claimStatus = (claim as { status?: string } | null)?.status;
+  if (claimStatus === "completed" || claimStatus === "ignored") {
+    return new Response("ok", { status: 200 });
+  }
+  if (claimStatus === "processing") {
+    // Another delivery holds the claim; let Stripe retry later.
+    return new Response("processing_in_flight", { status: 409 });
+  }
+  if (claimStatus !== "claimed") {
+    console.error("stripe-webhook unexpected claim status", claimStatus);
+    return new Response("processing_error", { status: 500 });
+  }
 
   try {
-    await processEvent(event, stripe, service);
-    await service
+    const result = await processEvent(event, stripe, service);
+    if (result === "ignored") {
+      const { error } = await service
+        .from("stripe_webhook_events")
+        .update({
+          status: "ignored",
+          processed_at: new Date().toISOString(),
+          error: null,
+        })
+        .eq("event_id", event.id);
+      if (error) throw new Error("ledger_update_failed");
+      return new Response("ok", { status: 200 });
+    }
+    const { error: doneErr } = await service
       .from("stripe_webhook_events")
-      .update({ status: "completed", processed_at: new Date().toISOString(), error: null })
+      .update({
+        status: "completed",
+        processed_at: new Date().toISOString(),
+        error: null,
+        team_id: result.teamId ?? null,
+      })
       .eq("event_id", event.id);
+    if (doneErr) throw new Error("ledger_update_failed");
     return new Response("ok", { status: 200 });
   } catch (err) {
-    const message = (err as Error).message?.slice(0, 500) ?? "unknown";
-    console.error("stripe-webhook processing failed", event.type, message);
+    const code = normalizeFailureCode((err as Error).message);
+    console.error("stripe-webhook processing failed", event.type, code);
     await service
       .from("stripe_webhook_events")
-      .update({ status: "failed", error: message })
+      .update({ status: "failed", error: code })
       .eq("event_id", event.id);
-    // Return 500 so Stripe retries.
     return new Response("processing_error", { status: 500 });
   }
 });
 
+type ProcessResult = "ignored" | { teamId: string | null };
+
+const FAILURE_CODES = new Set([
+  "malformed_event",
+  "unknown_price",
+  "apply_failed",
+  "ledger_update_failed",
+  "stripe_lookup_failed",
+]);
+function normalizeFailureCode(msg: string): string {
+  return FAILURE_CODES.has(msg) ? msg : "unknown_error";
+}
+
 async function processEvent(
   event: Stripe.Event,
   stripe: Stripe,
-  // deno-lint-ignore no-explicit-any
-  service: any,
-) {
+  service: Svc,
+): Promise<ProcessResult> {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const teamId =
       (session.metadata?.team_id as string | undefined) ??
       (session.client_reference_id as string | undefined) ??
       null;
-    if (!teamId || typeof session.subscription !== "string") return;
-    const sub = await stripe.subscriptions.retrieve(session.subscription);
+    // Checkout without our team metadata is not one of ours: safe to ignore.
+    if (!teamId) return "ignored";
+    if (typeof session.subscription !== "string") {
+      throw new Error("malformed_event");
+    }
+    let sub: Stripe.Subscription;
+    try {
+      sub = await stripe.subscriptions.retrieve(session.subscription);
+    } catch {
+      throw new Error("stripe_lookup_failed");
+    }
     await applySubscription(service, teamId, sub);
-    return;
+    return { teamId };
   }
+
   const sub = event.data.object as Stripe.Subscription;
-  const teamId =
-    (sub.metadata?.team_id as string | undefined) ??
-    (await resolveTeamFromCustomer(service, sub.customer as string));
-  if (!teamId) return;
+  let teamId = (sub.metadata?.team_id as string | undefined) ?? null;
+  if (!teamId) {
+    teamId = await resolveTeamFromCustomer(service, sub.customer as string);
+  }
+  // Unrelated subscription (no metadata, customer not in our billing table) → ignore.
+  if (!teamId) return "ignored";
 
   if (event.type === "customer.subscription.deleted") {
-    await service
+    const { error } = await service
       .from("team_billing")
       .update({
         status: "canceled",
@@ -141,38 +193,41 @@ async function processEvent(
         last_webhook_at: new Date().toISOString(),
       })
       .eq("team_id", teamId);
-    await service
-      .from("stripe_webhook_events")
-      .update({ team_id: teamId })
-      .eq("event_id", event.id);
-    return;
+    if (error) throw new Error("apply_failed");
+    return { teamId };
   }
 
   await applySubscription(service, teamId, sub);
-  await service.from("stripe_webhook_events").update({ team_id: teamId }).eq("event_id", event.id);
+  return { teamId };
 }
 
-// deno-lint-ignore no-explicit-any
-async function resolveTeamFromCustomer(service: any, customerId: string): Promise<string | null> {
+async function resolveTeamFromCustomer(service: Svc, customerId: string): Promise<string | null> {
   if (!customerId) return null;
-  const { data } = await service
+  const { data, error } = await service
     .from("team_billing")
     .select("team_id")
     .eq("stripe_customer_id", customerId)
     .maybeSingle();
-  return data?.team_id ?? null;
+  if (error) throw new Error("apply_failed");
+  return (data as { team_id?: string } | null)?.team_id ?? null;
 }
 
-// deno-lint-ignore no-explicit-any
-async function applySubscription(service: any, teamId: string, sub: Stripe.Subscription) {
+async function applySubscription(service: Svc, teamId: string, sub: Stripe.Subscription) {
   const item = sub.items.data[0];
   const priceId = item?.price?.id ?? null;
-  const quantity = item?.quantity ?? 5;
+  const quantity = item?.quantity ?? null;
   const mapped = priceId ? priceToPlan(priceId) : null;
+
+  // Fail closed for app subscriptions whose price we don't recognize.
+  if (!priceId || !mapped || quantity == null) {
+    throw new Error("unknown_price");
+  }
 
   const patch: Record<string, unknown> = {
     stripe_subscription_id: sub.id,
     status: sub.status,
+    plan: mapped.plan,
+    billing_interval: mapped.interval,
     stripe_price_id: priceId,
     subscription_quantity: quantity,
     seat_limit: quantity,
@@ -182,9 +237,6 @@ async function applySubscription(service: any, teamId: string, sub: Stripe.Subsc
       : null,
     last_webhook_at: new Date().toISOString(),
   };
-  if (mapped) {
-    patch.plan = mapped.plan;
-    patch.billing_interval = mapped.interval;
-  }
-  await service.from("team_billing").update(patch).eq("team_id", teamId);
+  const { error } = await service.from("team_billing").update(patch).eq("team_id", teamId);
+  if (error) throw new Error("apply_failed");
 }
