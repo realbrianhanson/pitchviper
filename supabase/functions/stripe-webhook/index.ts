@@ -128,10 +128,13 @@ serve(async (req) => {
   } catch (err) {
     const code = normalizeFailureCode((err as Error).message);
     console.error("stripe-webhook processing failed", event.type, code);
-    await service
+    const { error: failErr } = await service
       .from("stripe_webhook_events")
       .update({ status: "failed", error: code })
       .eq("event_id", event.id);
+    if (failErr) {
+      console.error("stripe-webhook ledger fail-update failed", event.type);
+    }
     return new Response("processing_error", { status: 500 });
   }
 });
