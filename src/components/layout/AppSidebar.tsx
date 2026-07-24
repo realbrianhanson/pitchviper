@@ -22,6 +22,7 @@ import {
   Phone,
   Building2,
   Sparkles,
+  CreditCard,
 } from "lucide-react";
 
 import {
@@ -82,6 +83,7 @@ const managerNavItems: NavItem[] = [
   { title: "Competitions", url: "/manager/competitions", icon: Gamepad2 },
   { title: "Company Setup", url: "/workspace-setup", icon: Building2 },
   { title: "Team Settings", url: "/team-settings", icon: Settings },
+  { title: "Billing", url: "/billing", icon: CreditCard },
 ];
 
 const sampleNavItem: NavItem = { title: "Sample workspace", url: "/sample-workspace", icon: Sparkles };

@@ -15,6 +15,7 @@ import { WorkspaceSetupChecklist } from "@/components/manager/WorkspaceSetupChec
 import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 import { Button } from "@/components/ui/button";
 import { resolveTeamMemberByName } from "@/lib/coachingValidation";
+import { BillingStatusStrip } from "@/components/billing/BillingStatusStrip";
 
 function formatDate(): string {
   return new Date().toLocaleDateString("en-US", {
@@ -131,6 +132,10 @@ export default function ManagerDashboard() {
             <ManagerQuickActions />
           </div>
         </motion.div>
+
+        <BillingStatusStrip />
+
+
 
         {/* Error banner */}
         {error && (

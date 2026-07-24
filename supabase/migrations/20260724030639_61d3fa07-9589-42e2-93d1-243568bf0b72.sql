@@ -1,0 +1,1 @@
+COMMENT ON TABLE public.team_billing IS 'Per-team billing state; managed by service role via Stripe webhook.';

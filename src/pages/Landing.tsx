@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Activity, Radio, Target, Trophy } from "lucide-react";
+import { ArrowRight, Activity, Radio, Target, Trophy, CheckCircle2 } from "lucide-react";
+import { PLANS, MIN_SEATS, TRIAL_DAYS, formatUSD, annualSavingsPerSeat } from "@/lib/billingPlans";
 
 function useDocumentMeta(title: string, description: string) {
   useEffect(() => {
@@ -257,6 +258,92 @@ export default function Landing() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className="border-t border-border">
+        <div className="mx-auto max-w-7xl px-6 md:px-10 py-24 md:py-32 space-y-12">
+          <SectionHeading
+            eyebrow="Pricing"
+            title={<>Simple <span className="italic text-primary">per-seat</span> pricing.</>}
+            lede={`Start with a ${TRIAL_DAYS}-day full-feature trial — no card required. ${MIN_SEATS}-seat minimum. Cancel anytime.`}
+          />
+          <div className="grid gap-6 md:grid-cols-3">
+            {PLANS.map((plan) => (
+              <div
+                key={plan.id}
+                className={`bg-card p-6 flex flex-col gap-5 border ${plan.recommended ? "border-primary" : "border-border"}`}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="eyebrow">{plan.name}</div>
+                    <p className="text-sm text-muted-foreground mt-2 max-w-[28ch]">{plan.tagline}</p>
+                  </div>
+                  {plan.recommended && (
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
+                      Recommended
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <div className="font-display text-4xl tabular-nums">
+                    {formatUSD(plan.monthlyPerSeat)}
+                    <span className="text-sm text-muted-foreground font-body ml-1">/seat/mo</span>
+                  </div>
+                  <div className="text-xs font-mono uppercase tracking-[0.2em] text-muted-foreground mt-1">
+                    or {formatUSD(plan.annualPerSeat)}/seat/yr · save {formatUSD(annualSavingsPerSeat(plan))} annually
+                  </div>
+                </div>
+                <ul className="space-y-2 text-sm">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  to="/sign-up"
+                  className="mt-auto text-center bg-primary text-primary-foreground px-4 py-3 font-mono text-xs uppercase tracking-[0.2em] hover:brightness-110 transition-all"
+                >
+                  Start {TRIAL_DAYS}-day trial
+                </Link>
+              </div>
+            ))}
+            <div className="bg-card border border-border p-6 flex flex-col gap-5">
+              <div>
+                <div className="eyebrow">Enterprise</div>
+                <p className="text-sm text-muted-foreground mt-2 max-w-[28ch]">
+                  Custom onboarding and terms for larger sales orgs.
+                </p>
+              </div>
+              <div className="font-display text-4xl">Custom</div>
+              <ul className="space-y-2 text-sm">
+                {[
+                  "Guided onboarding & data mapping",
+                  "Integration assistance",
+                  "Extended audit history",
+                  "Priority support",
+                  "Volume pricing",
+                ].map((f) => (
+                  <li key={f} className="flex gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="mailto:sales@pitchviper.com?subject=Enterprise%20inquiry"
+                className="mt-auto text-center border border-border px-4 py-3 font-mono text-xs uppercase tracking-[0.2em] hover:border-primary transition-colors"
+              >
+                Talk to sales
+              </a>
+            </div>
+          </div>
+          <p className="text-xs font-mono uppercase tracking-[0.2em] text-muted-foreground">
+            {MIN_SEATS}-seat minimum · Annual plans include 2 months free · Cancel anytime
+          </p>
         </div>
       </section>
 
