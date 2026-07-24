@@ -11,6 +11,7 @@ import { TeamTable } from "@/components/manager/TeamTable";
 import { AITeamInsights } from "@/components/manager/AITeamInsights";
 import { ManagerQuickActions } from "@/components/manager/ManagerQuickActions";
 import { ForecastSection } from "@/components/manager/ForecastSection";
+import { WorkspaceSetupChecklist } from "@/components/manager/WorkspaceSetupChecklist";
 import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 import { Button } from "@/components/ui/button";
 
