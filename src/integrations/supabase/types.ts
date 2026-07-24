@@ -1905,6 +1905,59 @@ export type Database = {
           },
         ]
       }
+      team_provider_integrations: {
+        Row: {
+          api_token_secret_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          last_verified_at: string | null
+          provider: string
+          status: string
+          team_id: string
+          updated_at: string
+          updated_by: string | null
+          webhook_key: string
+          webhook_secret_id: string | null
+        }
+        Insert: {
+          api_token_secret_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_verified_at?: string | null
+          provider: string
+          status?: string
+          team_id: string
+          updated_at?: string
+          updated_by?: string | null
+          webhook_key?: string
+          webhook_secret_id?: string | null
+        }
+        Update: {
+          api_token_secret_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_verified_at?: string | null
+          provider?: string
+          status?: string
+          team_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          webhook_key?: string
+          webhook_secret_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_provider_integrations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teams: {
         Row: {
           created_at: string
@@ -2452,6 +2505,10 @@ export type Database = {
       }
     }
     Functions: {
+      _svc_provider_secret_name: {
+        Args: { _kind: string; _provider: string; _team_id: string }
+        Returns: string
+      }
       abandon_stale_roleplay_sessions: { Args: never; Returns: number }
       append_roleplay_messages: {
         Args: { p_messages: Json; p_session_id: string }
@@ -2628,6 +2685,39 @@ export type Database = {
       }
       svc_join_team_by_code: {
         Args: { _code: string; _user_id: string }
+        Returns: Json
+      }
+      svc_provider_integration_by_webhook_key: {
+        Args: { _webhook_key: string }
+        Returns: Json
+      }
+      svc_provider_integration_disconnect: {
+        Args: { _provider: string; _team_id: string }
+        Returns: Json
+      }
+      svc_provider_integration_get_secret: {
+        Args: { _kind: string; _provider: string; _team_id: string }
+        Returns: string
+      }
+      svc_provider_integration_mark_verified: {
+        Args: { _provider: string; _status?: string; _team_id: string }
+        Returns: undefined
+      }
+      svc_provider_integration_rotate_webhook_secret: {
+        Args: { _actor?: string; _provider: string; _team_id: string }
+        Returns: Json
+      }
+      svc_provider_integration_save_token: {
+        Args: {
+          _actor?: string
+          _provider: string
+          _team_id: string
+          _token: string
+        }
+        Returns: Json
+      }
+      svc_provider_integration_status: {
+        Args: { _provider: string; _team_id: string }
         Returns: Json
       }
       svc_release_reservation: {
