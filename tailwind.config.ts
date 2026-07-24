@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Instrument Serif"', "Georgia", "serif"],
-        body: ['"Work Sans"', "system-ui", "sans-serif"],
+        display: ['"DM Sans"', "system-ui", "sans-serif"],
+        body: ['"DM Sans"', "system-ui", "sans-serif"],
+        brand: ['"Instrument Serif"', "Georgia", "serif"],
         mono: ['"JetBrains Mono"', "ui-monospace", "monospace"],
       },
       colors: {
@@ -143,11 +144,11 @@ export default {
         "flame-flicker": "flame-flicker 1.4s ease-in-out infinite",
       },
       boxShadow: {
-        "glow-sm": "0 0 10px hsl(var(--primary) / 0.3)",
-        "glow-md": "0 0 20px hsl(var(--primary) / 0.4)",
-        "glow-lg": "0 0 30px hsl(var(--primary) / 0.5)",
-        "glow-magenta": "0 0 20px hsl(var(--magenta) / 0.4)",
-        "glow-success": "0 0 20px hsl(var(--success) / 0.4)",
+        "glow-sm": "0 1px 2px 0 hsl(220 15% 14% / 0.05)",
+        "glow-md": "0 4px 12px -2px hsl(220 15% 14% / 0.08)",
+        "glow-lg": "0 8px 24px -4px hsl(220 15% 14% / 0.10)",
+        "glow-magenta": "0 4px 12px -2px hsl(var(--destructive) / 0.18)",
+        "glow-success": "0 4px 12px -2px hsl(var(--success) / 0.18)",
       },
     },
   },

@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, ChevronDown, User, Settings, LogOut, Phone } from "lucide-react";
-import { ViperInput } from "@/components/ui/viper-input";
-import { ViperButton } from "@/components/ui/viper-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { LogCallModal } from "@/components/calls/LogCallModal";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { ChatPanel } from "@/components/chat/ChatPanel";
-
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface AppHeaderProps {
   title?: string;
@@ -27,11 +25,9 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
   const navigate = useNavigate();
   const [showLogCall, setShowLogCall] = useState(false);
 
-  const profile = authProfile ? {
-    full_name: authProfile.full_name,
-    avatar_url: authProfile.avatar_url,
-    title: authProfile.title,
-  } : null;
+  const profile = authProfile
+    ? { full_name: authProfile.full_name, avatar_url: authProfile.avatar_url, title: authProfile.title }
+    : null;
   const role = isManager ? "manager" : "rep";
 
   const handleSignOut = async () => {
@@ -39,15 +35,9 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
     navigate("/sign-in");
   };
 
-  // Get initials from name
   const getInitials = () => {
     if (profile?.full_name) {
-      return profile.full_name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2);
+      return profile.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
     }
     return user?.email?.substring(0, 2).toUpperCase() || "??";
   };
@@ -56,112 +46,107 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
   const roleLabel = role === "manager" ? "Sales Manager" : "Sales Rep";
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-2 md:gap-4 border-b border-border bg-background px-3 md:px-8">
-      {/* Left: Mobile menu + editorial breadcrumb */}
-      <div className="flex items-center gap-2 md:gap-3 min-w-0 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-        <SidebarTrigger className="md:hidden -ml-1 text-muted-foreground hover:text-primary" />
-        <span className="text-primary hidden sm:inline">PITCHVIPER</span>
-        <span className="opacity-30 hidden sm:inline">/</span>
-        <span className="truncate text-foreground">{title || "Dashboard"}</span>
+    <header className="sticky top-0 z-40 flex h-[68px] items-center justify-between gap-3 md:gap-6 border-b border-border bg-card px-4 sm:px-6 lg:px-8">
+      {/* Left: mobile trigger + page title */}
+      <div className="flex items-center gap-3 min-w-0">
+        <SidebarTrigger className="md:hidden -ml-1 text-muted-foreground hover:text-foreground" />
+        <h1 className="text-[17px] font-medium text-foreground truncate leading-none">
+          {title || "Dashboard"}
+        </h1>
       </div>
 
-      {/* Center: Command palette trigger */}
+      {/* Center: command search */}
       <div className="hidden lg:flex flex-1 max-w-md mx-auto">
         <button
           onClick={onOpenPalette}
-          className="group w-full flex items-center justify-between gap-2 border border-border hover:border-primary/60 transition-colors px-3 py-1.5 text-left"
+          className="group w-full flex items-center justify-between gap-2 rounded-md border border-border bg-background hover:bg-accent/40 hover:border-ring/40 transition-colors px-3 h-9 text-left"
         >
           <span className="flex items-center gap-2 text-muted-foreground">
-            <Search className="h-3.5 w-3.5" strokeWidth={1.5} />
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em]">
-              Jump to anything
-            </span>
+            <Search className="h-4 w-4" strokeWidth={1.75} />
+            <span className="text-[13px]">Search or jump to…</span>
           </span>
-          <kbd className="font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground/70 border border-border px-1.5 py-0.5">
+          <kbd className="font-mono text-[11px] text-muted-foreground/80 border border-border rounded px-1.5 py-0.5 bg-muted/50">
             ⌘K
           </kbd>
         </button>
       </div>
 
-      {/* Right: Actions */}
-      <div className="flex items-center gap-1 md:gap-4">
+      {/* Right: actions */}
+      <div className="flex items-center gap-1.5 md:gap-2">
         <button
           onClick={onOpenPalette}
-          className="md:hidden inline-flex h-8 w-8 items-center justify-center border border-border text-muted-foreground hover:text-primary hover:border-primary/60 transition-colors"
+          className="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
           aria-label="Open command palette"
         >
-          <Search className="h-3.5 w-3.5" strokeWidth={1.5} />
+          <Search className="h-4 w-4" strokeWidth={1.75} />
         </button>
+
         <button
           onClick={() => setShowLogCall(true)}
-          className="hidden md:inline-flex items-center gap-2 px-4 py-1.5 border border-primary/60 text-primary text-[10px] font-mono uppercase tracking-[0.2em] font-bold hover:bg-primary hover:text-primary-foreground transition-all"
+          className="hidden md:inline-flex items-center gap-2 h-9 px-3.5 rounded-md bg-primary text-primary-foreground text-[13px] font-medium hover:bg-primary/90 transition-colors shadow-elev-xs"
         >
-          <Phone className="h-3 w-3" />
-          Log Session
+          <Phone className="h-3.5 w-3.5" strokeWidth={2} />
+          Log session
         </button>
         <button
           onClick={() => setShowLogCall(true)}
-          className="md:hidden inline-flex h-8 w-8 items-center justify-center border border-primary/60 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+          className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           aria-label="Log session"
         >
-          <Phone className="h-3.5 w-3.5" />
+          <Phone className="h-4 w-4" />
         </button>
         <LogCallModal open={showLogCall} onOpenChange={setShowLogCall} />
 
-        <div className="flex items-center gap-1 text-muted-foreground">
+        <div className="flex items-center gap-0.5 text-muted-foreground">
           <ChatPanel />
-          
           <NotificationBell />
+          <ThemeToggle />
         </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               aria-label={`Account menu for ${displayName}`}
-              className="flex items-center gap-2 md:gap-3 px-1 md:px-2 py-1 transition-colors hover:text-primary md:border-l md:border-border md:pl-4 md:ml-2"
+              className="flex items-center gap-2 md:gap-2.5 h-9 pl-1 pr-1.5 md:pl-2 md:pr-2 rounded-md hover:bg-accent transition-colors md:border-l md:border-border md:ml-1 md:rounded-l-none"
             >
-
-
               {profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
                   alt={profile.full_name}
-                  className="h-8 w-8 rounded-full object-cover border border-primary/30"
+                  className="h-7 w-7 rounded-full object-cover"
                 />
               ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent border border-primary/30">
-                  <span className="text-[10px] font-mono font-bold text-primary">
-                    {getInitials()}
-                  </span>
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                  <span className="text-[11px] font-semibold">{getInitials()}</span>
                 </div>
               )}
-              <div className="hidden md:flex flex-col items-start">
-                <span className="text-xs font-semibold text-foreground leading-tight">{displayName}</span>
-                <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground leading-tight mt-0.5">{roleLabel}</span>
+              <div className="hidden md:flex flex-col items-start leading-tight">
+                <span className="text-[13px] font-medium text-foreground">{displayName}</span>
+                <span className="text-[11px] text-muted-foreground mt-0.5">{roleLabel}</span>
               </div>
-              <ChevronDown className="h-3 w-3 text-muted-foreground hidden md:block" />
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground hidden md:block" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-card border-border z-50 rounded-none">
+          <DropdownMenuContent align="end" className="w-56 bg-popover border-border z-50">
             <div className="px-3 py-2 border-b border-border">
-              <p className="text-sm font-medium text-foreground">{displayName}</p>
-              <p className="text-xs text-muted-foreground">{user?.email}</p>
+              <p className="text-[13px] font-medium text-foreground">{displayName}</p>
+              <p className="text-[12px] text-muted-foreground truncate">{user?.email}</p>
             </div>
-            <DropdownMenuItem className="gap-2 cursor-pointer rounded-none" onClick={() => navigate("/performance")}>
+            <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => navigate("/performance")}>
               <User className="h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 cursor-pointer rounded-none" onClick={() => navigate("/settings")}>
+            <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => navigate("/settings")}>
               <Settings className="h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="gap-2 cursor-pointer text-destructive focus:text-destructive rounded-none"
+              className="gap-2 cursor-pointer text-destructive focus:text-destructive"
               onClick={handleSignOut}
             >
               <LogOut className="h-4 w-4" />
-              <span>Sign Out</span>
+              <span>Sign out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -95,7 +95,7 @@ const queryClient = new QueryClient({
 // Main application component
 const App = () => (
   <ErrorBoundary>
-    <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" enableSystem={false}>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem storageKey="pitchviper-theme">
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>

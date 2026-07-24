@@ -8,7 +8,7 @@ import { ClosersToolkit } from "@/components/toolkit/ClosersToolkit";
 import { ManagerFAB } from "@/components/manager/ManagerFAB";
 import { BroadcastModal } from "@/components/manager/BroadcastModal";
 import { LogCallModal } from "@/components/calls/LogCallModal";
-import { FilmGrain } from "@/components/ui/film-grain";
+
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -22,14 +22,15 @@ export function AppLayout({ children, title }: AppLayoutProps) {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full">
-        <FilmGrain />
+      <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-h-screen min-w-0">
           <AppHeader title={title} onOpenPalette={() => palette.setOpen(true)} />
           <LiveTicker />
-          <main className="flex-1 relative overflow-x-hidden bg-background">
-            <div className="relative z-10 p-4 sm:p-6 lg:p-8 xl:p-10">{children}</div>
+          <main className="flex-1 overflow-x-hidden bg-background">
+            <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-10 py-6 lg:py-8">
+              {children}
+            </div>
           </main>
           <ClosersToolkit />
           <ManagerFAB onSendBroadcast={() => setShowBroadcast(true)} />

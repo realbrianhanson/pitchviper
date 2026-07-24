@@ -97,14 +97,17 @@ function NavItemRow({ item, isCollapsed, active }: { item: NavItem; isCollapsed:
         <NavLink
           to={item.url}
           className={cn(
-            "relative flex items-center gap-3 px-3 py-2.5 text-sm transition-colors duration-150 rounded-none",
+            "relative flex items-center gap-3 px-3 py-2 text-[15px] leading-tight transition-colors duration-150 rounded-md",
             active
-              ? "bg-accent text-primary border-l-2 border-primary -ml-px"
-              : "text-muted-foreground hover:text-foreground border-l-2 border-transparent -ml-px"
+              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+              : "text-sidebar-foreground/75 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
           )}
         >
-          <item.icon className={cn("h-4 w-4 shrink-0", active ? "text-primary" : "")} strokeWidth={1.5} />
-          {!isCollapsed && <span className="font-medium">{item.title}</span>}
+          <item.icon
+            className={cn("h-[18px] w-[18px] shrink-0", active ? "text-primary" : "text-sidebar-foreground/60")}
+            strokeWidth={1.75}
+          />
+          {!isCollapsed && <span>{item.title}</span>}
         </NavLink>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -120,35 +123,35 @@ export function AppSidebar() {
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-border bg-sidebar"
+      className="border-r border-sidebar-border bg-sidebar"
       style={{
-        "--sidebar-width": "260px",
+        "--sidebar-width": "248px",
         "--sidebar-width-icon": "72px",
       } as React.CSSProperties}
     >
-      <SidebarHeader className="p-6 pb-8 border-b border-border">
+      <SidebarHeader className="px-5 pt-6 pb-5 border-b border-sidebar-border">
         <div className="flex flex-col">
-          <span className="font-display italic text-2xl tracking-tight text-primary leading-none">
+          <span className="brand-wordmark text-[22px] text-sidebar-foreground leading-none">
             PitchViper
           </span>
           {!isCollapsed && (
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-2">
-              Sales Command
+            <span className="text-[11px] text-muted-foreground mt-1.5">
+              Sales OS
             </span>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-3 py-6">
+      <SidebarContent className="px-3 py-5">
         {navGroups.map((group, idx) => (
-          <SidebarGroup key={group.label} className={idx > 0 ? "mt-4" : ""}>
+          <SidebarGroup key={group.label} className={idx > 0 ? "mt-5" : ""}>
             {!isCollapsed && (
-              <SidebarGroupLabel className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 font-bold px-3 mb-2">
+              <SidebarGroupLabel className="text-[11px] font-medium text-muted-foreground px-3 mb-1.5">
                 {group.label}
               </SidebarGroupLabel>
             )}
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-0.5">
                 {group.items.map((item) => (
                   <NavItemRow
                     key={item.title}
@@ -164,15 +167,15 @@ export function AppSidebar() {
 
         {isManager && (
           <>
-            <SidebarSeparator className="my-6 bg-border" />
+            <SidebarSeparator className="my-5 bg-sidebar-border" />
             <SidebarGroup>
               {!isCollapsed && (
-                <SidebarGroupLabel className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 font-bold px-3 mb-2">
+                <SidebarGroupLabel className="text-[11px] font-medium text-muted-foreground px-3 mb-1.5">
                   Manager
                 </SidebarGroupLabel>
               )}
               <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="gap-0.5">
                   {managerNavItems.map((item) => (
                     <NavItemRow
                       key={item.title}
@@ -187,11 +190,11 @@ export function AppSidebar() {
           </>
         )}
 
-        <SidebarSeparator className="my-6 bg-border" />
+        <SidebarSeparator className="my-5 bg-sidebar-border" />
 
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-0.5">
               {bottomNavItems.map((item) => (
                 <NavItemRow
                   key={item.title}
@@ -205,11 +208,11 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-border">
+      <SidebarFooter className="p-3 border-t border-sidebar-border">
         <button
           onClick={toggleSidebar}
           className={cn(
-            "flex items-center gap-3 w-full px-3 py-2 text-xs font-mono uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors",
+            "flex items-center gap-2 w-full px-3 py-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors rounded-md",
             isCollapsed && "justify-center"
           )}
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
