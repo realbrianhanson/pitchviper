@@ -11,11 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-interface AlowareUser {
-  id: string | number;
-  name: string;
-  email: string;
-}
+// Legacy Aloware prefill retired: invitees are managed by name/email only.
 
 interface TeamMember {
   id: string;
