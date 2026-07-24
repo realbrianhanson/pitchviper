@@ -55,15 +55,15 @@ export function ClosersToolkit() {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button
+          aria-label="Open Closer's Toolkit"
           className={cn(
-            "fixed bottom-6 right-6 z-50 h-14 px-5 rounded-full shadow-lg",
-            "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70",
-            "transition-all duration-300 hover:scale-105 group"
+            "fixed bottom-4 right-4 z-50 rounded-xl border border-border shadow-elev-sm",
+            "bg-card text-foreground hover:bg-accent transition-colors",
+            "h-12 w-12 p-0 sm:h-11 sm:w-auto sm:px-4 sm:gap-2"
           )}
         >
-          <Briefcase className="h-5 w-5 mr-2 group-hover:hidden" />
-          <Zap className="h-5 w-5 mr-2 hidden group-hover:block animate-pulse" />
-          <span className="font-semibold">Toolkit</span>
+          <Briefcase className="h-5 w-5 sm:h-4 sm:w-4" strokeWidth={1.75} />
+          <span className="hidden sm:inline text-[13px] font-medium">Toolkit</span>
         </Button>
       </SheetTrigger>
 
