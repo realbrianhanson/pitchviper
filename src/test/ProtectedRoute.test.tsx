@@ -54,6 +54,22 @@ function renderAt(path: string) {
           }
         />
         <Route
+          path="/ai-coach"
+          element={
+            <ProtectedRoute>
+              <div>AI COACH</div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/competitions"
+          element={
+            <ProtectedRoute>
+              <div>COMPETITIONS</div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/onboarding"
           element={
             <ProtectedRoute>
@@ -66,6 +82,7 @@ function renderAt(path: string) {
     </MemoryRouter>,
   );
 }
+
 
 function reset() {
   authState.user = null;
