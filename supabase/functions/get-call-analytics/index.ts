@@ -44,7 +44,7 @@ serve(async (req) => {
     if (team_id) {
       const { data: callerProfile } = await supabase
         .from('profiles').select('team_id').eq('user_id', authedUserId).maybeSingle();
-      const { data: isManager } = await supabase.rpc('has_role', { _user_id: authedUserId, _role: 'manager' });
+      const { data: isManager } = await supabase.rpc('has_management_role', { _user_id: authedUserId });
       if (callerProfile?.team_id !== team_id || !isManager) {
         return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }

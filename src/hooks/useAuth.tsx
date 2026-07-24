@@ -16,6 +16,8 @@ interface Profile {
   promo_validated: boolean;
 }
 
+export type AppRole = "owner" | "admin" | "manager" | "rep";
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -24,10 +26,15 @@ interface AuthContextType {
   isLoading: boolean;
   profileLoaded: boolean;
   profileError: string | null;
+  role: AppRole | null;
+  canManageTeam: boolean;
+  /** Backward-compatible alias — true for owner, admin, or manager. */
   isManager: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
+
+const MANAGEMENT_ROLES: readonly AppRole[] = ["owner", "admin", "manager"];
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -38,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const [isManager, setIsManager] = useState(false);
+  const [role, setRole] = useState<AppRole | null>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
@@ -66,12 +73,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setProfile((profileData as Profile) ?? null);
-      setIsManager(roleData?.role === 'manager');
+      setRole((roleData?.role as AppRole | undefined) ?? null);
     } catch (err: any) {
       console.error('[useAuth] fetchProfile threw', err);
       setProfileError(err?.message ?? 'Failed to load profile');
       setProfile(null);
-      setIsManager(false);
+      setRole(null);
     } finally {
       setProfileLoaded(true);
     }
@@ -100,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 0);
         } else {
           setProfile(null);
-          setIsManager(false);
+          setRole(null);
           setProfileLoaded(true);
           setProfileError(null);
         }
@@ -131,8 +138,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const canManageTeam = role !== null && MANAGEMENT_ROLES.includes(role);
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, isLoading: loading, profileLoaded, profileError, isManager, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, isLoading: loading, profileLoaded, profileError, role, canManageTeam, isManager: canManageTeam, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

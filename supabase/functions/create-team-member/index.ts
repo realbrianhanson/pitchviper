@@ -110,12 +110,11 @@ Deno.serve(async (req) => {
     if (userErr || !userData.user) return json({ success: false, error: "unauthorized" }, 401);
     const manager = userData.user;
 
-    // Manager role check via has_role RPC
-    const { data: isManager } = await supabase.rpc("has_role", {
+    // Management role check (owner / admin / manager) via has_management_role RPC
+    const { data: isMgmt } = await supabase.rpc("has_management_role", {
       _user_id: manager.id,
-      _role: "manager",
     });
-    if (!isManager) return json({ success: false, error: "forbidden" }, 403);
+    if (!isMgmt) return json({ success: false, error: "forbidden" }, 403);
 
     const { data: managerProfile } = await supabase
       .from("profiles")

@@ -39,7 +39,7 @@ serve(async (req) => {
 
     // Caller must be the rep, or a manager on the same team
     if (rep_id !== userData.user.id) {
-      const { data: isManager } = await authClient.rpc('has_role', { _user_id: userData.user.id, _role: 'manager' });
+      const { data: isManager } = await authClient.rpc('has_management_role', { _user_id: userData.user.id });
       const { data: callerProfile } = await supabase.from('profiles').select('team_id').eq('user_id', userData.user.id).maybeSingle();
       const { data: repTeam } = await supabase.from('profiles').select('team_id').eq('user_id', rep_id).maybeSingle();
       if (!isManager || !callerProfile?.team_id || callerProfile.team_id !== repTeam?.team_id) {

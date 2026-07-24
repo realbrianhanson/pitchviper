@@ -194,16 +194,11 @@ serve(async (req) => {
     }
 
     if (action === 'sync-team') {
-      // Only managers can sync team members
-      const { data: userRole } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-
-      if (userRole?.role !== 'manager') {
+      // Only owner / admin / manager can sync team members
+      const { data: isMgmt } = await supabase.rpc('has_management_role', { _user_id: user.id });
+      if (!isMgmt) {
         return new Response(
-          JSON.stringify({ success: false, error: 'Only managers can sync team members' }),
+          JSON.stringify({ success: false, error: 'Only team management can sync team members' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -285,16 +280,11 @@ serve(async (req) => {
     }
 
     if (action === 'map-user') {
-      // Map a profile to an Aloware user (manager only)
-      const { data: userRole } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-
-      if (userRole?.role !== 'manager') {
+      // Only owner / admin / manager can map profiles
+      const { data: isMgmt } = await supabase.rpc('has_management_role', { _user_id: user.id });
+      if (!isMgmt) {
         return new Response(
-          JSON.stringify({ success: false, error: 'Only managers can map users' }),
+          JSON.stringify({ success: false, error: 'Only team management can map users' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -303,6 +293,18 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ success: false, error: 'Profile ID and Aloware User ID are required' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // The target profile must live on the caller's team.
+      const { data: callerProfile } = await supabase
+        .from('profiles').select('team_id').eq('user_id', user.id).maybeSingle();
+      const { data: targetProfile } = await supabase
+        .from('profiles').select('team_id').eq('id', profileId).maybeSingle();
+      if (!callerProfile?.team_id || callerProfile.team_id !== targetProfile?.team_id) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Forbidden' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 

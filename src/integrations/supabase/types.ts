@@ -57,6 +57,7 @@ export type Database = {
           id: string
           payload: Json
           processed: boolean | null
+          team_id: string | null
         }
         Insert: {
           created_at?: string
@@ -65,6 +66,7 @@ export type Database = {
           id?: string
           payload?: Json
           processed?: boolean | null
+          team_id?: string | null
         }
         Update: {
           created_at?: string
@@ -73,8 +75,17 @@ export type Database = {
           id?: string
           payload?: Json
           processed?: boolean | null
+          team_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "aloware_sync_log_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audio_training_scores: {
         Row: {
@@ -108,6 +119,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      audit_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          target_id: string | null
+          target_type: string
+          team_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_type: string
+          team_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_type?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       badges: {
         Row: {
@@ -396,74 +448,190 @@ export type Database = {
           },
         ]
       }
+      coaching_actions: {
+        Row: {
+          assigned_by: string
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          rep_id: string
+          session_id: string
+          status: string
+          team_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_by: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          rep_id: string
+          session_id: string
+          status?: string
+          team_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          rep_id?: string
+          session_id?: string
+          status?: string
+          team_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_actions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coaching_actions_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coaching_sessions: {
         Row: {
           action_items: string[] | null
+          completed_at: string | null
           created_at: string
+          due_date: string | null
           focus_areas: string[] | null
           id: string
           manager_id: string
           next_session_date: string | null
           notes: string
           rep_id: string
+          status: string
+          team_id: string | null
+          updated_at: string
         }
         Insert: {
           action_items?: string[] | null
+          completed_at?: string | null
           created_at?: string
+          due_date?: string | null
           focus_areas?: string[] | null
           id?: string
           manager_id: string
           next_session_date?: string | null
           notes: string
           rep_id: string
+          status?: string
+          team_id?: string | null
+          updated_at?: string
         }
         Update: {
           action_items?: string[] | null
+          completed_at?: string | null
           created_at?: string
+          due_date?: string | null
           focus_areas?: string[] | null
           id?: string
           manager_id?: string
           next_session_date?: string | null
           notes?: string
           rep_id?: string
+          status?: string
+          team_id?: string | null
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "coaching_sessions_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_settings: {
         Row: {
+          brand_color: string
           common_use_cases: string[]
           company_name: string
           created_at: string
+          crm_connected_at: string | null
+          crm_provider: string
+          daily_appointments_target: number
+          daily_calls_target: number
+          first_sync_at: string | null
           id: string
           industry: string | null
+          logo_url: string | null
+          monthly_revenue_target: number
           product_description: string
+          setup_completed_at: string | null
           target_audience: string | null
           team_id: string | null
+          timezone: string
           updated_at: string
+          updated_by: string | null
           value_propositions: string[]
         }
         Insert: {
+          brand_color?: string
           common_use_cases?: string[]
           company_name?: string
           created_at?: string
+          crm_connected_at?: string | null
+          crm_provider?: string
+          daily_appointments_target?: number
+          daily_calls_target?: number
+          first_sync_at?: string | null
           id?: string
           industry?: string | null
+          logo_url?: string | null
+          monthly_revenue_target?: number
           product_description?: string
+          setup_completed_at?: string | null
           target_audience?: string | null
           team_id?: string | null
+          timezone?: string
           updated_at?: string
+          updated_by?: string | null
           value_propositions?: string[]
         }
         Update: {
+          brand_color?: string
           common_use_cases?: string[]
           company_name?: string
           created_at?: string
+          crm_connected_at?: string | null
+          crm_provider?: string
+          daily_appointments_target?: number
+          daily_calls_target?: number
+          first_sync_at?: string | null
           id?: string
           industry?: string | null
+          logo_url?: string | null
+          monthly_revenue_target?: number
           product_description?: string
+          setup_completed_at?: string | null
           target_audience?: string | null
           team_id?: string | null
+          timezone?: string
           updated_at?: string
+          updated_by?: string | null
           value_propositions?: string[]
         }
         Relationships: [
@@ -903,6 +1071,7 @@ export type Database = {
           matched_user_id: string | null
           occurred_at: string
           payload: Json
+          team_id: string | null
           unassigned: boolean
           value: number | null
         }
@@ -917,6 +1086,7 @@ export type Database = {
           matched_user_id?: string | null
           occurred_at?: string
           payload?: Json
+          team_id?: string | null
           unassigned?: boolean
           value?: number | null
         }
@@ -931,10 +1101,19 @@ export type Database = {
           matched_user_id?: string | null
           occurred_at?: string
           payload?: Json
+          team_id?: string | null
           unassigned?: boolean
           value?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ghl_activities_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       learning_paths: {
         Row: {
@@ -1511,6 +1690,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      team_billing: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          plan: string
+          seat_limit: number
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          team_id: string
+          trial_ends_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          plan?: string
+          seat_limit?: number
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          team_id: string
+          trial_ends_at?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          plan?: string
+          seat_limit?: number
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          team_id?: string
+          trial_ends_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_billing_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       team_broadcasts: {
         Row: {
@@ -2132,6 +2358,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["app_role"]
       }
       get_user_team_id: { Args: { p_user_id: string }; Returns: string }
+      has_management_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2159,6 +2386,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      log_team_audit_event: {
+        Args: {
+          p_action: string
+          p_metadata?: Json
+          p_target_id?: string
+          p_target_type: string
+        }
+        Returns: string
       }
       match_ghl_user: {
         Args: { _email: string; _ghl_user_id: string }
@@ -2198,7 +2434,7 @@ export type Database = {
         | "badge_earned"
         | "level_up"
         | "training_completed"
-      app_role: "rep" | "manager"
+      app_role: "rep" | "manager" | "owner" | "admin"
       badge_category:
         | "calls"
         | "closes"
@@ -2424,7 +2660,7 @@ export const Constants = {
         "level_up",
         "training_completed",
       ],
-      app_role: ["rep", "manager"],
+      app_role: ["rep", "manager", "owner", "admin"],
       badge_category: [
         "calls",
         "closes",
