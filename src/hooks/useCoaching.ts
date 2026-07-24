@@ -238,7 +238,7 @@ export function useCoaching() {
       if (!canManageTeam) throw new Error("forbidden");
 
       const sanitized = sanitizeSessionDraft(draft);
-      if (!sanitized.ok) throw new Error(sanitized.error);
+      if (sanitized.ok !== true) throw new Error(sanitized.error);
       const v = sanitized.value;
 
       const { data, error } = await supabase.rpc("create_coaching_session_with_actions", {
