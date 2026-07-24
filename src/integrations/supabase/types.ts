@@ -2360,6 +2360,7 @@ export type Database = {
         Args: { p_messages: Json; p_session_id: string }
         Returns: Json
       }
+      award_user_xp: { Args: { _delta: number }; Returns: number }
       calculate_streak: { Args: { p_user_id: string }; Returns: number }
       check_and_increment_rate_limit: {
         Args: {
