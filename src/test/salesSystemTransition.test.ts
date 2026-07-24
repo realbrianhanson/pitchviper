@@ -31,12 +31,18 @@ describe("sales system registry", () => {
     expect(hasInAppTelephony("manual")).toBe(false);
   });
 
-  it("allows dialer_io as a completed systems-step choice", () => {
+  it("allows dialer_io as a completed systems-step choice once reviewed", () => {
     expect(
-      isSystemsStepComplete({ crm_provider: "dialer_io" } as any),
+      isSystemsStepComplete({
+        crm_provider: "dialer_io",
+        setup_state: { systems_reviewed: true },
+      } as any),
     ).toBe(true);
     expect(
-      isSystemsStepComplete({ crm_provider: "manual" } as any),
+      isSystemsStepComplete({
+        crm_provider: "manual",
+        setup_state: { systems_reviewed: true },
+      } as any),
     ).toBe(true);
   });
 });
