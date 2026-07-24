@@ -138,6 +138,7 @@ const App = () => (
                      <Route path="/ai-coach" element={<ProtectedRoute><AICoachInsightsPage /></ProtectedRoute>} />
                       <Route path="/manager" element={<ProtectedRoute><ManagerDashboard /></ProtectedRoute>} />
                       <Route path="/manager/competitions" element={<ProtectedRoute><CompetitionsManager /></ProtectedRoute>} />
+                      <Route path="/workspace-setup" element={<ProtectedRoute><WorkspaceSetup /></ProtectedRoute>} />
                       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                       
                       {/* Catch-all */}
