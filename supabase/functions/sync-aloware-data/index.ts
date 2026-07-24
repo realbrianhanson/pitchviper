@@ -380,27 +380,24 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const {
       syncType = "all",
-      teamId,
-      userId,
       daysBack = 30,
     } = body;
 
-    if (!teamId || !userId) {
-      return new Response(
-        JSON.stringify({ success: false, error: "teamId and userId are required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // userId must match the authenticated caller, and team must match caller's team
-    if (userId !== authedUserId) {
-      return new Response(JSON.stringify({ success: false, error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    // Derive team + rep server-side. Never trust client-supplied teamId / userId.
     const { data: callerProfile } = await supabase
       .from('profiles').select('team_id').eq('user_id', authedUserId).maybeSingle();
-    if (callerProfile?.team_id !== teamId) {
+    const teamId = callerProfile?.team_id ?? null;
+    if (!teamId) {
+      return new Response(JSON.stringify({ success: false, error: 'No team' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Only owner / admin / manager on that team may trigger a sync
+    const { data: isMgmt } = await supabase.rpc('has_management_role', { _user_id: authedUserId });
+    if (!isMgmt) {
       return new Response(JSON.stringify({ success: false, error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+
+    const userId = authedUserId;
 
     console.log(`Starting Aloware sync: type=${syncType}, team=${teamId}`);
 
@@ -418,9 +415,10 @@ Deno.serve(async (req) => {
       results.contacts = await syncContacts(supabase, apiToken, teamId, userId);
     }
 
-    // Log the sync
+    // Log the sync — tag team_id explicitly (trigger is defense in depth).
     await supabase.from("aloware_sync_log").insert({
       event_type: `sync_${syncType}`,
+      team_id: teamId,
       payload: { teamId, userId, results },
       processed: true,
     });
