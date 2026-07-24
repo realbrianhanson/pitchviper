@@ -1630,6 +1630,44 @@ export type Database = {
           },
         ]
       }
+      seat_reservations: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          requested_by: string | null
+          target_hash: string
+          team_id: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          requested_by?: string | null
+          target_hash: string
+          team_id: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          requested_by?: string | null
+          target_hash?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seat_reservations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sms_messages: {
         Row: {
           aloware_message_id: string | null
@@ -2442,6 +2480,7 @@ export type Database = {
         Args: { p_event_id: string; p_event_type: string; p_object_id: string }
         Returns: Json
       }
+      cleanup_expired_seat_reservations: { Args: never; Returns: number }
       compute_entitlement: {
         Args: { p_billing: Database["public"]["Tables"]["team_billing"]["Row"] }
         Returns: Json
@@ -2456,6 +2495,7 @@ export type Database = {
         }
         Returns: Json
       }
+      effective_seat_usage: { Args: { p_team_id: string }; Returns: number }
       find_team_by_code: {
         Args: { _code: string }
         Returns: {
@@ -2564,6 +2604,10 @@ export type Database = {
         Args: { _session_id: string; _stale_after?: string; _user_id: string }
         Returns: Json
       }
+      svc_consume_reservation: {
+        Args: { p_reservation_id: string }
+        Returns: boolean
+      }
       svc_create_team: {
         Args: { _name: string; _user_id: string }
         Returns: Json
@@ -2586,9 +2630,21 @@ export type Database = {
         Args: { _code: string; _user_id: string }
         Returns: Json
       }
+      svc_release_reservation: {
+        Args: { p_reservation_id: string }
+        Returns: undefined
+      }
       svc_release_roleplay_claim: {
         Args: { _session_id: string; _user_id: string }
         Returns: undefined
+      }
+      svc_reserve_seat: {
+        Args: {
+          p_requested_by: string
+          p_target_hash: string
+          p_team_id: string
+        }
+        Returns: Json
       }
       svc_upsert_gauntlet_completion: {
         Args: {
