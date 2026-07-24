@@ -1,7 +1,6 @@
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { EditorialSkeleton } from "@/components/ui/editorial-skeleton";
-import { Crown } from "lucide-react";
 import { NumberFlash } from "@/components/ui/number-flash";
 
 export interface TeamPulseMember {
@@ -22,24 +21,36 @@ interface TeamPulseProps {
   error?: string | null;
 }
 
+function cleanName(name: string): string {
+  return name.replace(/https?:\/\/\S+/gi, "").replace(/\s+/g, " ").trim();
+}
+
+function initials(name: string): string {
+  const parts = name.split(" ").filter(Boolean);
+  return parts.map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+}
+
+const shellCls =
+  "rounded-[12px] border border-border bg-card p-6 shadow-sm h-full min-h-[280px]";
+
 export function TeamPulse({ members, teamName, loading = false, error = null }: TeamPulseProps) {
   if (loading) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-        className="bento-tile min-h-[260px]"
+        transition={{ duration: 0.4, delay: 0.25 }}
+        className={shellCls}
       >
-        <div className="flex items-center justify-between mb-6">
-          <EditorialSkeleton className="h-3 w-32" />
+        <div className="flex items-center justify-between mb-5">
+          <EditorialSkeleton className="h-4 w-40" />
           <EditorialSkeleton className="h-3 w-16" />
         </div>
         <div className="space-y-3">
           {[0, 1, 2, 3, 4].map((i) => (
             <div key={i} className="flex items-center gap-3">
-              <EditorialSkeleton className="h-6 w-6" />
-              <EditorialSkeleton className="h-8 w-8 rounded-full" />
+              <EditorialSkeleton className="h-4 w-5" />
+              <EditorialSkeleton className="h-9 w-9 rounded-full" />
               <EditorialSkeleton className="h-4 flex-1" />
               <EditorialSkeleton className="h-4 w-12" />
             </div>
@@ -52,16 +63,13 @@ export function TeamPulse({ members, teamName, loading = false, error = null }: 
   if (error) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-        className="bento-tile min-h-[260px] flex flex-col justify-center"
+        transition={{ duration: 0.4, delay: 0.25 }}
+        className={cn(shellCls, "flex flex-col justify-center")}
       >
-        <span className="eyebrow font-bold mb-3">Team Pulse</span>
-        <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-destructive/70 mb-1">
-          Sync Failed
-        </p>
-        <p className="font-body text-xs text-muted-foreground/60">{error}</p>
+        <h3 className="text-base font-semibold text-foreground mb-1">Team performance</h3>
+        <p className="text-sm text-muted-foreground">{error}</p>
       </motion.div>
     );
   }
@@ -69,16 +77,16 @@ export function TeamPulse({ members, teamName, loading = false, error = null }: 
   if (members.length === 0) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-        className="bento-tile min-h-[260px] flex flex-col justify-center"
+        transition={{ duration: 0.4, delay: 0.25 }}
+        className={cn(shellCls, "flex flex-col justify-center")}
       >
-        <span className="eyebrow font-bold mb-3">Team Pulse</span>
-        <p className="text-sm text-muted-foreground italic font-display">
+        <h3 className="text-base font-semibold text-foreground mb-1">Team performance</h3>
+        <p className="text-sm text-muted-foreground">
           {teamName
-            ? "No team activity yet this week. Be the first to put numbers on the board."
-            : "Join a squadron to synchronize real-time performance metrics."}
+            ? "No team activity yet this week."
+            : "Join a team to see live performance."}
         </p>
       </motion.div>
     );
@@ -89,100 +97,71 @@ export function TeamPulse({ members, teamName, loading = false, error = null }: 
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="bento-tile min-h-[260px]"
+      transition={{ duration: 0.4, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+      className={shellCls}
     >
-      <div className="flex items-center justify-between mb-5">
-        <span className="eyebrow font-bold">
-          Team Pulse{teamName ? ` — ${teamName}` : ""}
-        </span>
-        <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60">
-          Top {top.length} · This Week
-        </span>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-semibold text-foreground">
+          Team performance{teamName ? ` — ${teamName}` : ""}
+        </h3>
+        <span className="text-xs text-muted-foreground">Top {top.length} · This week</span>
       </div>
 
-      <ul className="space-y-1.5">
-        {top.map((m, idx) => (
-          <motion.li
-            key={m.id}
-            layout
-            initial={{ opacity: 0, x: -6 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.35, delay: idx * 0.05 }}
-            className={cn(
-              "flex items-center gap-3 px-2 py-2 -mx-2 transition-colors",
-              idx === 0 && "border border-primary/60",
-              idx === 1 || idx === 2 ? "border-l border-primary/30" : "",
-              m.isCurrentUser ? "bg-primary/10 ring-1 ring-primary/20" : "hover:bg-accent/30"
-            )}
-          >
-            <span
+      <ul className="divide-y divide-border">
+        {top.map((m, idx) => {
+          const displayName = cleanName(m.name);
+          return (
+            <motion.li
+              key={m.id}
+              layout
+              initial={{ opacity: 0, x: -4 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: idx * 0.04 }}
               className={cn(
-                "font-mono text-[11px] tabular-nums w-5 text-center",
-                idx === 0 ? "text-primary font-bold" : "text-muted-foreground/70"
+                "flex items-center gap-3 py-3 px-2 -mx-2 rounded-md transition-colors",
+                m.isCurrentUser && "bg-primary/5"
               )}
             >
-              {String(m.rank).padStart(2, "0")}
-            </span>
+              <span className="w-5 text-center text-xs tabular-nums text-muted-foreground">
+                {m.rank}
+              </span>
 
-            <div className="relative w-8 h-8 border border-border bg-accent flex items-center justify-center text-[10px] font-mono uppercase overflow-hidden shrink-0">
-              {m.avatarUrl ? (
-                <img src={m.avatarUrl} alt={m.name} className="w-full h-full object-cover" />
-              ) : (
-                <span>{m.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}</span>
-              )}
-              {idx === 0 && (
-                <Crown
-                  className="absolute -top-1.5 -right-1.5 h-3 w-3 text-primary"
-                  strokeWidth={2}
-                />
-              )}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-baseline gap-2">
-                <span
-                  className={cn(
-                    "leading-none truncate",
-                    idx === 0 ? "font-display italic text-base text-primary" : "font-display text-sm text-foreground"
-                  )}
-                >
-                  {m.name.split(" ")[0]}{" "}
-                  <span className={cn(idx === 0 ? "text-primary/80" : "text-foreground/80")}>
-                    {m.name.split(" ").slice(1).join(" ")}
-                  </span>
-                </span>
-                {m.isCurrentUser && (
-                  <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-primary">
-                    You
-                  </span>
+              <div className="relative w-9 h-9 rounded-full border border-border bg-muted flex items-center justify-center text-xs font-medium overflow-hidden shrink-0 text-foreground">
+                {m.avatarUrl ? (
+                  <img src={m.avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                ) : (
+                  <span>{initials(displayName)}</span>
                 )}
               </div>
-              {m.level !== undefined && (
-                <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground/60">
-                  Lvl {m.level}
-                </span>
-              )}
-            </div>
 
-            <div className="text-right shrink-0">
-              <NumberFlash
-                value={m.value}
-                className={cn(
-                  "font-mono text-sm tabular-nums",
-                  idx === 0 ? "text-primary" : "text-foreground"
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-foreground truncate">
+                    {displayName}
+                  </span>
+                  {m.isCurrentUser && (
+                    <span className="text-[10px] font-medium text-primary uppercase">You</span>
+                  )}
+                </div>
+                {m.level !== undefined && (
+                  <span className="text-xs text-muted-foreground">Level {m.level}</span>
                 )}
-              >
-                {m.value.toLocaleString()}
-              </NumberFlash>
-              <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground/60 ml-1">
-                {metricLabel}
-              </span>
-            </div>
-          </motion.li>
-        ))}
+              </div>
+
+              <div className="text-right shrink-0">
+                <NumberFlash
+                  value={m.value}
+                  className="text-sm font-semibold tabular-nums text-foreground"
+                >
+                  {m.value.toLocaleString()}
+                </NumberFlash>
+                <div className="text-xs text-muted-foreground">{metricLabel}</div>
+              </div>
+            </motion.li>
+          );
+        })}
       </ul>
     </motion.div>
   );
