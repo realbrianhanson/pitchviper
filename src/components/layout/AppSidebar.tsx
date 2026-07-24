@@ -188,6 +188,7 @@ export function AppSidebar() {
                     item={item}
                     isCollapsed={isCollapsed}
                     active={isNavItemActive(location.pathname, item.url, item.exact)}
+                    locked={!growthAllowed && isGrowthRoute(item.url)}
                   />
                 ))}
               </SidebarMenu>
