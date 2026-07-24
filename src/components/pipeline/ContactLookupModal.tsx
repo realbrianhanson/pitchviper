@@ -168,7 +168,7 @@ export function ContactLookupModal({ open, onOpenChange, onSelectContact }: Cont
           {/* Empty state */}
           {!isSearching && contacts.length === 0 && searchQuery && (
             <EditorialEmpty
-              eyebrow="Aloware"
+              eyebrow="Contacts"
               title="No contacts found"
               description="Try adjusting your search terms or switching the search type."
               icon={<User className="h-8 w-8" strokeWidth={1.25} />}

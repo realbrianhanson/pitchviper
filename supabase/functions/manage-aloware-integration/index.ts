@@ -119,15 +119,15 @@ serve(async (req) => {
     }
 
     if (action === "save-token") {
-      const token = safeToken(body.token);
-      if (!token) return errorResponse("invalid_token", 400);
-      const verified = await verifyAlowareToken(token);
+      const apiToken = safeToken(body.token);
+      if (!apiToken) return errorResponse("invalid_token", 400);
+      const verified = await verifyAlowareToken(apiToken);
       if (!verified) return errorResponse("invalid_token", 400);
 
       const { error: saveErr } = await serviceClient.rpc("svc_provider_integration_save_token", {
         _team_id: teamId,
         _provider: "aloware",
-        _token: token,
+        _token: apiToken,
         _actor: userId,
       });
       if (saveErr) return errorResponse("internal_error", 500);

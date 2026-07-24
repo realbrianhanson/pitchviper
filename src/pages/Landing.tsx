@@ -243,8 +243,8 @@ export default function Landing() {
                 role: "Source of truth for pipeline, opportunities and revenue activity.",
               },
               {
-                name: "Aloware",
-                role: "Live call and SMS telemetry — dials, connects, dispositions, recordings.",
+                name: "Dialer.io",
+                role: "Featured phone system for outbound dials, connects and disposition logging.",
               },
             ].map((i) => (
               <div key={i.name} className="bg-card p-6 flex items-start justify-between gap-6">

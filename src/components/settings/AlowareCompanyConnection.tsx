@@ -193,7 +193,7 @@ export function AlowareCompanyConnection() {
             </Button>
             <Button
               variant="destructive"
-              disabled={confirmText !== "DISCONNECT" || disconnect.isPending}
+              disabled={!(confirmText === "DISCONNECT") || disconnect.isPending}
               onClick={handleDisconnect}
             >
               {disconnect.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Disconnect"}

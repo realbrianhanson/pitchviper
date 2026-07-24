@@ -5,17 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-interface AlowareUser {
-  id: string | number;
-  name: string;
-  email: string;
-}
+// Legacy Aloware prefill retired: invitees are managed by name/email only.
 
 interface TeamMember {
   id: string;
@@ -69,13 +65,13 @@ export function TeamMembersManager() {
   const [isInviting, setIsInviting] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [alowareUsers, setAlowareUsers] = useState<AlowareUser[]>([]);
+  
   const [showForm, setShowForm] = useState(false);
 
   // Form state — no password, ever.
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
-  const [selectedAlowareUser, setSelectedAlowareUser] = useState<string>("");
+  
 
   useEffect(() => {
     loadData();
@@ -95,10 +91,6 @@ export function TeamMembersManager() {
         setTeamMembers(membersData.members || []);
       }
 
-      const { data: alowareData } = await supabase.functions.invoke("create-team-member", {
-        body: { action: "get-aloware-users" },
-      });
-      if (alowareData?.success) setAlowareUsers(alowareData.users || []);
     } catch (error) {
       console.error("Error loading team data:", error);
       setLoadError(ERROR_COPY.list_failed);
@@ -115,19 +107,11 @@ export function TeamMembersManager() {
     });
   };
 
-  const handleSelectAlowareUser = (alowareId: string) => {
-    setSelectedAlowareUser(alowareId);
-    const user = alowareUsers.find((u) => String(u.id) === alowareId);
-    if (user) {
-      setFullName(user.name);
-      setEmail(user.email);
-    }
-  };
 
   const resetForm = () => {
     setEmail("");
     setFullName("");
-    setSelectedAlowareUser("");
+    
   };
 
   const handleInvite = async () => {
@@ -147,7 +131,7 @@ export function TeamMembersManager() {
           action: "invite",
           email: email.trim(),
           fullName: fullName.trim(),
-          alowareUserId: selectedAlowareUser || null,
+          
         },
       });
 
@@ -249,23 +233,6 @@ export function TeamMembersManager() {
         <CardContent className="space-y-6">
           {showForm && (
             <div className="space-y-4 border rounded-md p-4 bg-muted/20">
-              {alowareUsers.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Prefill from Aloware (optional)</Label>
-                  <Select value={selectedAlowareUser} onValueChange={handleSelectAlowareUser}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an Aloware user…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {alowareUsers.map((u) => (
-                        <SelectItem key={u.id} value={String(u.id)}>
-                          {u.name} · {u.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
@@ -339,7 +306,6 @@ export function TeamMembersManager() {
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Aloware</TableHead>
                     <TableHead className="w-[60px]" />
                   </TableRow>
                 </TableHeader>
@@ -357,13 +323,6 @@ export function TeamMembersManager() {
                             <Badge variant="default">Active</Badge>
                           ) : (
                             <Badge variant="outline">Invited</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {member.aloware_user_id ? (
-                            <Badge variant="default">Linked</Badge>
-                          ) : (
-                            <Badge variant="outline">—</Badge>
                           )}
                         </TableCell>
                         <TableCell>

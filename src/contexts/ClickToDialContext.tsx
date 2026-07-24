@@ -117,58 +117,29 @@ export function ClickToDialProvider({ children }: { children: React.ReactNode })
     setPendingDial(null);
   }, []);
 
+  const openExternalDialer = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.open("https://app.dialer.io", "_blank", "noopener,noreferrer");
+    }
+  }, []);
+
   const initiateCall = useCallback(async (params: DialParams) => {
+    // No verified in-app telephony adapter — hand off to the external dialer
+    // and surface a neutral, provider-agnostic message. Never invoke
+    // legacy Aloware edge functions from user actions.
     setIsDialing(true);
-    
     try {
-      const { data, error } = await supabase.functions.invoke('initiate-aloware-call', {
-        body: {
-          contactPhoneNumber: params.phoneNumber,
-          linePhoneNumber: params.linePhoneNumber,
-          contactName: params.contactName,
-          companyName: params.companyName,
-          dealId: params.dealId,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        setCallState({
-          isActive: true,
-          callId: data.callId,
-          contactName: params.contactName || 'Unknown',
-          phoneNumber: params.phoneNumber,
-          startTime: new Date(),
-          notes: '',
-        });
-
-        toast({
-          title: "Call Initiated",
-          description: `Connecting to ${params.contactName || params.phoneNumber}...`,
-        });
-
-        closeDialModal();
-        return { success: true };
-      } else {
-        toast({
-          title: "Call Failed",
-          description: data.error || "Failed to initiate call",
-          variant: "destructive",
-        });
-        return { success: false, error: data.error };
-      }
-    } catch (error: any) {
+      openExternalDialer();
       toast({
-        title: "Call Error",
-        description: error.message || "Failed to initiate call",
-        variant: "destructive",
+        title: "Opened your phone system",
+        description: `Dial ${params.contactName || params.phoneNumber} from your phone system, then log the call here.`,
       });
-      return { success: false, error: error.message };
+      closeDialModal();
+      return { success: true };
     } finally {
       setIsDialing(false);
     }
-  }, [toast, closeDialModal]);
+  }, [toast, closeDialModal, openExternalDialer]);
 
   const endCall = useCallback(async () => {
     if (!user) return;
@@ -209,37 +180,16 @@ export function ClickToDialProvider({ children }: { children: React.ReactNode })
     setCallState(prev => ({ ...prev, notes }));
   }, []);
 
-  const addToPowerDialer = useCallback(async (contacts: PowerDialerContact[], position: 'top' | 'bottom' = 'bottom') => {
-    try {
-      const { data, error } = await supabase.functions.invoke('add-to-aloware-powerdialer', {
-        body: { contacts, position },
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        toast({
-          title: "Added to Power Dialer",
-          description: data.message,
-        });
-        return { success: true, added: data.added, failed: data.failed };
-      } else {
-        toast({
-          title: "Power Dialer Error",
-          description: data.error,
-          variant: "destructive",
-        });
-        return { success: false, error: data.error };
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add to power dialer",
-        variant: "destructive",
-      });
-      return { success: false, error: error.message };
-    }
-  }, [toast]);
+  const addToPowerDialer = useCallback(async (contacts: PowerDialerContact[], _position: 'top' | 'bottom' = 'bottom') => {
+    // Power-dialer queueing requires a native adapter that isn't wired up.
+    // Fail neutrally and point the user at their phone system.
+    openExternalDialer();
+    toast({
+      title: "Open your phone system",
+      description: `Queue ${contacts.length} contact${contacts.length === 1 ? "" : "s"} directly in your phone system.`,
+    });
+    return { success: false, error: "provider_unavailable" };
+  }, [toast, openExternalDialer]);
 
   // SMS functions
   const openSMSModal = useCallback((params: SMSParams) => {
@@ -252,47 +202,20 @@ export function ClickToDialProvider({ children }: { children: React.ReactNode })
     setPendingSMS(null);
   }, []);
 
-  const sendSMS = useCallback(async (phoneNumber: string, message: string, contactName?: string, dealId?: string) => {
+  const sendSMS = useCallback(async (phoneNumber: string, _message: string, contactName?: string, _dealId?: string) => {
     setIsSendingSMS(true);
-    
     try {
-      const { data, error } = await supabase.functions.invoke('send-aloware-sms', {
-        body: {
-          phoneNumber,
-          message,
-          contactName,
-          dealId,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        toast({
-          title: "SMS Sent",
-          description: `Message sent to ${contactName || phoneNumber}`,
-        });
-        closeSMSModal();
-        return { success: true };
-      } else {
-        toast({
-          title: "SMS Failed",
-          description: data.error || "Failed to send SMS",
-          variant: "destructive",
-        });
-        return { success: false, error: data.error };
-      }
-    } catch (error: any) {
+      openExternalDialer();
       toast({
-        title: "SMS Error",
-        description: error.message || "Failed to send SMS",
-        variant: "destructive",
+        title: "Open your phone system",
+        description: `Send the message to ${contactName || phoneNumber} from your phone system.`,
       });
-      return { success: false, error: error.message };
+      closeSMSModal();
+      return { success: false, error: "provider_unavailable" };
     } finally {
       setIsSendingSMS(false);
     }
-  }, [toast, closeSMSModal]);
+  }, [toast, closeSMSModal, openExternalDialer]);
 
   return (
     <ClickToDialContext.Provider

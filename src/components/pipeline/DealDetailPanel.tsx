@@ -47,7 +47,7 @@ import { ResearchButton } from '@/components/research/ResearchButton';
 import { DealCoachPanel } from '@/components/pipeline/DealCoachPanel';
 import { ClickToDialButton } from '@/components/calls/ClickToDialButton';
 import { SendSMSButton } from '@/components/calls/SendSMSButton';
-import { useAlowareLead } from '@/hooks/useAlowareLead';
+// Legacy Aloware push retired — deals stay in PitchViper's pipeline.
 import { cn } from '@/lib/utils';
 
 interface DealDetailPanelProps {
@@ -70,20 +70,8 @@ export function DealDetailPanel({
   const [history, setHistory] = useState<DealStageHistoryEntry[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const { isCreating: isPushingToAloware, createLead } = useAlowareLead();
+  // Push-to-Aloware retired: keep deal data inside PitchViper.
 
-  const handlePushToAloware = async () => {
-    if (!deal) return;
-    await createLead({
-      fullName: deal.contact_name,
-      email: deal.contact_email || undefined,
-      phone: deal.contact_phone || undefined,
-      company: deal.company_name,
-      notes: deal.notes || undefined,
-      dealId: deal.id,
-      assignToUser: true,
-    });
-  };
 
   useEffect(() => {
     if (deal && open) {
@@ -311,25 +299,6 @@ export function DealDetailPanel({
                 contactName={deal.contact_name}
                 variant="outline"
               />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handlePushToAloware}
-                    disabled={isPushingToAloware || (!deal.contact_phone && !deal.contact_email)}
-                  >
-                    {isPushingToAloware ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Upload className="h-4 w-4" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Push contact to Aloware</p>
-                </TooltipContent>
-              </Tooltip>
             </div>
             <Button
               variant="ghost"

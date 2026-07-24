@@ -199,7 +199,7 @@ export default function WorkspaceSetup() {
     }
   };
 
-  const chooseSystem = async (provider: "aloware" | "gohighlevel" | "manual") => {
+  const chooseSystem = async (provider: "dialer_io" | "gohighlevel" | "manual") => {
     setSaving(true);
     try {
       if (provider === "manual") {
@@ -207,12 +207,17 @@ export default function WorkspaceSetup() {
         await setup.patchState({ systems_reviewed: true, systems_deferred: false });
         toast.success("Set to manual operation");
         goNext();
+      } else if (provider === "dialer_io") {
+        // No public Dialer.io connect contract yet — record the selection
+        // and mark reviewed. Reps operate in Dialer.io directly.
+        await setup.save({ crm_provider: "dialer_io" }, { action: "workspace_setup_system_selected", metadata: { provider } });
+        await setup.patchState({ systems_reviewed: true, systems_deferred: false });
+        toast.success("Dialer.io selected. Open it from Settings › Phone system when you're ready.");
+        goNext();
       } else {
         await setup.save({ crm_provider: provider }, { action: "workspace_setup_system_selected", metadata: { provider } });
-        toast.success(`Provider set to ${provider === "aloware" ? "Aloware" : "GoHighLevel"}. Complete the connection in Team Settings.`);
-        // Deep-link into the correct tab so the user can actually connect.
-        if (provider === "aloware") navigate("/team-settings?tab=aloware");
-        else navigate("/team-settings?tab=webhook");
+        toast.success("GoHighLevel selected. Configure the webhook in Settings.");
+        navigate("/team-settings?tab=data-import");
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Couldn't save selection");
@@ -407,7 +412,6 @@ export default function WorkspaceSetup() {
                 <div className="space-y-5">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline">{setup.teamMemberCount} member{setup.teamMemberCount === 1 ? "" : "s"}</Badge>
-                    {setup.mappedRepCount > 0 && <Badge variant="outline">{setup.mappedRepCount} mapped to Aloware</Badge>}
                   </div>
                   <div className="rounded-[10px] border border-border bg-background/50 p-4">
                     <TeamMembersManager />
@@ -426,10 +430,10 @@ export default function WorkspaceSetup() {
                 <div className="space-y-5">
                   <div className="grid gap-3 md:grid-cols-3">
                     <SystemChoice
-                      title="Aloware"
-                      description="Sync calls, SMS, and user mapping automatically."
-                      status={setup.settings?.crm_provider === "aloware" && setup.settings?.crm_connected_at ? "Connected" : setup.settings?.crm_provider === "aloware" ? "Selected — connect in Team Settings" : undefined}
-                      onSelect={() => chooseSystem("aloware")}
+                      title="Dialer.io"
+                      description="Modern power-dialer. Recommended — reps dial in Dialer.io while PitchViper handles coaching and pipeline."
+                      status={setup.settings?.crm_provider === "dialer_io" ? "Selected" : undefined}
+                      onSelect={() => chooseSystem("dialer_io")}
                       disabled={saving}
                     />
                     <SystemChoice
@@ -448,7 +452,7 @@ export default function WorkspaceSetup() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    A connection isn't confirmed until we receive a successful verification or sync from the provider.
+                    Native sync is only claimed once a real handoff exists. Dialer.io and manual workflows work today.
                   </p>
                   <StepFooter
                     onBack={goBack}

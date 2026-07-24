@@ -30,9 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { NotificationSettings } from "@/components/notifications/NotificationSettings";
-import { AlowareConnectionCard } from "@/components/settings/AlowareConnectionCard";
-import { AlowareCompanyConnection } from "@/components/settings/AlowareCompanyConnection";
-import { AlowareWebhookSetup } from "@/components/settings/AlowareWebhookSetup";
+import { PhoneSystemPanel } from "@/components/settings/PhoneSystemPanel";
 
 import { CompanyProfileCard } from "@/components/settings/CompanyProfileCard";
 import { toast } from "sonner";
@@ -327,9 +325,7 @@ export default function Settings() {
 
           {/* Phone System Tab */}
           <TabsContent value="phone" className="space-y-6">
-            <AlowareCompanyConnection />
-            <AlowareWebhookSetup />
-            <AlowareConnectionCard />
+            <PhoneSystemPanel />
           </TabsContent>
 
 
