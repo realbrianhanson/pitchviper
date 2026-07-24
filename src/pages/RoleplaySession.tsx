@@ -332,6 +332,15 @@ export default function RoleplaySession() {
       clearInterval(timerRef.current);
     }
 
+    // Guard: analyzer rejects transcripts with no user turn. If the rep never
+    // spoke/typed, abandon the session instead of triggering a 400.
+    const hasUserTurn = messages.some((m) => m.role === "user" && m.content.trim().length > 0);
+    if (!hasUserTurn) {
+      toast.info("No conversation recorded — session ended.");
+      await abandonSession();
+      return;
+    }
+
     setSessionState("analyzing");
 
     try {
@@ -350,6 +359,11 @@ export default function RoleplaySession() {
         if (code === 429) toast.error("Rate limit exceeded. Please wait a moment.");
         else if (code === 402) toast.error("AI credits exhausted. Please add credits.");
         else if (code === 409) toast.error("Analysis already in progress — please wait.");
+        else if (code === 400) {
+          toast.error("Not enough conversation to analyze — please try again.");
+          await abandonSession();
+          return;
+        }
         else toast.error("Failed to analyze session");
         setSessionState("active");
         return;
