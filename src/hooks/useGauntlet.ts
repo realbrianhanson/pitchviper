@@ -229,25 +229,11 @@ export function useGauntlet() {
         if (error) throw error;
       }
 
-      // Award XP if passed
+      // Award XP if passed (via trusted RPC — direct xp_points writes are revoked)
       if (evaluation.passed) {
         const bonusXp = evaluation.averageScore === 100 ? 25 : 0;
         const totalXp = todayChallenge.xp_reward + bonusXp;
-
-        // Fetch current XP and update
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('xp_points')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (profile) {
-          await supabase
-            .from('profiles')
-            .update({ xp_points: (profile.xp_points || 0) + totalXp })
-            .eq('user_id', user.id);
-        }
-
+        await supabase.rpc('award_user_xp', { _delta: totalXp });
         toast.success(`+${totalXp} XP earned!`);
       }
 
