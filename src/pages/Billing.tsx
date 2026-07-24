@@ -103,7 +103,7 @@ export default function Billing() {
               />
             </div>
           )}
-          {hasActiveSub && (
+          {snapshot?.billing?.stripe_customer_id ? (
             <div className="mt-6">
               <button
                 type="button"
@@ -115,7 +115,7 @@ export default function Billing() {
                 {billing.portalPending ? "Opening…" : "Manage billing"}
               </button>
             </div>
-          )}
+          ) : null}
         </section>
 
         {/* Interval toggle */}
