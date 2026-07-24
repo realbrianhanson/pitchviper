@@ -280,16 +280,11 @@ serve(async (req) => {
     }
 
     if (action === 'map-user') {
-      // Map a profile to an Aloware user (manager only)
-      const { data: userRole } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-
-      if (userRole?.role !== 'manager') {
+      // Only owner / admin / manager can map profiles
+      const { data: isMgmt } = await supabase.rpc('has_management_role', { _user_id: user.id });
+      if (!isMgmt) {
         return new Response(
-          JSON.stringify({ success: false, error: 'Only managers can map users' }),
+          JSON.stringify({ success: false, error: 'Only team management can map users' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
