@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useConversation } from "@elevenlabs/react";
 import { supabase } from "@/integrations/supabase/client";
 import { RoleplayScenario } from "@/hooks/useRoleplayData";
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Mic, MicOff, Phone, PhoneOff, Volume2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { buildVoiceRoleplaySessionOptions } from "@/lib/elevenlabsRoleplaySession";
 
 interface VoiceRoleplayProps {
   scenario: RoleplayScenario;
@@ -41,15 +42,29 @@ export function VoiceRoleplay({
   const [micPermission, setMicPermission] = useState<"pending" | "granted" | "denied">("pending");
   const [agentNotConfigured, setAgentNotConfigured] = useState(false);
   const [overridesBlocked, setOverridesBlocked] = useState(false);
+  const [voiceIssue, setVoiceIssue] = useState<string | null>(null);
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
+  const userRequestedStopRef = useRef(false);
+  const connectedAtRef = useRef<number | null>(null);
 
   const conversation = useConversation({
     onConnect: () => {
-      
+      connectedAtRef.current = Date.now();
+      setVoiceIssue(null);
       toast.success("Voice session started!");
     },
     onDisconnect: () => {
-      
+      const connectedAt = connectedAtRef.current;
+      const endedImmediately = connectedAt !== null && Date.now() - connectedAt < 8_000;
+      connectedAtRef.current = null;
+
+      if (!userRequestedStopRef.current && endedImmediately) {
+        const message = "Voice agent disconnected immediately. I’m keeping you in the Arena — try once more or continue in text mode.";
+        setVoiceIssue(message);
+        toast.error(message);
+      }
+
+      userRequestedStopRef.current = false;
     },
     onMessage: (message: any) => {
       // The ElevenLabs React SDK normalizes messages to { source: "user" | "ai", message: string }.
@@ -67,16 +82,20 @@ export function VoiceRoleplay({
         onTranscriptUpdate("", text);
       }
     },
-    onError: (error: any) => {
-      console.error("ElevenLabs error:", error);
-      const msg = typeof error === "string" ? error : (error?.message || error?.reason || JSON.stringify(error ?? {}));
+    onError: (error: any, details?: any) => {
+      console.error("ElevenLabs error:", error, details);
+      const msg = typeof error === "string"
+        ? error
+        : (error?.message || error?.reason || details?.debugMessage || details?.details || JSON.stringify(error ?? {}));
       // ElevenLabs rejects connections when conversation overrides are sent
       // but disabled in the agent's Security settings. Surface that explicitly.
       if (/override/i.test(msg) || /not allowed/i.test(msg) || /security/i.test(msg)) {
         setOverridesBlocked(true);
         toast.error("Voice agent rejected scenario overrides. Enable overrides in the ElevenLabs agent settings.");
       } else {
-        toast.error("Voice connection error. Please try again.");
+        const message = "Voice connection error. Please try again or continue in text mode.";
+        setVoiceIssue(message);
+        toast.error(message);
       }
     },
   });
@@ -130,6 +149,9 @@ export function VoiceRoleplay({
 
   const startConversation = useCallback(async () => {
     setIsConnecting(true);
+    setVoiceIssue(null);
+    userRequestedStopRef.current = false;
+    connectedAtRef.current = null;
     
     try {
       // Request microphone permission first
@@ -161,45 +183,33 @@ export function VoiceRoleplay({
         return;
       }
 
-      if (!data.conversation_token && !data.signed_url) {
-        throw new Error("No voice connection credentials received");
-      }
-
-      // Always send overrides + dynamic variables — the scenario MUST drive the agent.
-      // If ElevenLabs rejects them because overrides are disabled on the agent, onError
-      // sets overridesBlocked and surfaces the editorial error card below.
-      const dynamicVariables = data.dynamic_variables ?? {
-        prospect_name: prospectName,
-        scenario_name: scenario.name,
-        difficulty: scenario.difficulty,
-      };
-
-      const sessionOptions = {
-        ...(data.conversation_token
-          ? { conversationToken: data.conversation_token, connectionType: "webrtc" }
-          : { signedUrl: data.signed_url, connectionType: "websocket" }),
-        dynamicVariables,
-        overrides: {
-          agent: {
-            ...(data.agent_prompt ? { prompt: { prompt: data.agent_prompt } } : {}),
-            ...(data.first_message ? { firstMessage: data.first_message } : {}),
-            language: "en",
-          },
-        },
-      };
+      const sessionOptions = buildVoiceRoleplaySessionOptions(data, {
+        prospectName,
+        prospectTitle,
+        prospectCompany,
+        sellerCompanyName: companySettings?.company_name,
+        productDescription: companySettings?.product_description,
+        industry: companySettings?.industry,
+        targetAudience: companySettings?.target_audience,
+        valuePropositions: companySettings?.value_propositions,
+        commonUseCases: companySettings?.common_use_cases,
+      });
 
       await conversation.startSession(sessionOptions as any);
 
 
     } catch (error) {
       console.error("Failed to start voice conversation:", error);
-      toast.error("Failed to start voice session. Please try text mode.");
+      const message = "Failed to start voice session. Please try once more or use text mode.";
+      setVoiceIssue(message);
+      toast.error(message);
     } finally {
       setIsConnecting(false);
     }
   }, [conversation, scenario, prospectName, prospectTitle, prospectCompany, companySettings, profile?.team_id]);
 
   const stopConversation = useCallback(async () => {
+    userRequestedStopRef.current = true;
     await conversation.endSession();
     onSessionEnd();
   }, [conversation, onSessionEnd]);
@@ -304,6 +314,12 @@ export function VoiceRoleplay({
              isConnected ? "Listening to you..." : 
              "Ready to start voice call"}
           </p>
+
+          {voiceIssue && !isConnected && (
+            <p className="max-w-md text-center font-body text-xs text-destructive mb-4">
+              {voiceIssue}
+            </p>
+          )}
 
           {/* Call controls */}
           <div className="flex gap-4">
