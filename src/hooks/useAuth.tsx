@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const [isManager, setIsManager] = useState(false);
+  const [role, setRole] = useState<AppRole | null>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
@@ -73,12 +73,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setProfile((profileData as Profile) ?? null);
-      setIsManager(roleData?.role === 'manager');
+      setRole((roleData?.role as AppRole | undefined) ?? null);
     } catch (err: any) {
       console.error('[useAuth] fetchProfile threw', err);
       setProfileError(err?.message ?? 'Failed to load profile');
       setProfile(null);
-      setIsManager(false);
+      setRole(null);
     } finally {
       setProfileLoaded(true);
     }
