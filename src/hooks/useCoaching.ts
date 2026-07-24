@@ -123,7 +123,8 @@ export function useCoaching() {
         if (error) throw error;
         return (data || []) as CoachingSession[];
       },
-      enabled: !!repId,
+      // Manager-only view of another rep's history.
+      enabled: !!repId && canManageTeam,
     });
 
   const useRepCoachingActions = (repId: string | null) =>
@@ -141,7 +142,7 @@ export function useCoaching() {
         if (error) throw error;
         return (data || []) as CoachingAction[];
       },
-      enabled: !!repId,
+      enabled: !!repId && canManageTeam,
     });
 
   const useMyCoachingActions = () =>
