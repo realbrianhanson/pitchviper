@@ -16,13 +16,16 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- 2. has_management_role helper
+-- 2. has_management_role helper.
+-- Compare role::text so this migration is safe on a fresh database in the same
+-- transaction that just added the 'owner'/'admin' enum labels above (Postgres
+-- forbids using newly-added enum labels as literals in the same tx).
 CREATE OR REPLACE FUNCTION public.has_management_role(_user_id uuid)
 RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.user_roles
     WHERE user_id = _user_id
-      AND role IN ('owner'::public.app_role,'admin'::public.app_role,'manager'::public.app_role)
+      AND role::text IN ('owner','admin','manager')
   )
 $$;
 

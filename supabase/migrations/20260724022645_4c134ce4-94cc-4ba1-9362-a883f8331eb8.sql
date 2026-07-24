@@ -133,3 +133,17 @@ GRANT EXECUTE ON FUNCTION public.has_management_role(uuid) TO authenticated, ser
 
 REVOKE ALL ON FUNCTION public.log_team_audit_event(text, text, text, jsonb) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.log_team_audit_event(text, text, text, jsonb) TO authenticated, service_role;
+
+
+-- 4. Least-privilege table grants (mirror live state).
+REVOKE ALL ON public.team_billing FROM anon, authenticated;
+GRANT SELECT ON public.team_billing TO authenticated;
+GRANT ALL ON public.team_billing TO service_role;
+
+REVOKE ALL ON public.audit_events FROM anon, authenticated;
+GRANT SELECT ON public.audit_events TO authenticated;
+GRANT ALL ON public.audit_events TO service_role;
+
+REVOKE ALL ON public.coaching_actions FROM anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.coaching_actions TO authenticated;
+GRANT ALL ON public.coaching_actions TO service_role;
