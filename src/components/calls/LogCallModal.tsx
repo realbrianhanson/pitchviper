@@ -69,7 +69,7 @@ const CALL_PURPOSES: { value: CallPurpose; label: string }[] = [
   { value: 'support', label: 'Support' },
 ];
 
-export function LogCallModal({ open, onOpenChange }: LogCallModalProps) {
+export function LogCallModal({ open, onOpenChange, initialData }: LogCallModalProps) {
   const { logCall, isLogging, commonObjections } = useCallLogging();
   const [step, setStep] = useState(1);
   
