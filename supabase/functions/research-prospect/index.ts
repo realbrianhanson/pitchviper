@@ -5,6 +5,7 @@ import {
 } from "../_shared/edgeAuth.ts";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
 import { safeExternalUrl } from "../_shared/ssrfSafe.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 const QUERY_TYPES = ["industry_trends", "competitive_landscape", "recent_news", "decision_maker_intel", "battlecard"] as const;
 const MAX_SCRAPE_CHARS = 15000;
@@ -14,6 +15,9 @@ serve(async (req) => {
   const auth = await authenticatePost(req);
   if (!auth.ok) return auth.response;
   const { userId, serviceClient } = auth.ctx;
+
+  const ent = await requireTeamEntitlement(serviceClient, userId, "growth");
+  if (!ent.ok) return ent.response;
 
   const rl = await enforceRateLimit(userId, "research-prospect", { serviceClient, perMinute: 5, perDay: 50 });
   if (!rl.allowed) return rl.response!;
