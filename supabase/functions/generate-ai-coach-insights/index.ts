@@ -71,7 +71,7 @@ serve(async (req) => {
       admin.from("user_roles").select("role").eq("user_id", currentUserId).maybeSingle(),
       admin.from("profiles").select("user_id, full_name, team_id").eq("user_id", currentUserId).maybeSingle(),
     ]);
-    const isManager = roleRow?.role === "manager";
+    const isManager = roleRow?.role === "manager" || roleRow?.role === "admin" || roleRow?.role === "owner";
 
     // Determine target user ids
     let targetIds: string[] = [];
