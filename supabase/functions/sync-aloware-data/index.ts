@@ -53,7 +53,7 @@ async function fetchAlowareData(endpoint: string, apiToken: string, params: Reco
     url.searchParams.append(key, value);
   }
 
-  console.log(`Fetching from Aloware: ${endpoint}`);
+  // no PII logging
   
   const response = await fetch(url.toString(), {
     method: "GET",
@@ -64,19 +64,19 @@ async function fetchAlowareData(endpoint: string, apiToken: string, params: Reco
   
   // Check if response is HTML (error page)
   if (responseText.startsWith('<!DOCTYPE') || responseText.startsWith('<html')) {
-    console.error('Aloware returned HTML instead of JSON');
+    // provider returned HTML error page
     throw new Error('Invalid Aloware API response - check API token');
   }
 
   if (!response.ok) {
-    console.error(`Aloware API error: ${response.status} - ${responseText}`);
+    console.error(`aloware_api_status:${response.status}`);
     throw new Error(`Aloware API error: ${response.status}`);
   }
 
   try {
     return JSON.parse(responseText);
   } catch {
-    console.error('Failed to parse Aloware response:', responseText.substring(0, 200));
+    console.error('aloware_parse_failed');
     throw new Error('Invalid JSON response from Aloware');
   }
 }
@@ -119,7 +119,7 @@ async function syncUsers(supabase: any, apiToken: string, teamId: string) {
           .limit(100);
 
         // For now, log unmatched users - they'll need to be linked manually or via email match
-        console.log(`Aloware user ${user.name} (${user.email}) not linked to any profile`);
+        // unlinked user (no PII log)
         skipped++;
       }
     }
@@ -178,7 +178,7 @@ async function syncCalls(supabase: any, apiToken: string, teamId: string, daysBa
       // Find matching user
       const userId = alowareToUserMap.get(call.user_id?.toString());
       if (!userId) {
-        console.log(`No matching user for Aloware user_id: ${call.user_id}`);
+        // no matching sf user for aloware user_id (no PII log)
         skipped++;
         continue;
       }
@@ -225,7 +225,7 @@ async function syncCalls(supabase: any, apiToken: string, teamId: string, daysBa
       });
 
       if (error) {
-        console.error(`Error inserting call ${call.id}:`, error);
+        console.error('call_insert_failed');
         skipped++;
       } else {
         synced++;
@@ -327,7 +327,7 @@ async function syncContacts(supabase: any, apiToken: string, teamId: string, use
       });
 
       if (error) {
-        console.error(`Error inserting contact ${phone}:`, error);
+        console.error('contact_insert_failed');
         skipped++;
       } else {
         synced++;
@@ -415,11 +415,17 @@ Deno.serve(async (req) => {
       results.contacts = await syncContacts(supabase, apiToken, teamId, userId);
     }
 
-    // Log the sync — tag team_id explicitly (trigger is defense in depth).
+    // Sanitized audit row — counts only, no PII/payload bodies.
+    const counters: Record<string, number> = {};
+    for (const [k, v] of Object.entries(results as Record<string, { synced?: number; skipped?: number; total?: number }>)) {
+      if (v?.synced != null) counters[`${k}_synced`] = v.synced;
+      if (v?.skipped != null) counters[`${k}_skipped`] = v.skipped;
+      if (v?.total != null) counters[`${k}_total`] = v.total;
+    }
     await supabase.from("aloware_sync_log").insert({
-      event_type: `sync_${syncType}`,
+      event_type: `sync_${syncType}`.slice(0, 64),
       team_id: teamId,
-      payload: { teamId, userId, results },
+      payload: counters,
       processed: true,
     });
 
@@ -448,8 +454,6 @@ Deno.serve(async (req) => {
     } catch (stampErr) {
       console.warn("sync-aloware-data could not stamp company_settings", stampErr);
     }
-
-    console.log("Aloware sync completed:", results);
 
     return new Response(
       JSON.stringify({ success: true, results }),

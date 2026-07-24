@@ -1,180 +1,108 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { authenticatePost, corsHeaders, errorResponse, jsonResponse } from "../_shared/edgeAuth.ts";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { boundedText, isSafePhone, logAlowareEvent, normalizePhone, readBoundedJson } from "../_shared/alowareSafe.ts";
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const auth = await authenticatePost(req);
+  if (!auth.ok) return auth.response;
+  const { userId, serviceClient } = auth.ctx;
+
+  const alowareToken = Deno.env.get("ALOWARE_API_TOKEN");
+  if (!alowareToken) return errorResponse("provider_unconfigured", 503, { success: false });
+
+  const limit = await enforceRateLimit(userId, "initiate-aloware-call", { perMinute: 20, perDay: 500, serviceClient });
+  if (!limit.allowed) return limit.response;
+
+  const body = (await readBoundedJson(req, 8192)) as Record<string, unknown> | null;
+  if (!body) return errorResponse("invalid_body", 400, { success: false });
+
+  const contactPhoneNumber = normalizePhone(body.contactPhoneNumber);
+  if (!contactPhoneNumber) return errorResponse("invalid_phone", 400, { success: false });
+  const linePhoneNumberRaw = body.linePhoneNumber;
+  const linePhoneNumber = linePhoneNumberRaw == null || linePhoneNumberRaw === ""
+    ? null
+    : normalizePhone(linePhoneNumberRaw);
+  if (linePhoneNumberRaw != null && linePhoneNumberRaw !== "" && !linePhoneNumber) {
+    return errorResponse("invalid_line", 400, { success: false });
   }
+  const contactName = boundedText(body.contactName, 120);
+  const companyName = boundedText(body.companyName, 120);
 
+  const { data: profile } = await serviceClient
+    .from("profiles")
+    .select("aloware_user_id, team_id, default_aloware_line")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!profile?.aloware_user_id) return errorResponse("aloware_not_linked", 400, { success: false });
+
+  const effectiveLine = linePhoneNumber || (isSafePhone(profile.default_aloware_line) ? normalizePhone(profile.default_aloware_line) : null);
+  if (!effectiveLine) return errorResponse("no_outbound_line", 400, { success: false });
+
+  let providerResult: Record<string, unknown> = {};
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const alowareToken = Deno.env.get('ALOWARE_API_TOKEN');
-
-    if (!alowareToken) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Aloware API token not configured' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-
-    if (userError || !user) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Invalid token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { contactPhoneNumber, linePhoneNumber, contactName, companyName, dealId } = await req.json();
-
-    if (!contactPhoneNumber) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Contact phone number is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get user's Aloware ID and default line
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('aloware_user_id, team_id, default_aloware_line')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!profile?.aloware_user_id) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Your Aloware account is not linked. Please configure it in Settings.' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Determine which line to use - explicit line, user's default, or error
-    const effectiveLineNumber = linePhoneNumber || profile.default_aloware_line;
-    
-    if (!effectiveLineNumber) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'No outbound line configured. Please set your default line in Settings or select a specific line.' 
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`Initiating call: user=${profile.aloware_user_id}, contact=${contactPhoneNumber}, line=${effectiveLineNumber}`);
-
-    // Initiate two-legged call via Aloware API
-    const alowareResponse = await fetch('https://app.aloware.com/api/v1/webhook/two-legged-call', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const resp = await fetch("https://app.aloware.com/api/v1/webhook/two-legged-call", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         api_token: alowareToken,
         user_id: profile.aloware_user_id,
         contact_phone_number: contactPhoneNumber,
-        line_phone_number: effectiveLineNumber,
+        line_phone_number: effectiveLine,
       }),
     });
-
-    const alowareResult = await alowareResponse.json();
-
-    if (!alowareResponse.ok) {
-      console.error('Aloware API error:', alowareResult);
-      
-      // Log the error
-      await supabase.from('aloware_sync_log').insert({
-        event_type: 'call_initiation_failed',
-        payload: { 
-          contactPhoneNumber, 
-          linePhoneNumber, 
-          error: alowareResult 
-        },
-        processed: false,
-        error_message: JSON.stringify(alowareResult),
-      });
-
-      return new Response(
-        JSON.stringify({ success: false, error: alowareResult.message || 'Failed to initiate call' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Update user status to on_call
-    await supabase.rpc('update_user_status', {
-      p_user_id: user.id,
-      p_status: 'on_call',
-      p_call_started_at: new Date().toISOString(),
-    });
-
-    // Create a pending call record
-    const { data: callRecord, error: callError } = await supabase
-      .from('calls')
-      .insert({
-        user_id: user.id,
+    if (!resp.ok) {
+      await logAlowareEvent(serviceClient, {
+        event_type: "call_initiation_failed",
         team_id: profile.team_id,
-        contact_name: contactName || 'Unknown',
-        company_name: companyName || null,
-        phone_number: contactPhoneNumber,
-        direction: 'outbound',
-        outcome: 'connected',
-        duration_seconds: 0,
-        aloware_call_id: alowareResult.call_id || alowareResult.id || null,
-        is_synced_from_aloware: false,
-      })
-      .select()
-      .single();
-
-    if (callError) {
-      console.error('Error creating call record:', callError);
+        processed: false,
+        error_code: "provider_error",
+        counters: { status: resp.status },
+      });
+      return errorResponse("provider_error", 502, { success: false });
     }
-
-    // Log successful initiation
-    await supabase.from('aloware_sync_log').insert({
-      event_type: 'call_initiated',
-      payload: { 
-        contactPhoneNumber, 
-        linePhoneNumber,
-        contactName,
-        callId: callRecord?.id,
-        alowareCallId: alowareResult.call_id || alowareResult.id,
-      },
-      processed: true,
-    });
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Call initiated successfully',
-        callId: callRecord?.id,
-        alowareCallId: alowareResult.call_id || alowareResult.id,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (error: unknown) {
-    console.error('Error in initiate-aloware-call:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-    return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    providerResult = (await resp.json().catch(() => ({}))) as Record<string, unknown>;
+  } catch {
+    return errorResponse("provider_unreachable", 502, { success: false });
   }
+
+  await serviceClient.rpc("update_user_status", {
+    p_user_id: userId,
+    p_status: "on_call",
+    p_call_started_at: new Date().toISOString(),
+  });
+
+  const alowareCallId = providerResult.call_id ?? providerResult.id ?? null;
+  const { data: callRecord } = await serviceClient
+    .from("calls")
+    .insert({
+      user_id: userId,
+      team_id: profile.team_id,
+      contact_name: contactName ?? "Unknown",
+      company_name: companyName,
+      phone_number: contactPhoneNumber,
+      direction: "outbound",
+      outcome: "connected",
+      duration_seconds: 0,
+      aloware_call_id: alowareCallId ? String(alowareCallId) : null,
+      is_synced_from_aloware: false,
+    })
+    .select("id")
+    .maybeSingle();
+
+  await logAlowareEvent(serviceClient, {
+    event_type: "call_initiated",
+    team_id: profile.team_id,
+    processed: true,
+    counters: { created_call: callRecord ? 1 : 0 },
+  });
+
+  return jsonResponse({
+    success: true,
+    message: "Call initiated successfully",
+    callId: callRecord?.id ?? null,
+    alowareCallId: alowareCallId ?? null,
+  });
 });

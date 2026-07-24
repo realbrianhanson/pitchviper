@@ -1,135 +1,95 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { authenticatePost, corsHeaders, errorResponse, isUuid, jsonResponse } from "../_shared/edgeAuth.ts";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { boundedText, logAlowareEvent, normalizePhone, readBoundedJson } from "../_shared/alowareSafe.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const MAX_SMS_LENGTH = 1600;
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-  const alowareToken = Deno.env.get('ALOWARE_API_TOKEN');
+  const auth = await authenticatePost(req);
+  if (!auth.ok) return auth.response;
+  const { userId, serviceClient } = auth.ctx;
 
-  // Get user from auth header
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader) {
-    return new Response(
-      JSON.stringify({ success: false, error: 'Not authenticated' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
+  const alowareToken = Deno.env.get("ALOWARE_API_TOKEN");
+  if (!alowareToken) return errorResponse("provider_unconfigured", 503, { success: false });
 
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: { headers: { Authorization: authHeader } }
-  });
+  const limit = await enforceRateLimit(userId, "send-aloware-sms", { perMinute: 20, perDay: 500, serviceClient });
+  if (!limit.allowed) return limit.response;
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return new Response(
-      JSON.stringify({ success: false, error: 'Invalid authentication' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
+  const body = (await readBoundedJson(req, 16384)) as Record<string, unknown> | null;
+  if (!body) return errorResponse("invalid_body", 400, { success: false });
 
+  const phoneNumber = normalizePhone(body.phoneNumber);
+  const message = boundedText(body.message, MAX_SMS_LENGTH);
+  if (!phoneNumber) return errorResponse("invalid_phone", 400, { success: false });
+  if (!message) return errorResponse("invalid_message", 400, { success: false });
+
+  const contactName = boundedText(body.contactName, 120);
+  const dealId = typeof body.dealId === "string" && isUuid(body.dealId) ? body.dealId : null;
+
+  const { data: profile } = await serviceClient
+    .from("profiles")
+    .select("aloware_user_id, team_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!profile?.aloware_user_id) return errorResponse("aloware_not_linked", 400, { success: false });
+
+  let providerData: Record<string, unknown> = {};
   try {
-    const { phoneNumber, message, contactName, dealId } = await req.json();
-
-    if (!phoneNumber || !message) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Phone number and message are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get user's profile for Aloware user ID and team
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('aloware_user_id, team_id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (profileError || !profile?.aloware_user_id) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Aloware account not connected. Please configure your Aloware User ID in settings.' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (!alowareToken) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Aloware API token not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Send SMS via Aloware API
-    console.log('Sending SMS via Aloware:', { to: phoneNumber, userId: profile.aloware_user_id });
-
-    const alowareResponse = await fetch('https://app.aloware.com/api/v1/webhook/sms', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const resp = await fetch("https://app.aloware.com/api/v1/webhook/sms", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         api_token: alowareToken,
         user_id: profile.aloware_user_id,
         to: phoneNumber,
-        message: message,
+        message,
       }),
     });
-
-    const alowareData = await alowareResponse.json();
-    console.log('Aloware SMS response:', alowareData);
-
-    if (!alowareResponse.ok) {
-      return new Response(
-        JSON.stringify({ success: false, error: alowareData.message || 'Failed to send SMS via Aloware' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Log SMS in database
-    const { data: smsRecord, error: insertError } = await supabase
-      .from('sms_messages')
-      .insert({
-        user_id: user.id,
+    if (!resp.ok) {
+      await logAlowareEvent(serviceClient, {
+        event_type: "sms_send_failed",
         team_id: profile.team_id,
-        deal_id: dealId || null,
-        contact_phone: phoneNumber,
-        contact_name: contactName || null,
-        message: message,
-        direction: 'outbound',
-        aloware_message_id: alowareData.id || alowareData.message_id || null,
-        status: 'sent',
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error('Failed to log SMS:', insertError);
-      // Don't fail the request, SMS was sent successfully
+        processed: false,
+        error_code: "provider_error",
+        counters: { status: resp.status },
+      });
+      return errorResponse("provider_error", 502, { success: false });
     }
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        messageId: smsRecord?.id,
-        alowareMessageId: alowareData.id || alowareData.message_id,
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (error: unknown) {
-    console.error('SMS sending error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    providerData = (await resp.json().catch(() => ({}))) as Record<string, unknown>;
+  } catch {
+    return errorResponse("provider_unreachable", 502, { success: false });
   }
+
+  const alowareMessageId = providerData.id ?? providerData.message_id ?? null;
+  const { data: smsRecord } = await serviceClient
+    .from("sms_messages")
+    .insert({
+      user_id: userId,
+      team_id: profile.team_id,
+      deal_id: dealId,
+      contact_phone: phoneNumber,
+      contact_name: contactName,
+      message,
+      direction: "outbound",
+      aloware_message_id: alowareMessageId ? String(alowareMessageId) : null,
+      status: "sent",
+    })
+    .select("id")
+    .maybeSingle();
+
+  await logAlowareEvent(serviceClient, {
+    event_type: "sms_sent",
+    team_id: profile.team_id,
+    processed: true,
+    counters: { has_message_id: alowareMessageId ? 1 : 0 },
+  });
+
+  return jsonResponse({
+    success: true,
+    messageId: smsRecord?.id ?? null,
+    alowareMessageId: alowareMessageId ?? null,
+  });
 });
