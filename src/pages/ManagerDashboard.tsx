@@ -74,7 +74,17 @@ export default function ManagerDashboard() {
     );
   }
 
-  const firstName = profile?.full_name?.split(" ")[0] || "Manager";
+  const cleanFirstName = (raw?: string | null) => {
+    if (!raw) return "";
+    const stripped = raw
+      .replace(/\bhttps?:\/\/\S+/gi, "")
+      .replace(/\bwww\.\S+/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    const first = stripped.split(" ")[0] || "";
+    return first ? first.charAt(0).toUpperCase() + first.slice(1) : "";
+  };
+  const firstName = cleanFirstName(profile?.full_name) || "Manager";
   const activeReps = overview?.currently_active ?? 0;
   const totalReps = overview?.team_size ?? 0;
 
