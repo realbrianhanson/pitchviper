@@ -108,14 +108,14 @@ export function PhoneSystemPanel() {
                   key={id}
                   whileHover={canManageTeam ? { y: -1 } : undefined}
                   transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                  disabled={!canManageTeam || false}
+                  disabled={!canManageTeam}
                   onClick={() => handleSelect(id)}
                   className={cn(
                     "text-left border p-5 space-y-3 transition-colors",
                     isSelected
                       ? "border-primary bg-primary/[0.04]"
                       : "border-border hover:border-primary/40",
-                    (!canManageTeam || false) && "opacity-70 cursor-not-allowed",
+                    !canManageTeam && "opacity-70 cursor-not-allowed",
                   )}
                 >
                   <div className="flex items-center justify-between gap-3">
