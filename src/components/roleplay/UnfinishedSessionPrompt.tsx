@@ -50,10 +50,9 @@ export function UnfinishedSessionPrompt() {
   };
 
   const handleAbandon = async () => {
-    const { error } = await supabase
-      .from("roleplay_sessions")
-      .update({ status: "abandoned", completed_at: new Date().toISOString() })
-      .eq("id", data.id);
+    const { error } = await supabase.functions.invoke("roleplay-abandon-session", {
+      body: { session_id: data.id },
+    });
     if (error) {
       toast.error("Could not close session");
       return;

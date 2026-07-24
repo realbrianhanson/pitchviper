@@ -372,14 +372,9 @@ export default function RoleplaySession() {
     }
 
     try {
-      await supabase
-        .from("roleplay_sessions")
-        .update({
-          status: "abandoned",
-          duration_seconds: elapsedSeconds,
-          completed_at: new Date().toISOString(),
-        })
-        .eq("id", sessionId);
+      await supabase.functions.invoke("roleplay-abandon-session", {
+        body: { session_id: sessionId, duration_seconds: elapsedSeconds },
+      });
 
       navigate("/roleplay");
     } catch (error) {
