@@ -153,10 +153,13 @@ describe("No detailed error / PII logging patterns", () => {
 });
 
 describe("Migration: anon revokes", () => {
-  const migDir = "supabase/migrations";
-  const files = readdirSync(migDir).sort();
-  const latest = files[files.length - 1];
-  const sql = readFileSync(join(migDir, latest), "utf8");
+  const sql = readFileSync(
+    join(
+      "supabase/migrations",
+      "20260724040710_530e3c17-8919-4dc2-add9-73df3fb57892.sql",
+    ),
+    "utf8",
+  );
 
   it("revokes anon on tenant-sensitive tables", () => {
     for (const t of [
