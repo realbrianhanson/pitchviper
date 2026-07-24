@@ -94,20 +94,14 @@ export function AlowareTeamConfig() {
           </ViperCardTitle>
         </ViperCardHeader>
         <ViperCardContent className="space-y-6">
-          <div className="p-6 rounded-lg bg-amber-500/10 border border-amber-500/20 text-center">
-            <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-            <h3 className="font-semibold text-lg mb-2">API Token Required</h3>
+          <div className="p-6 rounded-none border border-border bg-muted/40 text-center">
+            <AlertCircle className="h-12 w-12 text-primary mx-auto mb-4" />
+            <h3 className="font-semibold text-lg mb-2">Company connection required</h3>
             <p className="text-muted-foreground mb-4">
-              The Aloware API token has not been configured yet. Please add the 
-              <code className="mx-1 px-2 py-0.5 bg-muted rounded text-sm">ALOWARE_API_TOKEN</code> 
-              secret to your Cloud secrets.
+              Save and verify your company's Aloware API token in the
+              <strong className="mx-1">Company Aloware Connection</strong>
+              card above before syncing team members.
             </p>
-            <ol className="text-sm text-muted-foreground text-left space-y-2 max-w-md mx-auto">
-              <li>1. Go to your Aloware account → Integrations</li>
-              <li>2. Copy your API token</li>
-              <li>3. Add it as a secret named <code className="px-1 bg-muted rounded">ALOWARE_API_TOKEN</code></li>
-              <li>4. Return here and click "Test Token"</li>
-            </ol>
           </div>
           <Button
             variant="outline"
@@ -115,12 +109,13 @@ export function AlowareTeamConfig() {
             onClick={() => setApiConfigured(null)}
           >
             <RefreshCw className="mr-2 h-4 w-4" />
-            Try Again
+            Try again
           </Button>
         </ViperCardContent>
       </ViperCard>
     );
   }
+
 
   return (
     <ViperCard variant="glass">
