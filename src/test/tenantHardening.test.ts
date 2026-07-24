@@ -72,14 +72,14 @@ describe("client never writes promo_validated", () => {
   it("StepAccess does not update promo_validated on profiles", () => {
     expect(stepAccess).not.toMatch(/promo_validated/);
   });
-  it("Onboarding final save does not touch team_id or promo_validated", () => {
-    // Whitelist columns only; sensitive tenant/promo fields must not appear.
-    expect(onboardingPage).not.toMatch(/promo_validated/);
-    // The final save block writes only the whitelisted profile columns.
+  it("Onboarding final save writes only whitelisted profile columns", () => {
     const finalSaveIndex = onboardingPage.indexOf("handleFinalComplete");
     expect(finalSaveIndex).toBeGreaterThan(-1);
-    const finalSave = onboardingPage.slice(finalSaveIndex, finalSaveIndex + 800);
+    const finalSave = onboardingPage.slice(finalSaveIndex, finalSaveIndex + 900);
+    // Sensitive tenant/promo fields must never appear in the client update payload.
     expect(finalSave).not.toMatch(/team_id\s*:/);
+    expect(finalSave).not.toMatch(/promo_validated/);
+    expect(finalSave).not.toMatch(/xp_points/);
   });
 });
 
