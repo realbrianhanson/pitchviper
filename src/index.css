@@ -3,128 +3,135 @@
 @tailwind utilities;
 
 /* ============================================
-   PITCHVIPER — THE SOVEREIGN EDITORIAL
-   Obsidian + Gold. Bloomberg meets Hermès.
+   PITCHVIPER — Executive B2B Sales OS
+   Warm white canvas, forest primary, graphite type.
+   Light is canonical; dark stays polished.
    ============================================ */
 
 @layer base {
   :root {
-    /* Light mode — kept for ThemeToggle parity, but dark is canonical */
-    --background: 42 38% 96%;
-    --foreground: 240 10% 8%;
+    /* Warm neutral canvas + true-white elevated surfaces */
+    --background: 40 22% 97%;             /* #FAF9F6 warm white */
+    --foreground: 220 15% 14%;            /* graphite */
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 8%;
+    --card-foreground: 220 15% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 8%;
+    --popover-foreground: 220 15% 14%;
 
-    /* Brushed Gold */
-    --primary: 42 70% 50%;
-    --primary-foreground: 240 10% 4%;
+    /* Deep forest — primary action / status accent */
+    --primary: 156 40% 22%;               /* #234739 */
+    --primary-foreground: 40 22% 97%;
 
-    --secondary: 42 20% 92%;
-    --secondary-foreground: 240 10% 8%;
+    --secondary: 40 14% 94%;
+    --secondary-foreground: 220 15% 14%;
 
-    --muted: 42 15% 90%;
-    --muted-foreground: 240 5% 38%;
+    --muted: 40 12% 93%;
+    --muted-foreground: 220 8% 42%;
 
-    --accent: 42 25% 92%;
-    --accent-foreground: 240 10% 8%;
+    --accent: 156 30% 92%;                /* pale forest */
+    --accent-foreground: 156 40% 22%;
 
-    --destructive: 332 80% 48%;
-    --destructive-foreground: 42 38% 96%;
+    /* Coral destructive */
+    --destructive: 8 72% 52%;
+    --destructive-foreground: 40 22% 97%;
 
-    --success: 142 60% 38%;
-    --success-foreground: 42 38% 96%;
+    /* Calm emerald */
+    --success: 152 48% 34%;
+    --success-foreground: 40 22% 97%;
 
-    --warning: 38 90% 50%;
-    --warning-foreground: 240 10% 4%;
+    /* Restrained amber — warnings/awards only */
+    --warning: 36 88% 48%;
+    --warning-foreground: 220 15% 14%;
 
-    --magenta: 332 80% 48%;
-    --magenta-foreground: 42 38% 96%;
+    --magenta: 8 72% 52%;
+    --magenta-foreground: 40 22% 97%;
 
-    --border: 240 6% 86%;
-    --input: 240 6% 90%;
-    --ring: 42 70% 50%;
+    --border: 220 12% 88%;
+    --input: 220 12% 90%;
+    --ring: 156 40% 32%;
 
-    --radius: 0.125rem;
+    --radius: 0.625rem;                   /* ~10px */
 
-    --glass-bg: 0 0% 100% / 0.7;
-    --glass-border: 240 6% 86%;
+    --glass-bg: 0 0% 100% / 0.75;
+    --glass-border: 220 12% 88%;
 
-    --sidebar-background: 42 30% 94%;
-    --sidebar-foreground: 240 10% 8%;
-    --sidebar-primary: 42 70% 45%;
-    --sidebar-primary-foreground: 240 10% 4%;
-    --sidebar-accent: 42 20% 90%;
-    --sidebar-accent-foreground: 240 10% 8%;
-    --sidebar-border: 240 6% 86%;
-    --sidebar-ring: 42 70% 50%;
+    --sidebar-background: 40 20% 98%;
+    --sidebar-foreground: 220 15% 20%;
+    --sidebar-primary: 156 40% 22%;
+    --sidebar-primary-foreground: 40 22% 97%;
+    --sidebar-accent: 156 30% 92%;
+    --sidebar-accent-foreground: 156 40% 22%;
+    --sidebar-border: 220 12% 88%;
+    --sidebar-ring: 156 40% 32%;
 
     --glow-cyan: none;
     --glow-magenta: none;
     --glow-green: none;
+
+    --shadow-xs: 0 1px 2px 0 hsl(220 15% 14% / 0.04);
+    --shadow-sm: 0 1px 2px 0 hsl(220 15% 14% / 0.05), 0 1px 3px -1px hsl(220 15% 14% / 0.06);
+    --shadow-md: 0 4px 12px -2px hsl(220 15% 14% / 0.08), 0 2px 4px -2px hsl(220 15% 14% / 0.06);
   }
 
   .dark {
-    /* Obsidian Canvas */
-    --background: 240 7% 4%;            /* #08080B */
-    --foreground: 42 38% 93%;           /* #F5F1E8 warm off-white */
+    --background: 160 8% 5%;              /* #0B0D0C */
+    --foreground: 40 15% 92%;
 
-    --card: 240 7% 5.5%;                /* #0C0C10 */
-    --card-foreground: 42 38% 93%;
+    --card: 160 8% 8%;
+    --card-foreground: 40 15% 92%;
 
-    --popover: 240 7% 5.5%;
-    --popover-foreground: 42 38% 93%;
+    --popover: 160 8% 8%;
+    --popover-foreground: 40 15% 92%;
 
-    /* Brushed Gold — sovereign accent */
-    --primary: 42 73% 67%;              /* #E8C76F */
-    --primary-foreground: 240 7% 4%;
+    --primary: 152 42% 60%;               /* lighter forest for contrast */
+    --primary-foreground: 160 20% 8%;
 
-    --secondary: 240 5% 9%;
-    --secondary-foreground: 42 38% 93%;
+    --secondary: 160 6% 12%;
+    --secondary-foreground: 40 15% 92%;
 
-    --muted: 240 5% 11%;
-    --muted-foreground: 42 12% 60%;
+    --muted: 160 6% 14%;
+    --muted-foreground: 40 8% 62%;
 
-    --accent: 240 5% 12%;
-    --accent-foreground: 42 38% 93%;
+    --accent: 156 25% 16%;
+    --accent-foreground: 152 42% 72%;
 
-    /* Hot Magenta — alerts / overdue */
-    --destructive: 332 100% 59%;        /* #FF2D87 */
-    --destructive-foreground: 42 38% 93%;
+    --destructive: 8 72% 58%;
+    --destructive-foreground: 40 15% 96%;
 
-    /* Acid Green — positive deltas */
-    --success: 105 100% 71%;            /* #9CFF6B */
-    --success-foreground: 240 7% 4%;
+    --success: 152 48% 55%;
+    --success-foreground: 160 20% 8%;
 
-    --warning: 38 100% 60%;
-    --warning-foreground: 240 7% 4%;
+    --warning: 36 88% 58%;
+    --warning-foreground: 160 20% 8%;
 
-    --magenta: 332 100% 59%;
-    --magenta-foreground: 42 38% 93%;
+    --magenta: 8 72% 58%;
+    --magenta-foreground: 40 15% 96%;
 
-    --border: 240 5% 13%;               /* #1F1F23 hairline */
-    --input: 240 5% 10%;
-    --ring: 42 73% 67%;
+    --border: 160 6% 18%;
+    --input: 160 6% 15%;
+    --ring: 152 42% 55%;
 
-    --glass-bg: 240 7% 5.5% / 0.7;
-    --glass-border: 240 5% 13%;
+    --glass-bg: 160 8% 8% / 0.75;
+    --glass-border: 160 6% 18%;
 
-    --sidebar-background: 240 7% 4%;
-    --sidebar-foreground: 42 38% 93%;
-    --sidebar-primary: 42 73% 67%;
-    --sidebar-primary-foreground: 240 7% 4%;
-    --sidebar-accent: 240 5% 9%;
-    --sidebar-accent-foreground: 42 73% 67%;
-    --sidebar-border: 240 5% 13%;
-    --sidebar-ring: 42 73% 67%;
+    --sidebar-background: 160 8% 6%;
+    --sidebar-foreground: 40 15% 88%;
+    --sidebar-primary: 152 42% 60%;
+    --sidebar-primary-foreground: 160 20% 8%;
+    --sidebar-accent: 156 25% 14%;
+    --sidebar-accent-foreground: 152 42% 72%;
+    --sidebar-border: 160 6% 18%;
+    --sidebar-ring: 152 42% 55%;
 
-    /* Quiet, no neon */
     --glow-cyan: none;
     --glow-magenta: none;
     --glow-green: none;
+
+    --shadow-xs: 0 1px 2px 0 hsl(0 0% 0% / 0.4);
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.5), 0 1px 3px -1px hsl(0 0% 0% / 0.5);
+    --shadow-md: 0 4px 12px -2px hsl(0 0% 0% / 0.55), 0 2px 4px -2px hsl(0 0% 0% / 0.5);
   }
 }
 
@@ -135,74 +142,63 @@
 
   body {
     @apply bg-background text-foreground font-body antialiased;
-    background-attachment: fixed;
-    font-feature-settings: "ss01", "cv01", "cv11";
-  }
-
-  :root body {
-    background-image: linear-gradient(to bottom, hsl(42 38% 97%) 0%, hsl(42 30% 94%) 100%);
-  }
-
-  .dark body {
-    background-image: linear-gradient(to bottom, hsl(240 7% 4%) 0%, hsl(240 7% 3.5%) 100%);
+    font-feature-settings: "ss01", "cv11";
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight;
-    font-weight: 400;
+    @apply font-display tracking-tight text-foreground;
+    font-weight: 500;
   }
 
-  /* Tabular numerals everywhere they appear in KPIs */
-  .tabular-nums {
-    font-variant-numeric: tabular-nums;
+  .tabular-nums { font-variant-numeric: tabular-nums; }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }
 
 @layer components {
-  /* Editorial tile — hairline obsidian card */
+  /* Editorial tile — clean surface card */
   .editorial-tile {
-    @apply bg-card border border-border;
+    @apply bg-card border border-border rounded-[var(--radius)];
+    box-shadow: var(--shadow-xs);
   }
 
-  /* Bento grid mortar — 1px gold-tinted gridlines */
   .bento-grid {
-    @apply grid gap-px bg-border border border-border;
+    @apply grid gap-px bg-border border border-border rounded-[var(--radius)] overflow-hidden;
   }
 
   .bento-tile {
     @apply bg-card p-6;
   }
 
-  /* Eyebrow label — uppercase mono microtype */
   .eyebrow {
-    @apply font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground;
+    @apply font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground;
   }
 
-  /* Gold underline on hover — with a visible focus ring for keyboard users. */
   .gold-underline {
-    @apply relative after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-primary after:transition-all hover:after:w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm;
+    @apply relative after:absolute after:left-0 after:-bottom-0.5 after:h-px after:w-0 after:bg-primary after:transition-all hover:after:w-full focus-visible:outline-none;
   }
 
-  /* Legacy alias for older components */
+  /* Legacy aliases — kept so existing components render calmly */
   .glass-card {
-    @apply bg-card border border-border;
+    @apply bg-card border border-border rounded-[var(--radius)];
   }
 
   .gradient-border {
-    @apply bg-card border border-border;
+    @apply bg-card border border-border rounded-[var(--radius)];
   }
 
-  .glow-cyan, .glow-magenta, .glow-green {
-    box-shadow: none;
-  }
+  .glow-cyan, .glow-magenta, .glow-green { box-shadow: none; }
 
   .hover-lift {
-    @apply transition-colors duration-200;
+    @apply transition-shadow duration-200;
   }
+  .hover-lift:hover { box-shadow: var(--shadow-md); }
 
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(42 73% 80%) 100%);
+    background-image: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.7) 100%);
   }
 
   .pulse-glow {
@@ -213,57 +209,40 @@
     0%, 100% { opacity: 0.6; }
     50% { opacity: 1; }
   }
+
+  /* Brand-only wordmark utility */
+  .brand-wordmark {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
 }
 
 @layer utilities {
   .transition-smooth { @apply transition-all duration-200 ease-out; }
   .transition-medium { @apply transition-all duration-300 ease-out; }
 
-  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: hsl(var(--background)); }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: hsl(var(--border)); }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.5); }
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); }
 
-  .grid-pattern {
-    background-image: none;
-  }
+  .grid-pattern { background-image: none; }
 
-  /* Marquee for ambient tickers */
   @keyframes marquee {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
   }
   .animate-marquee { animation: marquee 40s linear infinite; }
 
-  /* Lacquered Obsidian — radial gold vignette behind page H1s only.
-     Apply with: <div class="gold-vignette"> ... <h1>...</h1> ... </div> */
-  .gold-vignette {
-    position: relative;
-    isolation: isolate;
-  }
-  .gold-vignette::before {
-    content: "";
-    position: absolute;
-    inset: -10% -10% auto -10%;
-    height: 320px;
-    z-index: -1;
-    pointer-events: none;
-    background: radial-gradient(
-      ellipse 60% 80% at 30% 30%,
-      hsl(var(--primary) / 0.05) 0%,
-      hsl(var(--primary) / 0.025) 35%,
-      transparent 70%
-    );
-  }
+  /* No-op — vignette retired */
+  .gold-vignette { position: relative; isolation: isolate; }
+
+  .shadow-elev-xs { box-shadow: var(--shadow-xs); }
+  .shadow-elev-sm { box-shadow: var(--shadow-sm); }
+  .shadow-elev-md { box-shadow: var(--shadow-md); }
 }
 
-/* ============================================
-   Accessibility — Reduced Motion
-   Silence continuous / looping animations for
-   users who ask for it. One-shot transitions
-   (fade-in, scale-in) remain — they're brief
-   and improve orientation, not distract.
-   ============================================ */
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee,
   .animate-flame-flicker,
@@ -274,7 +253,6 @@
     animation: none !important;
   }
 
-  /* Neutralize any element still doing an infinite loop we didn't name. */
   *,
   *::before,
   *::after {
@@ -284,4 +262,3 @@
     scroll-behavior: auto !important;
   }
 }
-
