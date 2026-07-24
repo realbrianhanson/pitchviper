@@ -2,6 +2,7 @@
 // Client never supplies challenge content, passing score, or completion rows.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { authenticatePost, boundedString, clampInt, corsHeaders, errorResponse, isUuid, jsonResponse } from "../_shared/edgeAuth.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const MAX_RESPONSES = 12;
