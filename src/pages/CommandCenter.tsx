@@ -41,7 +41,17 @@ export default function CommandCenter() {
     metricType,
   } = useLeaderboard();
 
-  const firstName = data?.profile?.full_name?.split(" ")[0] || "there";
+  const cleanFirstName = (raw?: string | null) => {
+    if (!raw) return "";
+    const stripped = raw
+      .replace(/\bhttps?:\/\/\S+/gi, "")
+      .replace(/\bwww\.\S+/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    const first = stripped.split(" ")[0] || "";
+    return first ? first.charAt(0).toUpperCase() + first.slice(1) : "";
+  };
+  const firstName = cleanFirstName(data?.profile?.full_name) || "there";
   const challenge = data?.challenge;
   const activities = data?.activities || [];
 

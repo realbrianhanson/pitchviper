@@ -28,7 +28,7 @@ export function AppLayout({ children, title }: AppLayoutProps) {
           <AppHeader title={title} onOpenPalette={() => palette.setOpen(true)} />
           <LiveTicker />
           <main className="flex-1 overflow-x-hidden bg-background">
-            <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-10 py-6 lg:py-8">
+            <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-10 py-6 lg:py-8 pb-32 md:pb-8">
               {children}
             </div>
           </main>

@@ -35,22 +35,36 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
     navigate("/sign-in");
   };
 
+  // Display-only cleaner: strip URL substrings, trim, uppercase first visible char.
+  const cleanDisplay = (raw?: string | null) => {
+    if (!raw) return "";
+    const stripped = raw
+      .replace(/\bhttps?:\/\/\S+/gi, "")
+      .replace(/\bwww\.\S+/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!stripped) return "";
+    return stripped.charAt(0).toUpperCase() + stripped.slice(1);
+  };
+
+  const cleanedName = cleanDisplay(profile?.full_name) || cleanDisplay(user?.email?.split("@")[0]) || "User";
+
   const getInitials = () => {
-    if (profile?.full_name) {
-      return profile.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    if (cleanedName && cleanedName !== "User") {
+      return cleanedName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
     }
     return user?.email?.substring(0, 2).toUpperCase() || "??";
   };
 
-  const displayName = profile?.full_name || user?.email?.split("@")[0] || "User";
+  const displayName = cleanedName;
   const roleLabel = role === "manager" ? "Sales Manager" : "Sales Rep";
 
   return (
     <header className="sticky top-0 z-40 flex h-[68px] items-center justify-between gap-3 md:gap-6 border-b border-border bg-card px-4 sm:px-6 lg:px-8">
       {/* Left: mobile trigger + page title */}
-      <div className="flex items-center gap-3 min-w-0">
-        <SidebarTrigger className="md:hidden -ml-1 text-muted-foreground hover:text-foreground" />
-        <h1 className="text-[17px] font-medium text-foreground truncate leading-none">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <SidebarTrigger className="md:hidden -ml-1 text-muted-foreground hover:text-foreground shrink-0" />
+        <h1 className="text-[17px] font-medium text-foreground truncate leading-none min-w-0">
           {title || "Dashboard"}
         </h1>
       </div>
@@ -75,7 +89,7 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
       <div className="flex items-center gap-1.5 md:gap-2">
         <button
           onClick={onOpenPalette}
-          className="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          className="hidden sm:inline-flex lg:hidden h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
           aria-label="Open command palette"
         >
           <Search className="h-4 w-4" strokeWidth={1.75} />
@@ -98,7 +112,9 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
         <LogCallModal open={showLogCall} onOpenChange={setShowLogCall} />
 
         <div className="flex items-center gap-0.5 text-muted-foreground">
-          <ChatPanel />
+          <div className="hidden sm:flex">
+            <ChatPanel />
+          </div>
           <NotificationBell />
           <ThemeToggle />
         </div>
@@ -112,7 +128,7 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
               {profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
-                  alt={profile.full_name}
+                  alt={displayName}
                   className="h-7 w-7 rounded-full object-cover"
                 />
               ) : (

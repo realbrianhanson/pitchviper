@@ -63,9 +63,9 @@ export function ManagerFAB({ onSendBroadcast, onStartCompetition }: ManagerFABPr
         />
       )}
 
-      <div className="fixed bottom-24 right-4 z-50 flex flex-col-reverse items-end gap-2">
+      <div className="fixed bottom-[72px] right-4 z-50 flex flex-col-reverse items-end gap-2">
         {isOpen && (
-          <div className="flex flex-col-reverse gap-2 mb-2">
+          <div className="flex flex-col-reverse gap-2 mb-1">
             {actions.map((action) => (
               <button
                 key={action.label}
@@ -75,14 +75,12 @@ export function ManagerFAB({ onSendBroadcast, onStartCompetition }: ManagerFABPr
                 }}
                 aria-label={action.ariaLabel}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-2.5 border border-border bg-card",
-                  "text-foreground hover:bg-muted transition-colors"
+                  "flex items-center gap-2.5 px-3.5 py-2 rounded-lg border border-border bg-card",
+                  "text-foreground text-[13px] hover:bg-accent transition-colors shadow-elev-sm"
                 )}
               >
-                <action.icon className="h-4 w-4 text-primary" strokeWidth={1.5} />
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] whitespace-nowrap">
-                  {action.label}
-                </span>
+                <action.icon className="h-4 w-4 text-primary" strokeWidth={1.75} />
+                <span className="whitespace-nowrap">{action.label}</span>
               </button>
             ))}
           </div>
@@ -93,7 +91,7 @@ export function ManagerFAB({ onSendBroadcast, onStartCompetition }: ManagerFABPr
           aria-label={isOpen ? "Close manager quick actions" : "Open manager quick actions"}
           aria-expanded={isOpen}
           className={cn(
-            "flex items-center justify-center w-12 h-12 border border-primary",
+            "flex items-center justify-center w-12 h-12 rounded-xl border border-border shadow-elev-sm",
             "transition-colors",
             isOpen
               ? "bg-card text-foreground"
@@ -101,9 +99,9 @@ export function ManagerFAB({ onSendBroadcast, onStartCompetition }: ManagerFABPr
           )}
         >
           {isOpen ? (
-            <X className="h-5 w-5" strokeWidth={1.5} />
+            <X className="h-5 w-5" strokeWidth={1.75} />
           ) : (
-            <Plus className="h-5 w-5" strokeWidth={1.5} />
+            <Plus className="h-5 w-5" strokeWidth={1.75} />
           )}
         </button>
       </div>
