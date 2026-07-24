@@ -7,6 +7,9 @@ import {
   defaultActionDueDate,
   isUuid,
   isCoachingActionStatus,
+  canRepAdvanceStatus,
+  normalizeDisplayName,
+  resolveTeamMemberByName,
   MAX_ACTIONS,
 } from "@/lib/coachingValidation";
 
