@@ -44,3 +44,25 @@ export async function requireTeamEntitlement(
   const status = code === "upgrade_required" ? 403 : 402;
   return { ok: false, response: errorResponse(code, status) };
 }
+
+/**
+ * Team-scoped variant used by signed webhooks (Aloware/GHL) after the caller
+ * has mapped the payload to an owning team_id. Returns `{ ok: false }` with
+ * the entitlement code so webhook handlers can decide between "accept and
+ * drop" (subscription_required) versus proceeding.
+ */
+export async function checkTeamEntitlementByTeamId(
+  service: SupabaseClient,
+  teamId: string | null | undefined,
+  minTier: MinTier = "starter",
+): Promise<{ ok: true } | { ok: false; code: string }> {
+  if (!teamId) return { ok: false, code: "no_team" };
+  const { data: billing } = await service
+    .from("team_billing").select("*").eq("team_id", teamId).maybeSingle();
+  if (!billing) return { ok: false, code: "no_billing" };
+  const { data: ent } = await service.rpc("compute_entitlement", { p_billing: billing });
+  const payload = (ent ?? {}) as Record<string, unknown>;
+  if (!payload.access) return { ok: false, code: String(payload.reason ?? "subscription_required") };
+  if (minTier === "growth" && payload.tier !== "growth") return { ok: false, code: "upgrade_required" };
+  return { ok: true };
+}
