@@ -136,8 +136,7 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Perplexity API error:', response.status, errorText);
+      console.error("provider_error", { status: response.status });
       throw new Error(`Perplexity API error: ${response.status}`);
     }
 

@@ -93,8 +93,7 @@ serve(async (req) => {
     );
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('ElevenLabs error:', response.status, errorText);
+      console.error("provider_error", { status: response.status });
       throw new Error(`ElevenLabs API error: ${response.status}`);
     }
 

@@ -81,8 +81,7 @@ Provide specific examples and be detailed.`,
     });
 
     if (!perplexityResponse.ok) {
-      const errorText = await perplexityResponse.text();
-      console.error('Perplexity API error:', perplexityResponse.status, errorText);
+      console.error("provider_error", { status: perplexityResponse.status });
       throw new Error(`Perplexity research failed: ${perplexityResponse.status}`);
     }
 
@@ -196,8 +195,7 @@ Create a battlecard with:
     });
 
     if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API error:', aiResponse.status, errorText);
+      console.error("provider_error", { status: aiResponse.status });
       throw new Error(`AI processing failed: ${aiResponse.status}`);
     }
 

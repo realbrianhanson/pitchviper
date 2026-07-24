@@ -230,8 +230,7 @@ Rules:
     });
 
     if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("ai_gateway_error");
+      console.error("provider_error", { status: aiResponse.status });
       
       if (aiResponse.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {

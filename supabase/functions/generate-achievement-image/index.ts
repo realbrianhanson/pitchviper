@@ -72,8 +72,7 @@ Ultra high resolution.`;
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI API error:', errorText);
+      console.error("provider_error", { status: response.status });
       throw new Error(`AI API error: ${response.status}`);
     }
 
