@@ -212,7 +212,7 @@ export function useCoaching() {
         if (error) throw error;
         return data || [];
       },
-      enabled: !!repId,
+      enabled: !!repId && canManageTeam,
     });
 
   const useCoachingInsights = (repId: string | null) =>
