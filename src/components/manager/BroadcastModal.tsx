@@ -57,7 +57,7 @@ export function BroadcastModal({ open, onOpenChange }: BroadcastModalProps) {
 
       // Get all team members to notify
       const { data: teamMembers } = await supabase
-        .from("profiles")
+        .from("team_profiles_safe")
         .select("user_id")
         .eq("team_id", profile.team_id)
         .neq("user_id", user.id);

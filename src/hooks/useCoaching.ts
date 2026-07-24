@@ -98,9 +98,9 @@ export function useCoaching() {
     queryFn: async () => {
       if (!profile?.team_id) return [];
       const { data, error } = await supabase
-        .from("profiles")
+        .from("team_profiles_safe")
         .select(
-          "user_id, full_name, avatar_url, title, hire_date, current_level, xp_points, current_streak, longest_streak, last_coached_at, team_id"
+          "user_id, full_name, avatar_url, title, hire_date, current_level, xp_points, current_streak, longest_streak, team_id"
         )
         .eq("team_id", profile.team_id)
         .neq("user_id", user?.id ?? "");

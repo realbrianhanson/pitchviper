@@ -127,7 +127,7 @@ export function useDashboardData() {
 
           // Get user info for the activity
           const { data: activityUser } = await supabase
-            .from("profiles")
+            .from("team_profiles_safe")
             .select("full_name, avatar_url")
             .eq("user_id", newActivity.user_id)
             .maybeSingle();

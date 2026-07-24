@@ -112,8 +112,8 @@ export function useManagerDashboard() {
 
       // 1) Team members
       const { data: profiles, error: profilesErr } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, avatar_url, title, current_level, current_streak, xp_points, team_id, last_coached_at')
+        .from('team_profiles_safe')
+        .select('user_id, full_name, avatar_url, title, current_level, current_streak, xp_points, team_id')
         .eq('team_id', profile.team_id);
 
       if (profilesErr) throw profilesErr;
