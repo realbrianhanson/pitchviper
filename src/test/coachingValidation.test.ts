@@ -108,3 +108,58 @@ describe("defaultActionDueDate", () => {
     expect(d).toBe("2026-07-31");
   });
 });
+
+describe("canRepAdvanceStatus (forward-only)", () => {
+  it("allows assigned -> in_progress", () => {
+    expect(canRepAdvanceStatus("assigned", "in_progress")).toBe(true);
+  });
+  it("allows in_progress -> completed", () => {
+    expect(canRepAdvanceStatus("in_progress", "completed")).toBe(true);
+  });
+  it("blocks skipping steps (assigned -> completed)", () => {
+    expect(canRepAdvanceStatus("assigned", "completed")).toBe(false);
+  });
+  it("blocks backward moves (completed -> anything)", () => {
+    expect(canRepAdvanceStatus("completed", "in_progress")).toBe(false);
+    expect(canRepAdvanceStatus("completed", "assigned")).toBe(false);
+    expect(canRepAdvanceStatus("completed", "completed")).toBe(false);
+  });
+  it("blocks in_progress -> assigned", () => {
+    expect(canRepAdvanceStatus("in_progress", "assigned")).toBe(false);
+  });
+  it("blocks same-state no-op transitions", () => {
+    expect(canRepAdvanceStatus("assigned", "assigned")).toBe(false);
+    expect(canRepAdvanceStatus("in_progress", "in_progress")).toBe(false);
+  });
+});
+
+describe("resolveTeamMemberByName (safe exact match)", () => {
+  const members = [
+    { user_id: "u-1", full_name: "Alice Smith" },
+    { user_id: "u-2", full_name: "  bob JONES  " },
+    { user_id: "u-3", full_name: "Alice Smith" }, // duplicate name
+    { user_id: "u-4", full_name: null },
+  ];
+  it("returns the user_id on an unambiguous case-insensitive match", () => {
+    expect(resolveTeamMemberByName("Bob Jones", members)).toBe("u-2");
+  });
+  it("returns null for ambiguous duplicate names", () => {
+    expect(resolveTeamMemberByName("Alice Smith", members)).toBeNull();
+  });
+  it("returns null when there is no match", () => {
+    expect(resolveTeamMemberByName("Nobody", members)).toBeNull();
+  });
+  it("returns null for empty/nullish input", () => {
+    expect(resolveTeamMemberByName("", members)).toBeNull();
+    expect(resolveTeamMemberByName(null, members)).toBeNull();
+    expect(resolveTeamMemberByName(undefined, members)).toBeNull();
+  });
+  it("normalizes whitespace and strips URLs so injected links can't match", () => {
+    expect(normalizeDisplayName("  Alice   Smith  ")).toBe("alice smith");
+    expect(normalizeDisplayName("Bob https://evil.example/x Jones")).toBe("bob jones");
+  });
+  it("never returns an AI-supplied id even if the name embeds one", () => {
+    // rep_name that looks like a uuid is treated as just a name; no match => null.
+    expect(resolveTeamMemberByName("11111111-1111-4111-8111-111111111111", members)).toBeNull();
+  });
+});
