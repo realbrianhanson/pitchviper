@@ -70,20 +70,8 @@ export function DealDetailPanel({
   const [history, setHistory] = useState<DealStageHistoryEntry[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const { isCreating: isPushingToAloware, createLead } = useAlowareLead();
+  // Push-to-Aloware retired: keep deal data inside PitchViper.
 
-  const handlePushToAloware = async () => {
-    if (!deal) return;
-    await createLead({
-      fullName: deal.contact_name,
-      email: deal.contact_email || undefined,
-      phone: deal.contact_phone || undefined,
-      company: deal.company_name,
-      notes: deal.notes || undefined,
-      dealId: deal.id,
-      assignToUser: true,
-    });
-  };
 
   useEffect(() => {
     if (deal && open) {
