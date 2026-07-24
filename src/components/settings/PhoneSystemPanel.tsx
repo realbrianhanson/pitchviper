@@ -159,7 +159,6 @@ export function PhoneSystemPanel() {
                 variant="ghost"
                 className="gap-2 text-muted-foreground"
                 onClick={() => handleSelect("manual")}
-                disabled={false}
               >
                 <ClipboardList className="h-4 w-4" />
                 Use manual logging for now
