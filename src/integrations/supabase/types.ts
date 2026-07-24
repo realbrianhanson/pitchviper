@@ -2300,6 +2300,7 @@ export type Database = {
           full_name: string | null
           hire_date: string | null
           id: string | null
+          last_coached_at: string | null
           longest_streak: number | null
           onboarding_completed: boolean | null
           phone_extension: string | null
@@ -2317,6 +2318,7 @@ export type Database = {
           full_name?: string | null
           hire_date?: string | null
           id?: string | null
+          last_coached_at?: string | null
           longest_streak?: number | null
           onboarding_completed?: boolean | null
           phone_extension?: string | null
@@ -2334,6 +2336,7 @@ export type Database = {
           full_name?: string | null
           hire_date?: string | null
           id?: string | null
+          last_coached_at?: string | null
           longest_streak?: number | null
           onboarding_completed?: boolean | null
           phone_extension?: string | null
