@@ -4,12 +4,16 @@ import {
   readBoundedJson, isUuid,
 } from "../_shared/edgeAuth.ts";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const auth = await authenticatePost(req);
   if (!auth.ok) return auth.response;
   const { userId, serviceClient } = auth.ctx;
+
+  const ent = await requireTeamEntitlement(serviceClient, userId, "growth");
+  if (!ent.ok) return ent.response;
 
   const rl = await enforceRateLimit(userId, "analyze-deal", { serviceClient, perMinute: 10, perDay: 200 });
   if (!rl.allowed) return rl.response!;
