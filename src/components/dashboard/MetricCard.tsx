@@ -40,76 +40,59 @@ export function MetricCard({
     }
   };
 
-  const isPositive = comparison && comparison.value > 0;
-  const isNegative = comparison && comparison.value < 0;
-  const isRevenue = format === "currency";
-
   const progressPct = progress ? Math.min(100, (progress.current / progress.goal) * 100) : 0;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: delay / 1000, ease: [0.22, 1, 0.36, 1] }}
-      className="group bento-tile relative flex flex-col justify-between min-h-[140px] transition-colors hover:bg-accent/40"
+      transition={{ duration: 0.4, delay: delay / 1000, ease: [0.22, 1, 0.36, 1] }}
+      className="group flex flex-col justify-between min-h-[132px] rounded-[12px] border border-border bg-card p-5 shadow-sm transition-colors hover:border-primary/30"
     >
       <div className="flex items-start justify-between">
-        <span className="eyebrow font-bold">{label}</span>
-        <Icon className="h-3.5 w-3.5 text-muted-foreground/40" strokeWidth={1.5} />
+        <span className="text-[13px] font-medium text-muted-foreground">{label}</span>
+        <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <Icon className="h-4 w-4" strokeWidth={2} />
+        </span>
       </div>
 
       <div className="mt-4">
         {loading ? (
-          <EditorialSkeleton className="h-12 w-24" />
+          <EditorialSkeleton className="h-9 w-24" />
         ) : error ? (
-          <div className="font-display text-3xl leading-none text-destructive/80 italic">
-            —
-          </div>
+          <div className="text-3xl font-semibold text-muted-foreground">—</div>
         ) : (
-          <div
-            className={cn(
-              "font-display text-3xl sm:text-4xl md:text-5xl leading-none tabular-nums",
-              isRevenue && "text-primary"
-            )}
-          >
+          <div className="text-[32px] md:text-[38px] font-semibold leading-none tabular-nums text-foreground">
             {formatValue(animatedValue)}
           </div>
         )}
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-4 min-h-[16px] flex items-center justify-between">
         {loading ? (
           <EditorialSkeleton className="h-3 w-20" />
         ) : error ? (
-          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-destructive/70">
-            {error}
-          </span>
+          <span className="text-xs text-destructive/80">{error}</span>
         ) : (
           <>
             {comparison && (
-              <span
-                className={cn(
-                  "font-mono text-[10px] uppercase tracking-[0.15em]",
-                  isPositive && "text-success",
-                  isNegative && "text-destructive",
-                  !isPositive && !isNegative && "text-muted-foreground/60"
-                )}
-              >
-                {isPositive && "+"}{comparison.value}% <span className="opacity-50 ml-1">{comparison.label}</span>
+              <span className="text-xs text-muted-foreground">
+                <span className="tabular-nums text-foreground/80">{comparison.value}</span>{" "}
+                {comparison.label}
               </span>
             )}
             {progress && (
               <div className="w-full">
-                <div className="flex justify-between font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60 mb-2">
+                <div className="flex justify-between text-xs text-muted-foreground mb-1.5 tabular-nums">
                   <span>{progress.current} / {progress.goal}</span>
                   <span>Goal</span>
                 </div>
-                <div className="h-px w-full bg-border">
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
                   <motion.div
-                    className="h-full bg-primary"
+                    className="h-full rounded-full bg-primary"
                     initial={{ width: 0 }}
                     animate={{ width: `${progressPct}%` }}
-                    transition={{ duration: 0.8, delay: delay / 1000 + 0.2, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.7, delay: delay / 1000 + 0.15, ease: [0.22, 1, 0.36, 1] }}
                   />
                 </div>
               </div>

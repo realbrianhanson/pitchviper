@@ -4,7 +4,6 @@ import { DailyChallenge } from "@/components/dashboard/DailyChallenge";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { TeamPulse } from "@/components/dashboard/TeamPulse";
-import { MotivationalQuote } from "@/components/dashboard/MotivationalQuote";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUpcomingFollowUps } from "@/hooks/useUpcomingFollowUps";
 import { useGhlStats } from "@/hooks/useGhlStats";
@@ -26,7 +25,7 @@ function formatDate(): string {
     weekday: "long",
     month: "long",
     day: "numeric",
-  }).toUpperCase();
+  });
 }
 
 export default function CommandCenter() {
@@ -42,80 +41,42 @@ export default function CommandCenter() {
     metricType,
   } = useLeaderboard();
 
-  const firstName = data?.profile?.full_name?.split(" ")[0] || "Operator";
+  const firstName = data?.profile?.full_name?.split(" ")[0] || "there";
   const challenge = data?.challenge;
   const activities = data?.activities || [];
 
   return (
     <AppLayout title="Command Center">
-      <div className="max-w-7xl mx-auto w-full space-y-8">
-        {/* Hero greeting + streak rule */}
+      <div className="max-w-[1400px] mx-auto w-full space-y-6">
+        {/* Intro */}
         <motion.div
-          initial={{ opacity: 0, y: -8 }}
+          initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 pb-2"
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div>
-            {dashboardLoading ? (
-              <div className="space-y-3">
-                <EditorialSkeleton className="h-14 w-80" />
-                <EditorialSkeleton className="h-3 w-56" />
-              </div>
-            ) : (
-              <div className="gold-vignette">
-                <h1 className="font-display text-5xl md:text-6xl leading-[1.05]">
-                  {getGreeting()}, <span className="italic">{firstName}.</span>
-                </h1>
-                <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70 mt-3">
-                  <span className="text-success">●</span> System Status: Active · {formatDate()}
-                </p>
-              </div>
-            )}
-          </div>
-          <div className="md:border-l md:border-border md:pl-10 flex md:flex-col items-baseline md:items-start gap-3 md:gap-1">
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Day Streak</span>
-            <span className="flex items-center gap-3">
-              {ghlLoading ? (
-                <EditorialSkeleton className="h-14 w-16" />
-              ) : (
-                <>
-                  <span className="font-display italic text-5xl md:text-6xl leading-none text-primary tabular-nums">
-                    {ghl.currentStreak}
-                  </span>
-                  {ghl.currentStreak > 7 && (
-                    <Flame className="h-7 w-7 text-primary animate-flame-flicker" strokeWidth={1.5} />
-                  )}
-                </>
-              )}
-            </span>
-          </div>
+          {dashboardLoading ? (
+            <div className="space-y-2">
+              <EditorialSkeleton className="h-3 w-40" />
+              <EditorialSkeleton className="h-9 w-72" />
+              <EditorialSkeleton className="h-4 w-56" />
+            </div>
+          ) : (
+            <>
+              <p className="text-xs text-muted-foreground mb-1.5">{formatDate()}</p>
+              <h1 className="text-[32px] md:text-[40px] font-semibold leading-tight tracking-tight text-foreground">
+                {getGreeting()}, {firstName}.
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Here's what's moving today.
+              </p>
+            </>
+          )}
         </motion.div>
 
-        {/* Mission + Streak meta bento */}
-        <DailyChallenge
-          challenge={challenge ? {
-            title: challenge.title,
-            description: challenge.description,
-            reward: challenge.xp_reward,
-            progress: challenge.progress,
-            goal: challenge.target,
-          } : {
-            title: "No Active Mission",
-            description: "Today's briefing is clear. Use the silence to drill objections or audit the pipeline before tomorrow's slate drops.",
-            reward: 0,
-            progress: 0,
-            goal: 1,
-          }}
-          streak={ghl.currentStreak}
-          loading={dashboardLoading || ghlLoading}
-          error={dashboardError || ghlError}
-        />
-
-        {/* KPI strip — 4 hairline tiles */}
-        <div className="bento-grid grid-cols-2 lg:grid-cols-4">
+        {/* KPI grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard
-            label="Calls Today"
+            label="Calls today"
             value={ghl.callsToday}
             icon={Phone}
             delay={0}
@@ -123,46 +84,59 @@ export default function CommandCenter() {
             error={ghlError}
           />
           <MetricCard
-            label="Pipeline Deals"
+            label="Pipeline deals"
             value={ghl.dealsInPipeline}
             icon={Calendar}
-            delay={80}
+            delay={60}
             loading={ghlLoading}
             error={ghlError}
           />
           <MetricCard
-            label="Won This Week"
+            label="Won this week"
             value={Math.round(ghl.revenueWonThisWeek)}
             format="currency"
             icon={Trophy}
             comparison={{
               value: ghl.dealsWonThisWeek,
-              label: "deals",
+              label: ghl.dealsWonThisWeek === 1 ? "deal" : "deals",
             }}
-            delay={160}
+            delay={120}
             loading={ghlLoading}
             error={ghlError}
           />
           <MetricCard
-            label="Day Streak"
+            label="Day streak"
             value={ghl.currentStreak}
             icon={Flame}
-            delay={240}
+            delay={180}
             loading={ghlLoading}
             error={ghlError}
           />
         </div>
 
-        {/* Activity + Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-border border border-border">
-          <div className="lg:col-span-8 bg-background">
-            <RecentActivity
-              activities={activities}
-              loading={dashboardLoading}
-              error={dashboardError}
+        {/* Row 1: Focus + Quick actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="lg:col-span-7">
+            <DailyChallenge
+              challenge={challenge ? {
+                title: challenge.title,
+                description: challenge.description,
+                reward: challenge.xp_reward,
+                progress: challenge.progress,
+                goal: challenge.target,
+              } : {
+                title: "No active focus",
+                description: "You're clear for today. Use the time to run a roleplay drill or review your pipeline before tomorrow.",
+                reward: 0,
+                progress: 0,
+                goal: 1,
+              }}
+              streak={ghl.currentStreak}
+              loading={dashboardLoading || ghlLoading}
+              error={dashboardError || ghlError}
             />
           </div>
-          <div className="lg:col-span-4 bg-background">
+          <div className="lg:col-span-5">
             <QuickActions
               followUps={followUps}
               followUpsLoading={followUpsLoading}
@@ -171,9 +145,16 @@ export default function CommandCenter() {
           </div>
         </div>
 
-        {/* Team Pulse + Quote */}
-        <div className="bento-grid grid-cols-1 lg:grid-cols-12">
+        {/* Row 2: Recent activity + Team pulse */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <div className="lg:col-span-7">
+            <RecentActivity
+              activities={activities}
+              loading={dashboardLoading}
+              error={dashboardError}
+            />
+          </div>
+          <div className="lg:col-span-5">
             <TeamPulse
               members={leaderboard.slice(0, 5).map((m) => ({
                 id: m.user_id,
@@ -189,9 +170,6 @@ export default function CommandCenter() {
               loading={leaderboardLoading}
               error={leaderboardError}
             />
-          </div>
-          <div className="lg:col-span-5">
-            <MotivationalQuote />
           </div>
         </div>
       </div>

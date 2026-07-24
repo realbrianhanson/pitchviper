@@ -20,21 +20,20 @@ interface QuickActionsProps {
 }
 
 const quickActionButtons = [
-  { to: "/roleplay", icon: Swords, label: "Roleplay Arena", verb: "Start", hotkey: "⌘R" },
-  { to: null, icon: Phone, label: "Log Session", verb: "Open", action: "logCall", hotkey: "⌘L" },
-  { to: "/pipeline", icon: GitBranch, label: "Pipeline Map", verb: "View", hotkey: "⌘P" },
-  { to: "/leaderboards", icon: Trophy, label: "Leaderboard", verb: "Open", hotkey: "⌘B" },
+  { to: "/roleplay", icon: Swords, label: "Roleplay", hotkey: "⌘R" },
+  { to: null, icon: Phone, label: "Log call", action: "logCall", hotkey: "⌘L" },
+  { to: "/pipeline", icon: GitBranch, label: "Pipeline", hotkey: "⌘P" },
+  { to: "/leaderboards", icon: Trophy, label: "Leaderboard", hotkey: "⌘B" },
 ];
 
 function FollowUpSkeleton() {
   return (
-    <div className="space-y-2 py-1">
+    <div className="space-y-2 py-2">
       <EditorialSkeleton className="h-3 w-16" />
       <div className="flex items-center justify-between">
         <EditorialSkeleton className="h-4 w-28" />
         <EditorialSkeleton className="h-4 w-12" />
       </div>
-      <EditorialSkeleton className="h-3 w-20" />
     </div>
   );
 }
@@ -44,73 +43,70 @@ export function QuickActions({ followUps, followUpsLoading = false, followUpsErr
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="space-y-px bg-border border border-border"
+      transition={{ duration: 0.4, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      className="rounded-[12px] border border-border bg-card p-6 shadow-sm h-full flex flex-col"
     >
-      {/* Quick Actions */}
-      <div className="bento-tile bg-background">
-        <div className="eyebrow font-bold mb-6">Quick Actions</div>
-        <div className="space-y-px">
-          {quickActionButtons.map((b) => {
-            const Inner = (
-              <button
-                onClick={b.action === "logCall" ? () => setShowLogCall(true) : undefined}
-                className="w-full flex justify-between items-center py-3 border-b border-border last:border-b-0 hover:text-primary transition-colors group"
-              >
-                <span className="flex items-center gap-3 text-sm">
-                  <span className="font-mono text-[10px] text-primary uppercase tracking-[0.15em] group-hover:translate-x-1 transition-transform">
-                    → {b.verb}
-                  </span>
-                  {b.label}
-                </span>
-                <span className="font-mono text-[10px] text-muted-foreground/40">{b.hotkey}</span>
-              </button>
-            );
-            return b.to ? (
-              <Link key={b.label} to={b.to} className="block">{Inner}</Link>
-            ) : (
-              <div key={b.label}>{Inner}</div>
-            );
-          })}
-        </div>
-        <LogCallModal open={showLogCall} onOpenChange={setShowLogCall} />
+      <h3 className="text-base font-semibold text-foreground mb-4">Quick actions</h3>
+
+      <div className="grid grid-cols-2 gap-2">
+        {quickActionButtons.map((b) => {
+          const Icon = b.icon;
+          const content = (
+            <button
+              type="button"
+              onClick={b.action === "logCall" ? () => setShowLogCall(true) : undefined}
+              className="w-full h-full flex flex-col items-start gap-2 rounded-[10px] border border-border bg-background p-3 text-left transition-colors hover:border-primary/40 hover:bg-accent min-h-[76px]"
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+              </span>
+              <div className="flex items-center justify-between w-full">
+                <span className="text-sm font-medium text-foreground">{b.label}</span>
+                <span className="text-[10px] text-muted-foreground/60 tabular-nums">{b.hotkey}</span>
+              </div>
+            </button>
+          );
+          return b.to ? (
+            <Link key={b.label} to={b.to} className="block">{content}</Link>
+          ) : (
+            <div key={b.label}>{content}</div>
+          );
+        })}
       </div>
 
-      {/* Follow-ups */}
-      <div className="bento-tile">
-        <div className="eyebrow font-bold mb-6">Urgent Follow-ups</div>
+      <LogCallModal open={showLogCall} onOpenChange={setShowLogCall} />
+
+      <div className="mt-6 pt-6 border-t border-border flex-1">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-semibold text-foreground">Upcoming follow-ups</h4>
+        </div>
         {followUpsLoading ? (
-          <div className="space-y-6">
+          <div className="divide-y divide-border">
             <FollowUpSkeleton />
             <FollowUpSkeleton />
             <FollowUpSkeleton />
           </div>
         ) : followUpsError ? (
-          <div className="py-4">
-            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-destructive/70 mb-1">
-              Unable to Load
-            </p>
-            <p className="font-body text-xs text-muted-foreground/60">{followUpsError}</p>
+          <div className="py-3">
+            <p className="text-sm font-medium text-foreground mb-1">Unable to load</p>
+            <p className="text-xs text-muted-foreground">{followUpsError}</p>
           </div>
         ) : followUps.length === 0 ? (
-          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 py-4">
-            No scheduled follow-ups
-          </div>
+          <p className="text-sm text-muted-foreground py-3">No scheduled follow-ups</p>
         ) : (
-          <div className="space-y-6">
-            {followUps.slice(0, 3).map((f, i) => (
-              <div key={f.id} className="group cursor-pointer">
-                <div className={`font-mono text-[10px] uppercase tracking-[0.15em] mb-1 ${i === 0 ? "text-destructive italic" : "text-muted-foreground/50"}`}>
-                  {i === 0 ? "Next Up" : `In ${(i + 1) * 45} min`}
-                </div>
+          <div className="divide-y divide-border">
+            {followUps.slice(0, 3).map((f) => (
+              <div key={f.id} className="py-3 group cursor-pointer">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm group-hover:text-primary transition-colors">{f.company}</div>
-                  <div className="font-mono text-xs text-primary tabular-nums">{f.time}</div>
+                  <div className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                    {f.company}
+                  </div>
+                  <div className="text-xs text-muted-foreground tabular-nums shrink-0 ml-2">{f.time}</div>
                 </div>
-                <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50 mt-1">
-                  {f.contact} • {f.type}
+                <div className="text-xs text-muted-foreground mt-0.5 truncate">
+                  {f.contact} · {f.type}
                 </div>
               </div>
             ))}
