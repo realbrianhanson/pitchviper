@@ -81,7 +81,7 @@ export function DialModal() {
               <ExternalLink className="h-4 w-4" />
               Open in phone system
             </Button>
-            <Button variant="outline" className="w-full gap-2" onClick={closeDialModal}>
+            <Button variant="outline" className="w-full gap-2" onClick={handleLogManually}>
               <ClipboardList className="h-4 w-4" />
               Log call manually
             </Button>
