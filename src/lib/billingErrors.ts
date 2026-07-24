@@ -6,6 +6,11 @@ const KNOWN_CODES = new Set([
   "use_billing_portal",
   "no_customer",
   "no_team",
+  "no_subscription",
+  "subscription_inactive",
+  "subscription_item_missing",
+  "seats_below_used",
+  "seats_above_max",
   "forbidden",
   "unauthorized",
   "invalid_plan",
@@ -14,9 +19,11 @@ const KNOWN_CODES = new Set([
   "rate_limited",
   "method_not_allowed",
   "checkout_failed",
+  "apply_failed",
   "invalid_url",
   "internal_error",
 ]);
+
 
 function sanitize(code: unknown): string {
   if (typeof code !== "string") return "internal_error";
