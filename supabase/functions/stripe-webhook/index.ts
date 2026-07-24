@@ -242,6 +242,11 @@ async function applySubscription(service: Svc, teamId: string, sub: Stripe.Subsc
       : null,
     last_webhook_at: new Date().toISOString(),
   };
-  const { error } = await service.from("team_billing").update(patch).eq("team_id", teamId);
+  const { data: updated, error } = await service
+    .from("team_billing")
+    .update(patch)
+    .eq("team_id", teamId)
+    .select("team_id");
   if (error) throw new Error("apply_failed");
+  if (!updated || updated.length !== 1) throw new Error("apply_failed");
 }
