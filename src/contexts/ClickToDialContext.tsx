@@ -34,25 +34,38 @@ interface PowerDialerContact {
   email?: string;
 }
 
+export interface ManualLogInitialData {
+  contactName?: string;
+  companyName?: string;
+  phoneNumber?: string;
+  direction?: 'outbound' | 'inbound';
+}
+
 interface ClickToDialContextType {
   // Dial modal
   isDialModalOpen: boolean;
   openDialModal: (params: DialParams) => void;
   closeDialModal: () => void;
   pendingDial: DialParams | null;
-  
+
   // Call initiation
   isDialing: boolean;
   initiateCall: (params: DialParams) => Promise<{ success: boolean; error?: string }>;
-  
+
   // Active call
   callState: CallState;
   endCall: () => Promise<void>;
   updateCallNotes: (notes: string) => void;
-  
+
   // Power dialer
   addToPowerDialer: (contacts: PowerDialerContact[], position?: 'top' | 'bottom') => Promise<{ success: boolean; added?: any[]; failed?: any[]; error?: string }>;
-  
+
+  // Manual call logging (opened from DialModal handoff)
+  isManualLogOpen: boolean;
+  manualLogInitial: ManualLogInitialData | null;
+  openManualLog: (initial?: ManualLogInitialData) => void;
+  closeManualLog: () => void;
+
   // SMS
   isSMSModalOpen: boolean;
   openSMSModal: (params: SMSParams) => void;
