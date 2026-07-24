@@ -147,11 +147,19 @@ export function useObjections() {
   }) => {
     if (!user) return;
 
+    // Fetch caller team so the row satisfies the tenant-tagged INSERT policy.
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('team_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
     const { error } = await (supabase
       .from('objections' as any)
       .insert({
         ...data,
-        created_by: user.id
+        created_by: user.id,
+        team_id: profile?.team_id ?? null,
       })) as any;
 
     if (!error) {
