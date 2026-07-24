@@ -61,11 +61,14 @@ export function sanitizeSessionDraft(draft: CoachingSessionDraft): SanitizeResul
   if (!notes) return { ok: false, error: "Session notes are required." };
   if (notes.length > MAX_NOTES_LEN) return { ok: false, error: "Session notes are too long." };
 
-  const focus_areas = (draft.focus_areas ?? [])
-    .map((f) => (typeof f === "string" ? f.trim() : ""))
-    .filter(Boolean)
-    .slice(0, MAX_FOCUS_AREAS)
-    .map((f) => f.slice(0, MAX_FOCUS_LEN));
+  const focus_areas = Array.from(
+    new Set(
+      (draft.focus_areas ?? [])
+        .map((f) => (typeof f === "string" ? f.trim() : ""))
+        .filter(Boolean)
+        .map((f) => f.slice(0, MAX_FOCUS_LEN))
+    )
+  ).slice(0, MAX_FOCUS_AREAS);
 
   const rawActions = (draft.actions ?? []).filter(
     (a) => a && typeof a.title === "string" && a.title.trim().length > 0
