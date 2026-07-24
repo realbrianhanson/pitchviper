@@ -73,12 +73,11 @@ export function CreateDealModal({ open, onOpenChange, onSubmit, initialStage = '
   });
 
   const handleContactSelect = (contact: AlowareContact) => {
-    // Auto-fill form fields from Aloware contact
+    // Auto-fill form fields from existing contact record.
     if (contact.fullName) form.setValue('contact_name', contact.fullName);
     if (contact.company) form.setValue('company_name', contact.company);
     if (contact.email) form.setValue('contact_email', contact.email);
     if (contact.phone) form.setValue('contact_phone', contact.phone);
-    if (contact.company) form.setValue('source', 'Aloware');
   };
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
