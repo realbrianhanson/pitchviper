@@ -96,6 +96,20 @@ export function LogCallModal({ open, onOpenChange, initialData }: LogCallModalPr
   const [selectedObjections, setSelectedObjections] = useState<string[]>([]);
   const [improvementNotes, setImprovementNotes] = useState('');
 
+  // Hydrate from initialData when the modal opens. We only apply it on the
+  // false -> true transition so we don't clobber user input mid-session.
+  const prevOpenRef = useRef(false);
+  useEffect(() => {
+    if (open && !prevOpenRef.current && initialData) {
+      if (initialData.contactName !== undefined) setContactName(initialData.contactName);
+      if (initialData.companyName !== undefined) setCompanyName(initialData.companyName);
+      if (initialData.phoneNumber !== undefined) setPhoneNumber(initialData.phoneNumber);
+      if (initialData.direction !== undefined) setDirection(initialData.direction);
+    }
+    prevOpenRef.current = open;
+  }, [open, initialData]);
+
+
   const resetForm = () => {
     setStep(1);
     setContactName('');
