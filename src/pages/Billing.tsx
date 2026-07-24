@@ -119,6 +119,10 @@ export default function Billing() {
           ) : null}
         </section>
 
+        <LicensedSeats />
+
+
+
         {/* Interval toggle */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="eyebrow">Choose a plan</div>
