@@ -138,8 +138,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const canManageTeam = role !== null && MANAGEMENT_ROLES.includes(role);
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, isLoading: loading, profileLoaded, profileError, isManager, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, isLoading: loading, profileLoaded, profileError, role, canManageTeam, isManager: canManageTeam, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
