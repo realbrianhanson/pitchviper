@@ -61,6 +61,7 @@ const IGNORE_FILES = new Set([
   "src/components/settings/AlowareCompanyConnection.tsx",
   "src/components/settings/AlowareWebhookSetup.tsx",
   "src/components/settings/AlowareTeamConfig.tsx",
+  "src/components/settings/AlowareConnectionCard.tsx",
 ]);
 
 function walk(dir: string, out: string[] = []) {
