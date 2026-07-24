@@ -197,8 +197,9 @@ export function useGauntlet() {
         .eq('challenge_id', todayChallenge.id)
         .maybeSingle();
 
+      let completionId: string | null = existing?.id ?? null;
+
       if (existing) {
-        // Update existing attempt
         const { error } = await supabase
           .from('user_gauntlet_completions')
           .update({
@@ -210,11 +211,9 @@ export function useGauntlet() {
             completed_at: new Date().toISOString(),
           })
           .eq('id', existing.id);
-
         if (error) throw error;
       } else {
-        // Create new completion
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from('user_gauntlet_completions')
           .insert({
             user_id: user.id,
@@ -224,17 +223,25 @@ export function useGauntlet() {
             attempts: 1,
             responses: responses as Json,
             feedback: evaluation as unknown as Json,
-          });
-
+          })
+          .select('id')
+          .single();
         if (error) throw error;
+        completionId = inserted?.id ?? null;
       }
 
-      // Award XP if passed (via trusted RPC — direct xp_points writes are revoked)
-      if (evaluation.passed) {
-        const bonusXp = evaluation.averageScore === 100 ? 25 : 0;
-        const totalXp = todayChallenge.xp_reward + bonusXp;
-        await supabase.rpc('award_user_xp', { _delta: totalXp });
-        toast.success(`+${totalXp} XP earned!`);
+      // Event-bound XP: only awarded once per completion, server derives amount.
+      if (evaluation.passed && completionId) {
+        const { data: awardData, error: awardError } = await supabase.rpc(
+          'award_event_xp',
+          { _reason: 'gauntlet_passed', _source_id: completionId },
+        );
+        if (awardError) {
+          console.error('[useGauntlet] award_event_xp failed');
+        } else if (awardData && (awardData as any).awarded) {
+          const amount = (awardData as any).amount ?? 0;
+          if (amount > 0) toast.success(`+${amount} XP earned!`);
+        }
       }
 
       await fetchTodayCompletion();

@@ -1,49 +1,103 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
-// Mirrors the validation the join-team-by-code / team-membership function uses.
-const CODE_RE = /^[A-Z0-9]{6,10}$/;
+const teamMembership = readFileSync(
+  resolve("supabase/functions/team-membership/index.ts"),
+  "utf-8",
+);
+const validatePromo = readFileSync(
+  resolve("supabase/functions/validate-promo-code/index.ts"),
+  "utf-8",
+);
+const useCallLogging = readFileSync(
+  resolve("src/hooks/useCallLogging.ts"),
+  "utf-8",
+);
+const useGauntlet = readFileSync(resolve("src/hooks/useGauntlet.ts"), "utf-8");
+const stepAccess = readFileSync(
+  resolve("src/components/onboarding/StepAccess.tsx"),
+  "utf-8",
+);
+const onboardingPage = readFileSync(resolve("src/pages/Onboarding.tsx"), "utf-8");
 
-function normalizeCode(raw: string) {
-  return raw.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-}
-
-describe("team code validation", () => {
-  it("accepts legacy 6-char codes", () => {
-    expect(CODE_RE.test("ABC123")).toBe(true);
+describe("team-membership edge function", () => {
+  it("delegates join and create to the service-only RPCs (never inserts teams directly)", () => {
+    expect(teamMembership).toContain('service.rpc("svc_join_team_by_code"');
+    expect(teamMembership).toContain('service.rpc("svc_create_team"');
+    expect(teamMembership).not.toMatch(/service\.from\(["']teams["']\)\.insert/);
   });
-  it("accepts 10-char codes", () => {
-    expect(CODE_RE.test("ABCDEF1234")).toBe(true);
+  it("is POST-only and returns 405 otherwise", () => {
+    expect(teamMembership).toContain('req.method !== "POST"');
+    expect(teamMembership).toMatch(/method_not_allowed/);
   });
-  it("rejects too short / too long", () => {
-    expect(CODE_RE.test("ABC12")).toBe(false);
-    expect(CODE_RE.test("ABCDEFGHIJK")).toBe(false);
+  it("validates codes with the shared 6-10 alphanumeric regex", () => {
+    expect(teamMembership).toContain("/^[A-Z0-9]{6,10}$/");
   });
-  it("rejects non-alphanumerics", () => {
-    expect(CODE_RE.test("ABCD-12")).toBe(false);
+  it("validates the rpc result shape before returning", () => {
+    expect(teamMembership).toMatch(/structuredResult\(data\)/);
   });
-  it("normalizes user input", () => {
-    expect(normalizeCode("  ab cd-ef 12 ")).toBe("ABCDEF12");
+  it("maps only allow-listed error codes and never leaks exception text", () => {
+    expect(teamMembership).toContain("KNOWN_ERRORS");
+    // No raw error object interpolation into the JSON response
+    expect(teamMembership).not.toMatch(/error:\s*error\.message/);
+    expect(teamMembership).not.toMatch(/JSON\.stringify\(error\)/);
   });
 });
 
-describe("promo code normalization", () => {
-  const codes = ["viper"];
-  const check = (raw: string) => {
-    if (typeof raw !== "string") return false;
-    const t = raw.trim().toLowerCase();
-    if (t.length < 3 || t.length > 40) return false;
-    return codes.includes(t);
-  };
-  it("accepts the default code case-insensitively", () => {
-    expect(check("Viper")).toBe(true);
-    expect(check("  VIPER ")).toBe(true);
+describe("validate-promo-code edge function", () => {
+  it("has no hard-coded fallback promo codes", () => {
+    // No literal 'viper' anywhere in the source path.
+    expect(validatePromo.toLowerCase()).not.toContain('"viper"');
+    expect(validatePromo.toLowerCase()).not.toContain("'viper'");
+    expect(validatePromo).not.toMatch(/DEFAULT_PROMO_CODES/);
   });
-  it("rejects empty and out-of-bounds inputs", () => {
-    expect(check("")).toBe(false);
-    expect(check("ab")).toBe(false);
-    expect(check("x".repeat(41))).toBe(false);
+  it("returns 503 access_not_configured when no codes are configured", () => {
+    expect(validatePromo).toContain("access_not_configured");
+    expect(validatePromo).toMatch(/json\(503/);
   });
-  it("rejects unknown codes", () => {
-    expect(check("nope")).toBe(false);
+  it("uses the constant-time comparison helper", () => {
+    expect(validatePromo).toContain("timingSafeEqualStrings");
+  });
+  it("requires exactly one affected profile row after the service-role update", () => {
+    expect(validatePromo).toContain('.select("user_id")');
+    expect(validatePromo).toContain("updated.length !== 1");
+  });
+  it("is POST-only", () => {
+    expect(validatePromo).toContain('req.method !== "POST"');
+  });
+});
+
+describe("client never writes promo_validated", () => {
+  it("StepAccess never writes promo_validated from the client", () => {
+    // Any direct client-side update of promo_validated is forbidden.
+    expect(stepAccess).not.toMatch(/\.update\([^)]*promo_validated/);
+    expect(stepAccess).not.toMatch(/promo_validated\s*:/);
+  });
+  it("Onboarding final save writes only whitelisted profile columns", () => {
+    const finalSaveIndex = onboardingPage.indexOf("handleFinalComplete");
+    expect(finalSaveIndex).toBeGreaterThan(-1);
+    const finalSave = onboardingPage.slice(finalSaveIndex, finalSaveIndex + 900);
+    // Sensitive tenant/promo fields must never appear in the client update payload.
+    expect(finalSave).not.toMatch(/team_id\s*:/);
+    expect(finalSave).not.toMatch(/promo_validated/);
+    expect(finalSave).not.toMatch(/xp_points/);
+  });
+});
+
+describe("event-bound XP awards", () => {
+  it("useCallLogging awards XP through award_event_xp with the inserted call id", () => {
+    expect(useCallLogging).toContain("award_event_xp");
+    expect(useCallLogging).toContain("_reason: 'call_logged'");
+    expect(useCallLogging).toContain("_source_id: call.id");
+    expect(useCallLogging).not.toMatch(/award_user_xp/);
+  });
+  it("useGauntlet awards XP with the completion id and shows amount only when newly awarded", () => {
+    expect(useGauntlet).toContain("award_event_xp");
+    expect(useGauntlet).toContain("_reason: 'gauntlet_passed'");
+    expect(useGauntlet).toContain("_source_id: completionId");
+    expect(useGauntlet).not.toMatch(/award_user_xp/);
+    // Only newly-awarded results show the toast (guard on awarded flag).
+    expect(useGauntlet).toMatch(/\.awarded\b/);
   });
 });

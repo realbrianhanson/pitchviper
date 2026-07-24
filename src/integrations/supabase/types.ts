@@ -2289,6 +2289,33 @@ export type Database = {
         }
         Relationships: []
       }
+      xp_awards: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          reason: string
+          source_id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          reason: string
+          source_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          reason?: string
+          source_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       team_profiles_safe: {
@@ -2363,7 +2390,10 @@ export type Database = {
         Args: { p_messages: Json; p_session_id: string }
         Returns: Json
       }
-      award_user_xp: { Args: { _delta: number }; Returns: number }
+      award_event_xp: {
+        Args: { _reason: string; _source_id: string }
+        Returns: Json
+      }
       calculate_streak: { Args: { p_user_id: string }; Returns: number }
       check_and_increment_rate_limit: {
         Args: {
@@ -2482,6 +2512,14 @@ export type Database = {
       match_ghl_user: {
         Args: { _email: string; _ghl_user_id: string }
         Returns: string
+      }
+      svc_create_team: {
+        Args: { _name: string; _user_id: string }
+        Returns: Json
+      }
+      svc_join_team_by_code: {
+        Args: { _code: string; _user_id: string }
+        Returns: Json
       }
       update_coaching_action_status: {
         Args: { p_action_id: string; p_status: string }
