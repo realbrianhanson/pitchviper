@@ -42,6 +42,14 @@ serve(async (req) => {
     .from("profiles").select("team_id").eq("user_id", userId).maybeSingle();
   const teamId = callerProfile?.team_id ?? null;
 
+  // Resolve caller team's Aloware token from Vault (never a global env fallback).
+  const alowareToken = await getTeamAlowareToken(serviceClient, teamId);
+  const needsToken = action === "verify" || action === "sync-team";
+  if (needsToken && !alowareToken) {
+    return errorResponse("integration_not_configured", 400, { success: false });
+  }
+
+
   const requireMgmt = async () => {
     const { data: isMgmt } = await serviceClient.rpc("has_management_role", { _user_id: userId });
     return isMgmt === true;
