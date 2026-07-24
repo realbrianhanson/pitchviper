@@ -259,9 +259,9 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error calculating leaderboard:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    console.error("internal_error");
+    // error scrubbed
+    return new Response(JSON.stringify({ error: "internal_error" }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

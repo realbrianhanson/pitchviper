@@ -227,10 +227,10 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Badge check error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error("internal_error");
+    // error scrubbed
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "internal_error" }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

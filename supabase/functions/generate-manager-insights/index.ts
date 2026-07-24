@@ -196,11 +196,11 @@ Be specific, actionable, and data-driven. If there's insufficient data for a fie
     });
 
   } catch (error) {
-    console.error('Error generating manager insights:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error("internal_error");
+    // error scrubbed
     return new Response(JSON.stringify({ 
       success: false,
-      error: errorMessage 
+      error: "internal_error" 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

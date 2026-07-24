@@ -234,7 +234,7 @@ Return ONLY a JSON array like: ["insight 1", "insight 2", "insight 3", "insight 
         }
       }
     } catch (aiError) {
-      console.error("AI insights error:", aiError);
+      console.error("ai_insights_error");
       insights = [
         `${atRiskDeals.length} deals at risk, worth $${atRiskValue.toLocaleString()}.`,
         `Weighted forecast: $${weightedForecast.toLocaleString()}.`,
@@ -269,10 +269,10 @@ Return ONLY a JSON array like: ["insight 1", "insight 2", "insight 3", "insight 
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error("Error generating forecast:", error);
+    const message = "internal_error";
+    console.error("internal_error");
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({ error: "internal_error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

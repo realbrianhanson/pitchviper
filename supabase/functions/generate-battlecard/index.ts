@@ -224,11 +224,11 @@ Create a battlecard with:
       }
     );
   } catch (error) {
-    console.error('Error generating battlecard:', error);
+    console.error("internal_error");
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: "internal_error",
       }),
       {
         status: 500,
