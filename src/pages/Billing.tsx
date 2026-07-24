@@ -133,7 +133,14 @@ export default function Billing() {
                   interval === i ? "bg-primary text-primary-foreground" : "hover:bg-muted"
                 }`}
               >
-                {i === "monthly" ? "Monthly" : "Annual · 2 months free"}
+                {i === "monthly" ? (
+                  "Monthly"
+                ) : (
+                  <>
+                    <span className="sm:hidden">Annual · save 17%</span>
+                    <span className="hidden sm:inline">Annual · 2 months free</span>
+                  </>
+                )}
               </button>
             ))}
           </div>
