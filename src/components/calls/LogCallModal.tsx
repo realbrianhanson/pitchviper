@@ -29,9 +29,17 @@ import { useCallLogging, CallFormData, CallDirection, CallOutcome, CallPurpose }
 import { ResearchButton } from '@/components/research/ResearchButton';
 import { fireGoldCelebration } from '@/components/ui/gold-celebration';
 
+export interface LogCallInitialData {
+  contactName?: string;
+  companyName?: string;
+  phoneNumber?: string;
+  direction?: CallDirection;
+}
+
 interface LogCallModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialData?: LogCallInitialData;
 }
 
 const QUICK_DURATIONS = [
