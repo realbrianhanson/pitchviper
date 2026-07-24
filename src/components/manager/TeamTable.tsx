@@ -49,6 +49,7 @@ function initials(name: string): string {
 }
 
 export function TeamTable({ members, isLoading }: TeamTableProps) {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [performanceFilter, setPerformanceFilter] = useState<PerformanceFilter>('all');
