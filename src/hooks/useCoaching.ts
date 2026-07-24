@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   sanitizeSessionDraft,
   isCoachingActionStatus,
+  canRepAdvanceStatus,
   type CoachingSessionDraft,
   type CoachingActionStatus,
 } from "@/lib/coachingValidation";
