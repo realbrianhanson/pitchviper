@@ -1506,6 +1506,35 @@ export type Database = {
         }
         Relationships: []
       }
+      roleplay_analysis_claims: {
+        Row: {
+          claimed_at: string
+          session_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          session_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string
+          session_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roleplay_analysis_claims_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "roleplay_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roleplay_scenarios: {
         Row: {
           created_at: string
@@ -2513,12 +2542,54 @@ export type Database = {
         Args: { _email: string; _ghl_user_id: string }
         Returns: string
       }
+      svc_abandon_roleplay_session: {
+        Args: {
+          _duration_seconds?: number
+          _session_id: string
+          _user_id: string
+        }
+        Returns: Json
+      }
+      svc_claim_roleplay_analysis: {
+        Args: { _session_id: string; _stale_after?: string; _user_id: string }
+        Returns: Json
+      }
       svc_create_team: {
         Args: { _name: string; _user_id: string }
         Returns: Json
       }
+      svc_finalize_roleplay_analysis: {
+        Args: {
+          _duration_seconds: number
+          _feedback: Json
+          _outcome: string
+          _overall_score: number
+          _scenario_id: string
+          _scenario_name: string
+          _session_id: string
+          _user_id: string
+          _xp_amount: number
+        }
+        Returns: Json
+      }
       svc_join_team_by_code: {
         Args: { _code: string; _user_id: string }
+        Returns: Json
+      }
+      svc_release_roleplay_claim: {
+        Args: { _session_id: string; _user_id: string }
+        Returns: undefined
+      }
+      svc_upsert_gauntlet_completion: {
+        Args: {
+          _challenge_id: string
+          _feedback: Json
+          _passed: boolean
+          _responses: Json
+          _score: number
+          _skipped?: boolean
+          _user_id: string
+        }
         Returns: Json
       }
       update_coaching_action_status: {
