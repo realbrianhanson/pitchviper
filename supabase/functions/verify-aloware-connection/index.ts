@@ -194,16 +194,11 @@ serve(async (req) => {
     }
 
     if (action === 'sync-team') {
-      // Only managers can sync team members
-      const { data: userRole } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-
-      if (userRole?.role !== 'manager') {
+      // Only owner / admin / manager can sync team members
+      const { data: isMgmt } = await supabase.rpc('has_management_role', { _user_id: user.id });
+      if (!isMgmt) {
         return new Response(
-          JSON.stringify({ success: false, error: 'Only managers can sync team members' }),
+          JSON.stringify({ success: false, error: 'Only team management can sync team members' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
