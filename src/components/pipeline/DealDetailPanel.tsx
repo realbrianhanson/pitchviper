@@ -123,6 +123,9 @@ export function DealDetailPanel({
                 {deal.company_name}
               </SheetTitle>
             </div>
+            <SheetDescription className="sr-only">
+              Deal details, stage, contacts, and activity for {deal.company_name}.
+            </SheetDescription>
           </SheetHeader>
 
           <ScrollArea className="flex-1 -mx-6 px-6">
