@@ -91,10 +91,6 @@ export function TeamMembersManager() {
         setTeamMembers(membersData.members || []);
       }
 
-      const { data: alowareData } = await supabase.functions.invoke("create-team-member", {
-        body: { action: "get-aloware-users" },
-      });
-      if (alowareData?.success) setAlowareUsers(alowareData.users || []);
     } catch (error) {
       console.error("Error loading team data:", error);
       setLoadError(ERROR_COPY.list_failed);
