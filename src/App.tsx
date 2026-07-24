@@ -109,6 +109,7 @@ const App = () => (
                   <OfflineIndicator />
                   <ActiveCallBanner />
                   <DialModal />
+                  <GlobalLogCallModal />
                   <SendSMSModal />
                   <Toaster />
                   <Sonner />
