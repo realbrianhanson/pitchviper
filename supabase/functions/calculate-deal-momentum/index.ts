@@ -3,6 +3,7 @@ import {
   authenticatePostOrService, corsHeaders, errorResponse, jsonResponse,
   readBoundedJson, isUuid,
 } from "../_shared/edgeAuth.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 interface StageHistory { deal_id: string; from_stage: string | null; to_stage: string; changed_at: string; }
 
