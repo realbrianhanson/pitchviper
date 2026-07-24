@@ -96,7 +96,14 @@ describe("AI/provider endpoint hardening", () => {
 
   it.each([...AI_ENDPOINTS])("%s enforces POST-only", (name) => {
     const s = src(name);
-    expect(s).toMatch(/method !== ['"]POST['"]|method_not_allowed/);
+    // Either an inline method guard OR the shared authenticatePost/authenticatePostOrService helper
+    // (which both reject non-POST with method_not_allowed).
+    const hasPostGuard =
+      /method !== ['"]POST['"]/.test(s) ||
+      /method_not_allowed/.test(s) ||
+      /authenticatePost\(/.test(s) ||
+      /authenticatePostOrService\(/.test(s);
+    expect(hasPostGuard, `${name} must enforce POST-only`).toBe(true);
   });
 });
 
