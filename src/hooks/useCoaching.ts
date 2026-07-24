@@ -106,7 +106,8 @@ export function useCoaching() {
       if (error) throw error;
       return (data || []) as RepCoachingProfile[];
     },
-    enabled: !!profile?.team_id && !!user,
+    // Only managers see the roster; reps calling MyCoachingActions never fetch it.
+    enabled: !!profile?.team_id && !!user && canManageTeam,
   });
 
   const useRepCoachingSessions = (repId: string | null) =>
