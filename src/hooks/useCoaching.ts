@@ -2,16 +2,42 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import {
+  sanitizeSessionDraft,
+  isCoachingActionStatus,
+  type CoachingSessionDraft,
+  type CoachingActionStatus,
+} from "@/lib/coachingValidation";
 
 export interface CoachingSession {
   id: string;
   manager_id: string;
   rep_id: string;
+  team_id: string | null;
   notes: string;
-  focus_areas: string[];
-  action_items: string[];
+  focus_areas: string[] | null;
+  action_items: string[] | null;
+  due_date: string | null;
+  status: string;
+  completed_at: string | null;
   next_session_date: string | null;
   created_at: string;
+  updated_at: string;
+}
+
+export interface CoachingAction {
+  id: string;
+  session_id: string;
+  team_id: string;
+  rep_id: string;
+  assigned_by: string;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  status: CoachingActionStatus;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface RepCoachingProfile {
@@ -29,19 +55,12 @@ export interface RepCoachingProfile {
 }
 
 export interface CoachingInsights {
-  focus_areas: Array<{
-    area: string;
-    reason: string;
-    action: string;
-  }>;
+  focus_areas: Array<{ area: string; reason: string; action: string }>;
   conversation_starters: string[];
   recognition_points: string[];
-  suggested_roleplay: {
-    scenario_type: string;
-    reason: string;
-  } | null;
+  suggested_roleplay: { scenario_type: string; reason: string } | null;
   performance_insights: {
-    trend: 'improving' | 'declining' | 'steady';
+    trend: "improving" | "declining" | "steady";
     key_strength: string;
     biggest_opportunity: string;
   } | null;
@@ -66,190 +85,209 @@ export interface RepStats {
   }>;
 }
 
+const GENERIC_SAVE_ERR = "Couldn't save coaching session. Please try again.";
+const GENERIC_STATUS_ERR = "Couldn't update action status. Please try again.";
+
 export function useCoaching() {
-  const { user, profile } = useAuth();
+  const { user, profile, canManageTeam } = useAuth();
   const queryClient = useQueryClient();
 
-  // Get all team members who can be coached
   const { data: teamMembers = [], isLoading: isLoadingMembers } = useQuery({
-    queryKey: ['coaching-team-members', profile?.team_id],
+    queryKey: ["coaching-team-members", profile?.team_id],
     queryFn: async () => {
       if (!profile?.team_id) return [];
-
       const { data, error } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, avatar_url, title, hire_date, current_level, xp_points, current_streak, longest_streak, last_coached_at, team_id')
-        .eq('team_id', profile.team_id)
-        .neq('user_id', user?.id);
-
+        .from("profiles")
+        .select(
+          "user_id, full_name, avatar_url, title, hire_date, current_level, xp_points, current_streak, longest_streak, last_coached_at, team_id"
+        )
+        .eq("team_id", profile.team_id)
+        .neq("user_id", user?.id ?? "");
       if (error) throw error;
       return (data || []) as RepCoachingProfile[];
     },
     enabled: !!profile?.team_id && !!user,
   });
 
-  // Get coaching sessions for a specific rep
-  const useRepCoachingSessions = (repId: string | null) => {
-    return useQuery({
-      queryKey: ['coaching-sessions', repId],
+  const useRepCoachingSessions = (repId: string | null) =>
+    useQuery({
+      queryKey: ["coaching-sessions", repId],
       queryFn: async () => {
         if (!repId) return [];
-
         const { data, error } = await supabase
-          .from('coaching_sessions')
-          .select('*')
-          .eq('rep_id', repId)
-          .order('created_at', { ascending: false });
-
+          .from("coaching_sessions")
+          .select("*")
+          .eq("rep_id", repId)
+          .order("created_at", { ascending: false });
         if (error) throw error;
         return (data || []) as CoachingSession[];
       },
       enabled: !!repId,
     });
-  };
 
-  // Get recent calls for a rep
-  const useRepRecentCalls = (repId: string | null) => {
-    return useQuery({
-      queryKey: ['rep-recent-calls', repId],
+  const useRepCoachingActions = (repId: string | null) =>
+    useQuery({
+      queryKey: ["coaching-actions", repId],
       queryFn: async () => {
         if (!repId) return [];
-
         const { data, error } = await supabase
-          .from('calls')
-          .select('*')
-          .eq('user_id', repId)
-          .order('created_at', { ascending: false })
+          .from("coaching_actions")
+          .select("*")
+          .eq("rep_id", repId)
+          .order("status", { ascending: true })
+          .order("due_date", { ascending: true, nullsFirst: false })
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return (data || []) as CoachingAction[];
+      },
+      enabled: !!repId,
+    });
+
+  const useMyCoachingActions = () =>
+    useQuery({
+      queryKey: ["my-coaching-actions", user?.id],
+      queryFn: async () => {
+        if (!user?.id) return [];
+        const { data, error } = await supabase
+          .from("coaching_actions")
+          .select("*")
+          .eq("rep_id", user.id)
+          .order("status", { ascending: true })
+          .order("due_date", { ascending: true, nullsFirst: false })
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return (data || []) as CoachingAction[];
+      },
+      enabled: !!user?.id,
+    });
+
+  const useRepRecentCalls = (repId: string | null) =>
+    useQuery({
+      queryKey: ["rep-recent-calls", repId],
+      queryFn: async () => {
+        if (!repId) return [];
+        const { data, error } = await supabase
+          .from("calls")
+          .select("*")
+          .eq("user_id", repId)
+          .order("created_at", { ascending: false })
           .limit(10);
-
         if (error) throw error;
         return data || [];
       },
       enabled: !!repId,
     });
-  };
 
-  // Get recent roleplay sessions for a rep
-  const useRepRoleplaySessions = (repId: string | null) => {
-    return useQuery({
-      queryKey: ['rep-roleplay-sessions', repId],
+  const useRepRoleplaySessions = (repId: string | null) =>
+    useQuery({
+      queryKey: ["rep-roleplay-sessions", repId],
       queryFn: async () => {
         if (!repId) return [];
-
         const { data, error } = await supabase
-          .from('roleplay_sessions')
-          .select('*, roleplay_scenarios(name, difficulty)')
-          .eq('user_id', repId)
-          .eq('status', 'completed')
-          .order('completed_at', { ascending: false })
+          .from("roleplay_sessions")
+          .select("*, roleplay_scenarios(name, difficulty)")
+          .eq("user_id", repId)
+          .eq("status", "completed")
+          .order("completed_at", { ascending: false })
           .limit(5);
-
         if (error) throw error;
         return data || [];
       },
       enabled: !!repId,
     });
-  };
 
-  // Get recent badges for a rep
-  const useRepRecentBadges = (repId: string | null) => {
-    return useQuery({
-      queryKey: ['rep-recent-badges', repId],
+  const useRepRecentBadges = (repId: string | null) =>
+    useQuery({
+      queryKey: ["rep-recent-badges", repId],
       queryFn: async () => {
         if (!repId) return [];
-
         const { data, error } = await supabase
-          .from('user_badges')
-          .select('*, badges(*)')
-          .eq('user_id', repId)
-          .order('earned_at', { ascending: false })
+          .from("user_badges")
+          .select("*, badges(*)")
+          .eq("user_id", repId)
+          .order("earned_at", { ascending: false })
           .limit(5);
-
         if (error) throw error;
         return data || [];
       },
       enabled: !!repId,
     });
-  };
 
-  // Generate AI coaching insights
-  const useCoachingInsights = (repId: string | null) => {
-    return useQuery({
-      queryKey: ['coaching-insights', repId],
+  const useCoachingInsights = (repId: string | null) =>
+    useQuery({
+      queryKey: ["coaching-insights", repId],
       queryFn: async () => {
         if (!repId) return null;
-
-        const { data, error } = await supabase.functions.invoke('generate-coaching-insights', {
-          body: { rep_id: repId }
+        const { data, error } = await supabase.functions.invoke("generate-coaching-insights", {
+          body: { rep_id: repId },
         });
-
         if (error) throw error;
         if (!data.success) throw new Error(data.error);
-
         return {
           insights: data.insights as CoachingInsights,
           stats: data.stats as RepStats,
         };
       },
       enabled: !!repId,
-      staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+      staleTime: 5 * 60 * 1000,
     });
-  };
 
-  // Save coaching session
   const saveCoachingSession = useMutation({
-    mutationFn: async (session: {
-      rep_id: string;
-      notes: string;
-      focus_areas: string[];
-      action_items: string[];
-      next_session_date?: string;
-    }) => {
-      if (!user) throw new Error('Not authenticated');
+    mutationFn: async (draft: CoachingSessionDraft) => {
+      if (!user) throw new Error("not_authenticated");
+      if (!canManageTeam) throw new Error("forbidden");
 
-      // Insert coaching session
-      const { data, error } = await supabase
-        .from('coaching_sessions')
-        .insert({
-          manager_id: user.id,
-          rep_id: session.rep_id,
-          notes: session.notes,
-          focus_areas: session.focus_areas,
-          action_items: session.action_items,
-          next_session_date: session.next_session_date || null,
-        })
-        .select()
-        .single();
+      const sanitized = sanitizeSessionDraft(draft);
+      if (!sanitized.ok) throw new Error(sanitized.error);
+      const v = sanitized.value;
 
-      if (error) throw error;
-
-      // Update rep's last_coached_at
-      await supabase
-        .from('profiles')
-        .update({ last_coached_at: new Date().toISOString() })
-        .eq('user_id', session.rep_id);
-
-      // Log activity
-      await supabase.rpc('log_activity', {
-        p_user_id: user.id,
-        p_activity_type: 'training_completed',
-        p_metadata: {
-          type: 'coaching_session',
-          rep_id: session.rep_id,
-          session_id: data.id
-        }
+      const { data, error } = await supabase.rpc("create_coaching_session_with_actions", {
+        p_rep_id: v.rep_id,
+        p_notes: v.notes,
+        p_focus_areas: v.focus_areas,
+        p_actions: v.actions as unknown as never,
+        p_due_date: v.due_date,
       });
-
+      if (error) throw error;
       return data;
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['coaching-sessions', variables.rep_id] });
-      queryClient.invalidateQueries({ queryKey: ['coaching-team-members'] });
-      toast.success('Coaching session saved!');
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["coaching-sessions", variables.rep_id] });
+      queryClient.invalidateQueries({ queryKey: ["coaching-actions", variables.rep_id] });
+      queryClient.invalidateQueries({ queryKey: ["coaching-team-members"] });
+      queryClient.invalidateQueries({ queryKey: ["manager-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["my-coaching-actions"] });
+      toast.success("Coaching session saved");
     },
     onError: (error) => {
-      console.error('Error saving coaching session:', error);
-      toast.error('Failed to save coaching session');
+      const msg =
+        error instanceof Error && /required|too long|too many|Select|valid date|Limit|action item/i.test(error.message)
+          ? error.message
+          : GENERIC_SAVE_ERR;
+      console.error("[useCoaching] saveCoachingSession", error);
+      toast.error(msg);
+    },
+  });
+
+  const updateActionStatus = useMutation({
+    mutationFn: async (input: { action_id: string; status: CoachingActionStatus }) => {
+      if (!user) throw new Error("not_authenticated");
+      if (!isCoachingActionStatus(input.status)) throw new Error("invalid_status");
+      const { data, error } = await supabase.rpc("update_coaching_action_status", {
+        p_action_id: input.action_id,
+        p_status: input.status,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["coaching-actions"] });
+      queryClient.invalidateQueries({ queryKey: ["my-coaching-actions"] });
+      queryClient.invalidateQueries({ queryKey: ["manager-dashboard"] });
+    },
+    onError: (error) => {
+      console.error("[useCoaching] updateActionStatus", error);
+      toast.error(GENERIC_STATUS_ERR);
     },
   });
 
@@ -257,10 +295,14 @@ export function useCoaching() {
     teamMembers,
     isLoadingMembers,
     useRepCoachingSessions,
+    useRepCoachingActions,
+    useMyCoachingActions,
     useRepRecentCalls,
     useRepRoleplaySessions,
     useRepRecentBadges,
     useCoachingInsights,
     saveCoachingSession,
+    updateActionStatus,
+    canManageTeam,
   };
 }
