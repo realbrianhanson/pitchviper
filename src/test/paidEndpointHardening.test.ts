@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const read = (p: string) => readFileSync(resolve(p), "utf-8");
 
-const migration = read("supabase/migrations/20260724040000_ai_endpoint_hardening.sql");
+const migration = read("supabase/migrations/20260724034533_ecba35d7-04c8-49dd-9e22-4f9bcb56a480.sql");
 const evaluateGauntlet = read("supabase/functions/evaluate-gauntlet/index.ts");
 const roleplayAnalyze = read("supabase/functions/roleplay-analyze/index.ts");
 const roleplayVoiceAnalyze = read("supabase/functions/roleplay-voice-analyze/index.ts");
