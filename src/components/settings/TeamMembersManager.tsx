@@ -65,7 +65,7 @@ export function TeamMembersManager() {
   const [isInviting, setIsInviting] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [alowareUsers, setAlowareUsers] = useState<AlowareUser[]>([]);
+  
   const [showForm, setShowForm] = useState(false);
 
   // Form state — no password, ever.
