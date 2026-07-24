@@ -106,7 +106,7 @@ export function useTeamChat() {
     
     // Fetch profiles for those users
     const { data: profilesData } = await supabase
-      .from("profiles")
+      .from("team_profiles_safe")
       .select("user_id, full_name, avatar_url")
       .in("user_id", userIds);
 
@@ -137,7 +137,7 @@ export function useTeamChat() {
     if (!profile?.team_id) return;
 
     const { data, error } = await supabase
-      .from("profiles")
+      .from("team_profiles_safe")
       .select("user_id, full_name, avatar_url")
       .eq("team_id", profile.team_id);
 
@@ -298,7 +298,7 @@ export function useTeamChat() {
         async (payload) => {
           // Fetch the sender's profile
           const { data: profileData } = await supabase
-            .from("profiles")
+            .from("team_profiles_safe")
             .select("full_name, avatar_url")
             .eq("user_id", payload.new.user_id)
             .maybeSingle();

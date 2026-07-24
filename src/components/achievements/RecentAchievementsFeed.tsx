@@ -75,7 +75,7 @@ export function RecentAchievementsFeed() {
       // Fetch profiles for these users
       const userIds = [...new Set(userBadges.map(ub => ub.user_id))];
       const { data: profiles } = await supabase
-        .from('profiles')
+        .from('team_profiles_safe')
         .select('user_id, full_name, avatar_url')
         .in('user_id', userIds);
 

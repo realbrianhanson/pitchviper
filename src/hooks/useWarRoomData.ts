@@ -85,7 +85,7 @@ export function useWarRoomData() {
 
       // Get team members with their profiles
       const { data: members } = await supabase
-        .from("profiles")
+        .from("team_profiles_safe")
         .select("*")
         .eq("team_id", profile.team_id);
 

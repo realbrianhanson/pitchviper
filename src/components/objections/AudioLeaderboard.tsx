@@ -61,7 +61,7 @@ export function AudioLeaderboard({ isOpen, onClose }: AudioLeaderboardProps) {
       if (data && data.length > 0) {
         const userIds = [...new Set(data.map((d: LeaderboardEntry) => d.user_id))] as string[];
         const { data: profiles } = await supabase
-          .from('profiles')
+          .from('team_profiles_safe')
           .select('user_id, full_name, avatar_url')
           .in('user_id', userIds);
 

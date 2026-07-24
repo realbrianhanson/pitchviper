@@ -58,7 +58,7 @@ export function MobileSOSAlerts({ teamId }: MobileSOSAlertsProps) {
     if (data && data.length > 0) {
       const userIds = [...new Set(data.map(a => a.user_id))];
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("team_profiles_safe")
         .select("user_id, full_name, avatar_url, phone_extension")
         .in("user_id", userIds);
 

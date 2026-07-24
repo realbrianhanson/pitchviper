@@ -124,14 +124,9 @@ export const useCallLogging = () => {
         });
       }
 
-      // Add XP to user profile
-      const xpEarned = 10; // Base XP for logging a call
-      await supabase
-        .from('profiles')
-        .update({ 
-          xp_points: (await supabase.from('profiles').select('xp_points').eq('user_id', user.id).maybeSingle()).data?.xp_points + xpEarned 
-        })
-        .eq('user_id', user.id);
+      // Add XP through the trusted RPC (direct writes to xp_points are revoked).
+      const xpEarned = 10;
+      await supabase.rpc('award_user_xp', { _delta: xpEarned });
 
       return { call, xpEarned };
     },

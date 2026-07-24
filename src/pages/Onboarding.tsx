@@ -100,13 +100,14 @@ export default function Onboarding() {
     if (!user) return;
 
     try {
+      // team_id is set server-side (team-membership function or invite trigger);
+      // the client no longer has UPDATE privilege on that column.
       const { error } = await supabase
         .from("profiles")
         .update({
           avatar_url: profileData.avatarUrl,
           title: profileData.title,
           hire_date: profileData.hireDate || null,
-          team_id: teamData.teamId,
           onboarding_completed: true,
         })
         .eq("user_id", user.id);

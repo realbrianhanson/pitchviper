@@ -139,7 +139,7 @@ export function useCompetitions() {
       } else {
         // Add all team members as participants
         const { data: teamMembers } = await supabase
-          .from('profiles')
+          .from('team_profiles_safe')
           .select('user_id')
           .eq('team_id', profile.team_id);
 
@@ -227,7 +227,7 @@ export function useCompetitions() {
       // Fetch profiles separately
       const userIds = (participants || []).map(p => p.user_id);
       const { data: profiles } = await supabase
-        .from('profiles')
+        .from('team_profiles_safe')
         .select('user_id, full_name, avatar_url, current_level')
         .in('user_id', userIds);
 
@@ -258,7 +258,7 @@ export function useCompetitions() {
       // Fetch profiles
       const userIds = [...new Set((data || []).map(a => a.user_id))];
       const { data: profiles } = await supabase
-        .from('profiles')
+        .from('team_profiles_safe')
         .select('user_id, full_name, avatar_url')
         .in('user_id', userIds);
 

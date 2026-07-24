@@ -57,7 +57,7 @@ export function useWorkspaceSetup(): UseWorkspaceSetupResult {
       if (!teamId) throw new Error("No team");
       const [{ data: settings, error: sErr }, { count: memberCount, error: mErr }, { count: mappedCount, error: aErr }] = await Promise.all([
         supabase.from("company_settings").select("*").eq("team_id", teamId).maybeSingle(),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("team_id", teamId),
+        supabase.from("team_profiles_safe").select("id", { count: "exact", head: true }).eq("team_id", teamId),
         supabase
           .from("profiles")
           .select("id", { count: "exact", head: true })

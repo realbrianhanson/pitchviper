@@ -39,7 +39,8 @@ export function StepAccess({ initialData, onComplete }: StepAccessProps) {
     setLoading(true);
 
     try {
-      // Validate promo code server-side
+      // Server validates the code AND flips promo_validated with the service
+      // role — the client no longer has UPDATE on that column.
       const { data: promoResult, error: promoError } =
         await supabase.functions.invoke("validate-promo-code", {
           body: { promoCode: promoCode.trim() },
@@ -56,22 +57,12 @@ export function StepAccess({ initialData, onComplete }: StepAccessProps) {
         return;
       }
 
-      // Mark promo validated on profile
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ promo_validated: true })
-        .eq("user_id", user.id);
-      if (profileError) throw profileError;
-
-      // NOTE: The manager role is NOT self-assignable. Users who select
-      // "Sales Manager" here are granted the manager role automatically by
-      // the database when they create a team in the next step. Reps remain
-      // the default role set by the handle_new_user trigger.
-
+      // Role selection is UI-only here. Manager role is granted server-side
+      // when a manager creates a team in the next step.
       await refreshProfile();
       onComplete({ promoCode: promoCode.trim(), role });
     } catch (err: any) {
-      setError(err.message || "Could not validate access. Please try again.");
+      setError("Could not validate access. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -89,7 +80,6 @@ export function StepAccess({ initialData, onComplete }: StepAccessProps) {
       </div>
 
       <form onSubmit={handleContinue} className="space-y-6">
-        {/* Promo Code */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">
             Promo Code <span className="text-destructive">*</span>
@@ -108,7 +98,6 @@ export function StepAccess({ initialData, onComplete }: StepAccessProps) {
           </div>
         </div>
 
-        {/* Role Selector */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">I am a...</label>
           <div className="grid grid-cols-2 gap-3">
