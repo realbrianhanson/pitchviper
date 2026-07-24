@@ -117,58 +117,29 @@ export function ClickToDialProvider({ children }: { children: React.ReactNode })
     setPendingDial(null);
   }, []);
 
+  const openExternalDialer = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.open("https://app.dialer.io", "_blank", "noopener,noreferrer");
+    }
+  }, []);
+
   const initiateCall = useCallback(async (params: DialParams) => {
+    // No verified in-app telephony adapter — hand off to the external dialer
+    // and surface a neutral, provider-agnostic message. Never invoke
+    // legacy Aloware edge functions from user actions.
     setIsDialing(true);
-    
     try {
-      const { data, error } = await supabase.functions.invoke('initiate-aloware-call', {
-        body: {
-          contactPhoneNumber: params.phoneNumber,
-          linePhoneNumber: params.linePhoneNumber,
-          contactName: params.contactName,
-          companyName: params.companyName,
-          dealId: params.dealId,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        setCallState({
-          isActive: true,
-          callId: data.callId,
-          contactName: params.contactName || 'Unknown',
-          phoneNumber: params.phoneNumber,
-          startTime: new Date(),
-          notes: '',
-        });
-
-        toast({
-          title: "Call Initiated",
-          description: `Connecting to ${params.contactName || params.phoneNumber}...`,
-        });
-
-        closeDialModal();
-        return { success: true };
-      } else {
-        toast({
-          title: "Call Failed",
-          description: data.error || "Failed to initiate call",
-          variant: "destructive",
-        });
-        return { success: false, error: data.error };
-      }
-    } catch (error: any) {
+      openExternalDialer();
       toast({
-        title: "Call Error",
-        description: error.message || "Failed to initiate call",
-        variant: "destructive",
+        title: "Opened your phone system",
+        description: `Dial ${params.contactName || params.phoneNumber} from your phone system, then log the call here.`,
       });
-      return { success: false, error: error.message };
+      closeDialModal();
+      return { success: true };
     } finally {
       setIsDialing(false);
     }
-  }, [toast, closeDialModal]);
+  }, [toast, closeDialModal, openExternalDialer]);
 
   const endCall = useCallback(async () => {
     if (!user) return;
