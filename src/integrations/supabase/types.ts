@@ -2370,6 +2370,10 @@ export type Database = {
         }
         Returns: Json
       }
+      claim_stripe_webhook_event: {
+        Args: { p_event_id: string; p_event_type: string; p_object_id: string }
+        Returns: Json
+      }
       create_coaching_session_with_actions: {
         Args: {
           p_actions?: Json
