@@ -260,6 +260,11 @@ export function ClickToDialProvider({ children }: { children: React.ReactNode })
         endCall,
         updateCallNotes,
         addToPowerDialer,
+        // Manual log handoff
+        isManualLogOpen,
+        manualLogInitial,
+        openManualLog,
+        closeManualLog,
         // SMS
         isSMSModalOpen,
         openSMSModal,
