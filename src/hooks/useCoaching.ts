@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   sanitizeSessionDraft,
   isCoachingActionStatus,
+  canRepAdvanceStatus,
   type CoachingSessionDraft,
   type CoachingActionStatus,
 } from "@/lib/coachingValidation";
@@ -106,7 +107,8 @@ export function useCoaching() {
       if (error) throw error;
       return (data || []) as RepCoachingProfile[];
     },
-    enabled: !!profile?.team_id && !!user,
+    // Only managers see the roster; reps calling MyCoachingActions never fetch it.
+    enabled: !!profile?.team_id && !!user && canManageTeam,
   });
 
   const useRepCoachingSessions = (repId: string | null) =>
@@ -122,7 +124,8 @@ export function useCoaching() {
         if (error) throw error;
         return (data || []) as CoachingSession[];
       },
-      enabled: !!repId,
+      // Manager-only view of another rep's history.
+      enabled: !!repId && canManageTeam,
     });
 
   const useRepCoachingActions = (repId: string | null) =>
@@ -140,7 +143,7 @@ export function useCoaching() {
         if (error) throw error;
         return (data || []) as CoachingAction[];
       },
-      enabled: !!repId,
+      enabled: !!repId && canManageTeam,
     });
 
   const useMyCoachingActions = () =>
@@ -175,7 +178,7 @@ export function useCoaching() {
         if (error) throw error;
         return data || [];
       },
-      enabled: !!repId,
+      enabled: !!repId && canManageTeam,
     });
 
   const useRepRoleplaySessions = (repId: string | null) =>
@@ -193,7 +196,7 @@ export function useCoaching() {
         if (error) throw error;
         return data || [];
       },
-      enabled: !!repId,
+      enabled: !!repId && canManageTeam,
     });
 
   const useRepRecentBadges = (repId: string | null) =>
@@ -210,7 +213,7 @@ export function useCoaching() {
         if (error) throw error;
         return data || [];
       },
-      enabled: !!repId,
+      enabled: !!repId && canManageTeam,
     });
 
   const useCoachingInsights = (repId: string | null) =>
@@ -228,7 +231,7 @@ export function useCoaching() {
           stats: data.stats as RepStats,
         };
       },
-      enabled: !!repId,
+      enabled: !!repId && canManageTeam,
       staleTime: 5 * 60 * 1000,
     });
 
@@ -270,9 +273,22 @@ export function useCoaching() {
   });
 
   const updateActionStatus = useMutation({
-    mutationFn: async (input: { action_id: string; status: CoachingActionStatus }) => {
+    mutationFn: async (input: {
+      action_id: string;
+      status: CoachingActionStatus;
+      current_status?: CoachingActionStatus;
+    }) => {
       if (!user) throw new Error("not_authenticated");
       if (!isCoachingActionStatus(input.status)) throw new Error("invalid_status");
+      // Client-side belt for reps: block reopen/backward moves before hitting the RPC.
+      // The RPC is still authoritative and enforces the same rule server-side.
+      if (
+        !canManageTeam &&
+        input.current_status &&
+        !canRepAdvanceStatus(input.current_status, input.status)
+      ) {
+        throw new Error("forbidden");
+      }
       const { data, error } = await supabase.rpc("update_coaching_action_status", {
         p_action_id: input.action_id,
         p_status: input.status,

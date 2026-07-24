@@ -1,4 +1,4 @@
-import { Brain, TrendingUp, Target, Users, RefreshCw, AlertCircle } from "lucide-react";
+import { Brain, TrendingUp, Target, Users, RefreshCw, AlertCircle, ArrowRight } from "lucide-react";
 import { ManagerInsights } from "@/hooks/useManagerDashboard";
 import { cn } from "@/lib/utils";
 
@@ -6,6 +6,10 @@ interface AITeamInsightsProps {
   insights: ManagerInsights | null;
   isLoading: boolean;
   onRefresh: () => void;
+  /** Resolved same-team user_id for the top coaching opportunity, or null when
+   * the AI-provided rep_name has no unambiguous match. Never accept an AI id. */
+  coachingRepId?: string | null;
+  onCoachRep?: (userId: string) => void;
 }
 
 type Accent = "primary" | "warning" | "destructive" | "success";
@@ -43,7 +47,7 @@ function InsightRow({
   );
 }
 
-export function AITeamInsights({ insights, isLoading, onRefresh }: AITeamInsightsProps) {
+export function AITeamInsights({ insights, isLoading, onRefresh, coachingRepId, onCoachRep }: AITeamInsightsProps) {
   return (
     <div className="rounded-[12px] border border-border bg-card p-6 shadow-sm h-full">
       <div className="flex items-center justify-between mb-4">
@@ -95,6 +99,16 @@ export function AITeamInsights({ insights, isLoading, onRefresh }: AITeamInsight
               <p className="text-xs text-muted-foreground">
                 Focus on: {insights.coaching_opportunity.suggested_focus}
               </p>
+              {coachingRepId && onCoachRep ? (
+                <button
+                  type="button"
+                  onClick={() => onCoachRep(coachingRepId)}
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-sm"
+                  aria-label={`Coach ${insights.coaching_opportunity.rep_name}`}
+                >
+                  Coach this rep <ArrowRight className="h-3 w-3" />
+                </button>
+              ) : null}
             </InsightRow>
           )}
 

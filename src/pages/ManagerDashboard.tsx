@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Shield, AlertCircle, Users, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
@@ -14,6 +14,7 @@ import { ForecastSection } from "@/components/manager/ForecastSection";
 import { WorkspaceSetupChecklist } from "@/components/manager/WorkspaceSetupChecklist";
 import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 import { Button } from "@/components/ui/button";
+import { resolveTeamMemberByName } from "@/lib/coachingValidation";
 
 function formatDate(): string {
   return new Date().toLocaleDateString("en-US", {
@@ -48,6 +49,19 @@ export default function ManagerDashboard() {
     refetch,
     refreshInsights,
   } = useManagerDashboard();
+
+  // Resolve the AI-provided rep_name to a real same-team user_id via exact
+  // normalized match. If the name is missing or ambiguous, coachingRepId stays
+  // null and the deep-link is hidden. Never trust an AI-supplied id.
+  const coachingRepId = useMemo(() => {
+    const name = insights?.coaching_opportunity?.rep_name;
+    if (!name) return null;
+    return resolveTeamMemberByName(
+      name,
+      teamMembers.map((m) => ({ user_id: m.user_id, full_name: m.full_name }))
+    );
+  }, [insights, teamMembers]);
+
 
   useEffect(() => {
     if (!authLoading && !isManager) navigate("/");
@@ -193,6 +207,8 @@ export default function ManagerDashboard() {
                   insights={insights}
                   isLoading={isLoadingInsights}
                   onRefresh={refreshInsights}
+                  coachingRepId={coachingRepId}
+                  onCoachRep={(id) => navigate(`/coaching?rep=${id}`)}
                 />
               </div>
             </section>
