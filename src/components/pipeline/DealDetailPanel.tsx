@@ -299,25 +299,6 @@ export function DealDetailPanel({
                 contactName={deal.contact_name}
                 variant="outline"
               />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handlePushToAloware}
-                    disabled={isPushingToAloware || (!deal.contact_phone && !deal.contact_email)}
-                  >
-                    {isPushingToAloware ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Upload className="h-4 w-4" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Push contact to Aloware</p>
-                </TooltipContent>
-              </Tooltip>
             </div>
             <Button
               variant="ghost"
