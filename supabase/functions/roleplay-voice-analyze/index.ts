@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { authenticatePost, boundedString, corsHeaders, errorResponse, isUuid, jsonResponse } from "../_shared/edgeAuth.ts";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 interface AnalysisResult {
   addressed_objection: boolean;
@@ -37,6 +38,8 @@ serve(async (req) => {
   if (!auth.ok) return auth.response;
   const { userId, serviceClient } = auth.ctx;
 
+  const _ent = await requireTeamEntitlement(serviceClient, userId, "starter");
+  if (!_ent.ok) return _ent.response;
   const rl = await enforceRateLimit(userId, "roleplay-voice-analyze", { perMinute: 30, perDay: 400, serviceClient });
   if (!rl.allowed) return rl.response!;
 

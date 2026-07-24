@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -69,6 +70,8 @@ serve(async (req) => {
 
     // Rate-limit ONLY the paid path (cache hits should not consume budget).
     const rl = await enforceRateLimit(userId, 'perplexity-research', { serviceClient: admin });
+    const _ent = await requireTeamEntitlement(admin, userId, "growth");
+    if (!_ent.ok) return _ent.response;
     if (!rl.allowed) return rl.response!;
 
     const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY');

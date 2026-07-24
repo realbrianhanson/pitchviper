@@ -4,6 +4,7 @@ import {
   readBoundedJson, enumOf, boundedString, isUuid,
 } from "../_shared/edgeAuth.ts";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 const NOTIFICATION_TYPES = [
   "badge_earned","level_up","streak_milestone","deal_closed","sos_alert","mentioned",
@@ -17,6 +18,7 @@ serve(async (req) => {
   if (!auth.ok) return auth.response;
   const { userId, serviceClient, isService } = auth.ctx;
 
+  if (!isService) { const _ent = await requireTeamEntitlement(serviceClient, userId, "starter"); if (!_ent.ok) return _ent.response; }
   // Rate-limit only user callers; scheduled service calls are trusted.
   if (!isService) {
     const rl = await enforceRateLimit(userId, "create-notification", { serviceClient, perMinute: 20, perDay: 500 });

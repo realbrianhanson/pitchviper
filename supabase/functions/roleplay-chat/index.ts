@@ -4,6 +4,7 @@ import {
   readBoundedJson, boundedString, isUuid, boundedStringArray,
 } from "../_shared/edgeAuth.ts";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 interface Message { role: "user" | "assistant" | "system"; content: string; timestamp?: string; }
 interface AnalysisResult { addressed_objection: boolean; attempted_close: boolean; positive_momentum: boolean; win_conditions_achieved: string[]; }
@@ -14,6 +15,8 @@ serve(async (req) => {
   if (!auth.ok) return auth.response;
   const { userId, serviceClient } = auth.ctx;
 
+  const _ent = await requireTeamEntitlement(serviceClient, userId, "starter");
+  if (!_ent.ok) return _ent.response;
   const rl = await enforceRateLimit(userId, "roleplay-chat", { serviceClient, perMinute: 30, perDay: 500 });
   if (!rl.allowed) return rl.response!;
 

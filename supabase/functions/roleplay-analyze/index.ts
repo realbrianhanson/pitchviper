@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { authenticatePost, boundedString, clampInt, corsHeaders, errorResponse, isUuid, jsonResponse } from "../_shared/edgeAuth.ts";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 const MAX_MESSAGES = 200;
 const MAX_MESSAGE_CHARS = 5000;
@@ -124,6 +125,8 @@ serve(async (req) => {
   if (!auth.ok) return auth.response;
   const { userId, serviceClient } = auth.ctx;
 
+  const _ent = await requireTeamEntitlement(serviceClient, userId, "starter");
+  if (!_ent.ok) return _ent.response;
   const rl = await enforceRateLimit(userId, "roleplay-analyze", { perMinute: 4, perDay: 40, serviceClient });
   if (!rl.allowed) return rl.response!;
 
