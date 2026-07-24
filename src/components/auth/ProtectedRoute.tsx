@@ -3,6 +3,7 @@ import { Navigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { Button } from "@/components/ui/button";
+import { isGrowthRoute } from "@/lib/featureGates";
 
 const ALWAYS_ALLOWED = new Set([
   "/onboarding",
@@ -39,6 +40,40 @@ function PausedWorkspace({ isManager }: { isManager: boolean }) {
             <>
               <Button asChild>
                 <Link to="/billing">Choose a plan</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/settings">Settings</Link>
+              </Button>
+            </>
+          ) : (
+            <Button asChild variant="outline">
+              <Link to="/settings">Settings</Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GrowthUpgradeRequired({ isManager }: { isManager: boolean }) {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="max-w-lg w-full editorial-tile p-8 space-y-6" data-testid="growth-upgrade-required">
+        <div className="eyebrow">Upgrade required</div>
+        <h1 className="font-display text-3xl md:text-4xl tracking-tight">
+          This is a <span className="italic text-primary">Growth</span> feature.
+        </h1>
+        <p className="text-muted-foreground">
+          {isManager
+            ? "Upgrade your team to Growth to unlock AI coaching, competitions, and advanced signals."
+            : "Ask your manager to upgrade the team to Growth to unlock this feature."}
+        </p>
+        <div className="flex flex-wrap gap-3">
+          {isManager ? (
+            <>
+              <Button asChild>
+                <Link to="/billing">Upgrade to Growth</Link>
               </Button>
               <Button asChild variant="outline">
                 <Link to="/settings">Settings</Link>
@@ -92,5 +127,11 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     return <PausedWorkspace isManager={canManageTeam} />;
   }
 
+  // Growth-only route gate. Trial grants tier=growth server-side.
+  if (isGrowthRoute(location.pathname) && ent.data.tier !== "growth") {
+    return <GrowthUpgradeRequired isManager={canManageTeam} />;
+  }
+
   return <>{children}</>;
 }
+

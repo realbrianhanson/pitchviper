@@ -1,34 +1,24 @@
-// Manager-only Stripe seat update. Never trusts client-provided price/item/customer IDs.
+// Manager-only Stripe seat update.
+// - Auth via shared authenticatePost (POST + JWT + service client)
+// - Strict seat range [max(5, used), 500]
+// - Refuses if subscription price isn't a known configured plan price
+// - Deterministic idempotency key: seats:{subId}:{itemId}:{qty}
+// - Verifies team_billing update actually affected 1 row
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
-import { corsHeadersFor, jsonResponse } from "../_shared/billing.ts";
-
-const MAX_SEATS = 500;
-const MIN_SEATS = 5;
+import { corsHeadersFor, jsonResponse, priceToPlan, MIN_SEATS, MAX_SEATS } from "../_shared/billing.ts";
+import { authenticatePost } from "../_shared/edgeAuth.ts";
 
 serve(async (req) => {
   const cors = corsHeadersFor(req.headers.get("origin"));
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
-  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, { status: 405 }, cors);
+
+  const auth = await authenticatePost(req);
+  if (!auth.ok) return auth.response;
+  const { userId, serviceClient: service } = auth.ctx;
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const service = createClient(supabaseUrl, serviceKey);
-
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const token = authHeader.replace("Bearer ", "");
-    if (!token) return jsonResponse({ error: "unauthorized" }, { status: 401 }, cors);
-    const authClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-    });
-    const { data: userData, error: userErr } = await authClient.auth.getUser();
-    if (userErr || !userData.user) return jsonResponse({ error: "unauthorized" }, { status: 401 }, cors);
-    const userId = userData.user.id;
-
     const rl = await enforceRateLimit(userId, "update-stripe-seats", {
       serviceClient: service,
       perMinute: 3,
@@ -43,11 +33,10 @@ serve(async (req) => {
     } catch {
       return jsonResponse({ error: "invalid_body" }, { status: 400 }, cors);
     }
-    const desiredRaw = Number(body.seats);
+    const desiredRaw = Number((body as { seats?: unknown }).seats);
     if (!Number.isFinite(desiredRaw) || !Number.isInteger(desiredRaw)) {
       return jsonResponse({ error: "invalid_body" }, { status: 400 }, cors);
     }
-    const desired = Math.max(MIN_SEATS, Math.min(MAX_SEATS, desiredRaw));
 
     // Management role required
     const { data: mgmt } = await service.rpc("has_management_role", { _user_id: userId });
@@ -64,7 +53,7 @@ serve(async (req) => {
 
     const { data: billing } = await service
       .from("team_billing")
-      .select("stripe_customer_id, stripe_subscription_id, status, seat_limit")
+      .select("stripe_customer_id, stripe_subscription_id, status")
       .eq("team_id", teamId)
       .maybeSingle();
 
@@ -75,15 +64,26 @@ serve(async (req) => {
       return jsonResponse({ error: "subscription_inactive" }, { status: 409 }, cors);
     }
 
-    // Cannot reduce below current used seats
-    const { count: usedSeats } = await service
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("team_id", teamId);
-    const used = usedSeats ?? 0;
-    if (desired < used) {
-      return jsonResponse({ error: "seats_below_used", used }, { status: 409 }, cors);
+    // Cannot reduce below current used seats (effective usage includes pending invites)
+    const { data: usageData } = await service.rpc("effective_seat_usage", { p_team_id: teamId });
+    const used = Number(usageData ?? 0);
+    const minAllowed = Math.max(MIN_SEATS, used);
+
+    if (desiredRaw < minAllowed) {
+      return jsonResponse(
+        { error: "seats_below_used", used, min: minAllowed },
+        { status: 409 },
+        cors,
+      );
     }
+    if (desiredRaw > MAX_SEATS) {
+      return jsonResponse(
+        { error: "seats_above_max", max: MAX_SEATS },
+        { status: 409 },
+        cors,
+      );
+    }
+    const desired = desiredRaw; // already validated within [minAllowed, MAX_SEATS]
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) return jsonResponse({ error: "billing_not_configured" }, { status: 503 }, cors);
@@ -91,22 +91,51 @@ serve(async (req) => {
 
     // Fetch subscription — trust only the server-known ID from team_billing
     const sub = await stripe.subscriptions.retrieve(billing.stripe_subscription_id);
-    const item = sub.items?.data?.[0];
-    if (!item) return jsonResponse({ error: "subscription_item_missing" }, { status: 500 }, cors);
+    if (!["active", "trialing", "past_due"].includes(sub.status)) {
+      return jsonResponse({ error: "subscription_inactive" }, { status: 409 }, cors);
+    }
 
-    if ((item.quantity ?? 0) === desired) {
-      // Idempotent no-op sync
-      await service
+    const items = sub.items?.data ?? [];
+    if (items.length !== 1) {
+      // Multi-item subs aren't supported by our seat model.
+      return jsonResponse({ error: "subscription_item_missing" }, { status: 500 }, cors);
+    }
+    const item = items[0];
+    const priceId = typeof item.price?.id === "string" ? item.price.id : "";
+    if (!priceId || !priceToPlan(priceId)) {
+      // Subscription is priced against something we don't recognize. Refuse.
+      return jsonResponse({ error: "invalid_plan" }, { status: 409 }, cors);
+    }
+
+    const currentQty = item.quantity ?? 0;
+
+    if (currentQty === desired) {
+      // Idempotent no-op: still sync local cache.
+      const { count } = await service
         .from("team_billing")
-        .update({ seat_limit: desired, subscription_quantity: desired, updated_at: new Date().toISOString() })
+        .update(
+          { seat_limit: desired, subscription_quantity: desired, updated_at: new Date().toISOString() },
+          { count: "exact" },
+        )
         .eq("team_id", teamId);
+      if ((count ?? 0) === 0) {
+        return jsonResponse({ error: "apply_failed" }, { status: 500 }, cors);
+      }
       return jsonResponse({ ok: true, seats: desired, changed: false }, { status: 200 }, cors);
     }
 
-    const updated = await stripe.subscriptions.update(billing.stripe_subscription_id, {
-      items: [{ id: item.id, quantity: desired }],
-      proration_behavior: "create_prorations",
-    });
+    // Deterministic idempotency key — same desired qty against same sub+item
+    // is safe to retry, but a different qty won't collide.
+    const idemKey = `seats:${billing.stripe_subscription_id}:${item.id}:${desired}`;
+
+    const updated = await stripe.subscriptions.update(
+      billing.stripe_subscription_id,
+      {
+        items: [{ id: item.id, quantity: desired }],
+        proration_behavior: "create_prorations",
+      },
+      { idempotencyKey: idemKey },
+    );
 
     const newQty = updated.items?.data?.[0]?.quantity ?? desired;
     const { error: upErr, count } = await service

@@ -237,81 +237,159 @@ Deno.serve(async (req) => {
     }
 
     // ── INVITE ────────────────────────────────────────────────────────────
-    // Seat/entitlement gate — refuse before we touch auth or email.
-    const { data: seatData, error: seatErr } = await supabase.rpc(
-      "check_team_seat_available",
-      { p_team_id: teamId },
+    const { email, fullName, alowareUserId } = body;
+
+    // Deterministic per-(team,email) target hash for the reservation.
+    const hashBuf = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(`${teamId}:${email}`),
     );
-    if (seatErr) return json({ success: false, code: "server_error" }, 500);
-    const seat = (seatData ?? {}) as Record<string, unknown>;
-    if (seat.ok !== true) {
-      const code = String(seat.code ?? "subscription_required");
+    const targetHash = Array.from(new Uint8Array(hashBuf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    // Atomic entitlement + seat reservation. Existing live reservation for the
+    // same email is reused (safe for re-invites).
+    const { data: reserveData, error: reserveErr } = await supabase.rpc("svc_reserve_seat", {
+      p_team_id: teamId,
+      p_target_hash: targetHash,
+      p_requested_by: manager.id,
+    });
+    if (reserveErr) return json({ success: false, code: "server_error" }, 500);
+    const reservation = (reserveData ?? {}) as Record<string, unknown>;
+    if (reservation.ok !== true) {
+      const code = String(reservation.code ?? "subscription_required");
       const status = code === "seat_limit_reached" ? 409 : 402;
       return json({ success: false, code }, status);
     }
+    const reservationId = String(reservation.reservation_id ?? "");
+    if (!reservationId) return json({ success: false, code: "server_error" }, 500);
 
-    const { email, fullName, alowareUserId } = body;
+    let consumed = false;
+    const release = async () => {
+      if (consumed) return;
+      await supabase.rpc("svc_release_reservation", { p_reservation_id: reservationId }).catch(() => {});
+    };
 
-    // Look up existing auth user by email (paginated scan capped for safety).
-    // On ANY listUsers error we must abort — silently continuing would risk
-    // double-creating an account or leaking existence info via race.
-    let existingUser:
-      | { id: string; email?: string | null; last_sign_in_at?: string | null; email_confirmed_at?: string | null }
-      | null = null;
-    for (let page = 1; page <= 20; page++) {
-      const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
-      if (error) {
-        console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "list_users_failed" }));
+    try {
+      // Look up existing auth user by email (paginated scan capped for safety).
+      let existingUser:
+        | { id: string; email?: string | null; last_sign_in_at?: string | null; email_confirmed_at?: string | null }
+        | null = null;
+      for (let page = 1; page <= 20; page++) {
+        const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
+        if (error) {
+          console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "list_users_failed" }));
+          return json({ success: false, code: "invite_failed" }, 500);
+        }
+        const match = data.users.find((u) => (u.email ?? "").toLowerCase() === email);
+        if (match) {
+          existingUser = {
+            id: match.id,
+            email: match.email,
+            last_sign_in_at: match.last_sign_in_at ?? null,
+            email_confirmed_at: match.email_confirmed_at ?? null,
+          };
+          break;
+        }
+        if (data.users.length < 200) break;
+      }
+
+      if (existingUser) {
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("team_id")
+          .eq("user_id", existingUser.id)
+          .maybeSingle();
+
+        if (existingProfile?.team_id && existingProfile.team_id === teamId) {
+          // Already on this team — no seat is needed; drop the reservation.
+          console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "already_member" }));
+          return json({ success: true, status: "already_member" });
+        }
+        if (existingProfile?.team_id && existingProfile.team_id !== teamId) {
+          console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "email_unavailable" }));
+          return json({ success: false, code: "email_unavailable" }, 409);
+        }
+        if (isAuthUserActive(existingUser)) {
+          console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "email_unavailable" }));
+          return json({ success: false, code: "email_unavailable" }, 409);
+        }
+
+        const roleState = await ensureRepRole(supabase, existingUser.id);
+        if (roleState !== "ok") {
+          console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "email_unavailable" }));
+          return json({ success: false, code: "email_unavailable" }, 409);
+        }
+
+        const { error: upsertErr } = await supabase
+          .from("profiles")
+          .upsert(
+            {
+              user_id: existingUser.id,
+              full_name: fullName,
+              team_id: teamId,
+              aloware_user_id: alowareUserId ?? null,
+              promo_validated: true,
+              onboarding_completed: false,
+            },
+            { onConflict: "user_id" },
+          );
+        if (upsertErr) {
+          console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "profile_upsert_failed" }));
+          return json({ success: false, code: "invite_failed" }, 500);
+        }
+        const { error: reInviteErr } = await supabase.auth.admin.inviteUserByEmail(email, {
+          redirectTo,
+          data: { full_name: fullName, invite_source: "team_manager" },
+        });
+        if (reInviteErr) {
+          console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "resend_failed" }));
+          return json({ success: false, code: "invite_failed" }, 500);
+        }
+        // Profile now consumes a seat — reservation is fulfilled.
+        await supabase.rpc("svc_consume_reservation", { p_reservation_id: reservationId }).catch(() => {});
+        consumed = true;
+        console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "resent" }));
+        return json({ success: true, status: "resent" });
+      }
+
+      // Fresh invite.
+      const { data: invited, error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(email, {
+        redirectTo,
+        data: {
+          full_name: fullName,
+          invite_source: "team_manager",
+        },
+      });
+
+      if (inviteErr || !invited?.user) {
+        console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "invite_failed" }));
         return json({ success: false, code: "invite_failed" }, 500);
       }
-      const match = data.users.find((u) => (u.email ?? "").toLowerCase() === email);
-      if (match) {
-        existingUser = {
-          id: match.id,
-          email: match.email,
-          last_sign_in_at: match.last_sign_in_at ?? null,
-          email_confirmed_at: match.email_confirmed_at ?? null,
-        };
-        break;
-      }
-      if (data.users.length < 200) break;
-    }
 
-    if (existingUser) {
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("team_id")
-        .eq("user_id", existingUser.id)
-        .maybeSingle();
+      const newUserId = invited.user.id;
+      const invitedAt = invited.user.created_at ?? new Date().toISOString();
+      const cleanupIfFresh = async () => {
+        const createdRecently =
+          Date.parse(invitedAt) > Date.now() - 60_000 && !invited.user!.last_sign_in_at;
+        if (createdRecently) {
+          await supabase.auth.admin.deleteUser(newUserId).catch(() => {});
+        }
+      };
 
-      if (existingProfile?.team_id && existingProfile.team_id === teamId) {
-        console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "already_member" }));
-        return json({ success: true, status: "already_member" });
-      }
-      if (existingProfile?.team_id && existingProfile.team_id !== teamId) {
-        console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "email_unavailable" }));
-        return json({ success: false, code: "email_unavailable" }, 409);
-      }
-      if (isAuthUserActive(existingUser)) {
-        // Signed in or confirmed but no profile team — treat as unavailable.
-        console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "email_unavailable" }));
-        return json({ success: false, code: "email_unavailable" }, 409);
-      }
-
-      // Unconfirmed / never-signed-in user with no team. Before attaching,
-      // guarantee they are a plain 'rep'. If they carry any elevated role,
-      // refuse without touching them — same opaque response.
-      const roleState = await ensureRepRole(supabase, existingUser.id);
+      const roleState = await ensureRepRole(supabase, newUserId);
       if (roleState !== "ok") {
-        console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "email_unavailable" }));
-        return json({ success: false, code: "email_unavailable" }, 409);
+        await cleanupIfFresh();
+        console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "role_guarantee_failed" }));
+        return json({ success: false, code: "invite_failed" }, 500);
       }
 
       const { error: upsertErr } = await supabase
         .from("profiles")
         .upsert(
           {
-            user_id: existingUser.id,
+            user_id: newUserId,
             full_name: fullName,
             team_id: teamId,
             aloware_user_id: alowareUserId ?? null,
@@ -320,79 +398,21 @@ Deno.serve(async (req) => {
           },
           { onConflict: "user_id" },
         );
+
       if (upsertErr) {
+        await cleanupIfFresh();
         console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "profile_upsert_failed" }));
         return json({ success: false, code: "invite_failed" }, 500);
       }
-      const { error: reInviteErr } = await supabase.auth.admin.inviteUserByEmail(email, {
-        redirectTo,
-        // Only user-visible metadata the client flow needs.
-        data: { full_name: fullName, invite_source: "team_manager" },
-      });
-      if (reInviteErr) {
-        console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "resend_failed" }));
-        return json({ success: false, code: "invite_failed" }, 500);
-      }
-      console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "resent" }));
-      return json({ success: true, status: "resent" });
+
+      await supabase.rpc("svc_consume_reservation", { p_reservation_id: reservationId }).catch(() => {});
+      consumed = true;
+      console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "ok" }));
+      return json({ success: true, status: "invited" });
+    } finally {
+      await release();
     }
 
-    // Fresh invite. Team + Aloware + role assignment happen server-side.
-    // Metadata carries ONLY what the client flow reads.
-    const { data: invited, error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo,
-      data: {
-        full_name: fullName,
-        invite_source: "team_manager",
-      },
-    });
-
-    if (inviteErr || !invited?.user) {
-      console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "invite_failed" }));
-      return json({ success: false, code: "invite_failed" }, 500);
-    }
-
-    const newUserId = invited.user.id;
-    const invitedAt = invited.user.created_at ?? new Date().toISOString();
-    const cleanupIfFresh = async () => {
-      const createdRecently =
-        Date.parse(invitedAt) > Date.now() - 60_000 && !invited.user!.last_sign_in_at;
-      if (createdRecently) {
-        await supabase.auth.admin.deleteUser(newUserId).catch(() => {});
-      }
-    };
-
-    // handle_new_user trigger should have inserted role='rep'. Verify.
-    // If missing → insert. If any non-rep role exists → refuse and cleanup.
-    const roleState = await ensureRepRole(supabase, newUserId);
-    if (roleState !== "ok") {
-      await cleanupIfFresh();
-      console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "role_guarantee_failed" }));
-      return json({ success: false, code: "invite_failed" }, 500);
-    }
-
-    const { error: upsertErr } = await supabase
-      .from("profiles")
-      .upsert(
-        {
-          user_id: newUserId,
-          full_name: fullName,
-          team_id: teamId,
-          aloware_user_id: alowareUserId ?? null,
-          promo_validated: true,
-          onboarding_completed: false,
-        },
-        { onConflict: "user_id" },
-      );
-
-    if (upsertErr) {
-      await cleanupIfFresh();
-      console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "profile_upsert_failed" }));
-      return json({ success: false, code: "invite_failed" }, 500);
-    }
-
-    console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "ok" }));
-    return json({ success: true, status: "invited" });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown";
     console.log(JSON.stringify({ action: "error", status: "exception", note: msg.slice(0, 200) }));
