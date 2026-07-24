@@ -75,7 +75,7 @@ serve(async (req) => {
 
     const { data: profile, error: profErr } = await service
       .from("profiles")
-      .select("team_id, email, full_name")
+      .select(PROFILE_CHECKOUT_COLUMNS)
       .eq("user_id", userId)
       .maybeSingle();
     if (profErr) {
