@@ -325,9 +325,7 @@ export default function Settings() {
 
           {/* Phone System Tab */}
           <TabsContent value="phone" className="space-y-6">
-            <AlowareCompanyConnection />
-            <AlowareWebhookSetup />
-            <AlowareConnectionCard />
+            <PhoneSystemPanel />
           </TabsContent>
 
 
