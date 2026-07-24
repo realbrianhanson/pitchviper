@@ -27,6 +27,7 @@ export function AppLayout({ children, title }: AppLayoutProps) {
         <AppSidebar />
         <div className="flex-1 flex flex-col min-h-screen min-w-0">
           <AppHeader title={title} onOpenPalette={() => palette.setOpen(true)} />
+          <EntitlementBanner />
           <LiveTicker />
           <main className="flex-1 overflow-x-hidden bg-background">
             <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-10 py-6 lg:py-8 pb-32 md:pb-8">
