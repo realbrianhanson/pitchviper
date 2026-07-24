@@ -268,7 +268,34 @@ Deno.serve(async (req) => {
     let consumed = false;
     const release = async () => {
       if (consumed) return;
-      await supabase.rpc("svc_release_reservation", { p_reservation_id: reservationId }).catch(() => {});
+      await supabase
+        .rpc("svc_release_reservation", { p_reservation_id: reservationId })
+        .catch(() => {});
+    };
+    // Atomic finalize: only marks consumed=true when the RPC returns data===true
+    // and no error. On any failure it explicitly releases the reservation (the
+    // service-only release RPC removes the named reservation whether it was
+    // unconsumed or partially consumed) and returns a stable invite_failed.
+    const finalizeReservation = async (): Promise<Response | null> => {
+      const { data, error } = await supabase.rpc("svc_consume_reservation", {
+        p_reservation_id: reservationId,
+      });
+      if (!error && data === true) {
+        consumed = true;
+        return null;
+      }
+      // Best-effort cleanup; ignore any errors from the delete itself.
+      await supabase
+        .rpc("svc_release_reservation", { p_reservation_id: reservationId })
+        .catch(() => {});
+      console.log(
+        JSON.stringify({
+          managerId: manager.id,
+          action: "invite",
+          status: "reservation_finalize_failed",
+        }),
+      );
+      return json({ success: false, code: "invite_failed" }, 500);
     };
 
     try {
