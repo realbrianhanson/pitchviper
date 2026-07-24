@@ -34,6 +34,12 @@ serve(async (req) => {
     const rl = await enforceRateLimit(_userData.user.id, 'generate-battlecard');
     if (!rl.allowed) return rl.response!;
 
+    const _svc = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const _ent = await requireTeamEntitlement(_svc, _userData.user.id, "growth");
+    if (!_ent.ok) return _ent.response;
+
+
+
 
     const { competitor_name, our_company_name } = await req.json();
 
