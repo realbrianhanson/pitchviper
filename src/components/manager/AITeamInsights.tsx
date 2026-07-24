@@ -1,4 +1,4 @@
-import { Brain, TrendingUp, Target, Users, RefreshCw, AlertCircle } from "lucide-react";
+import { Brain, TrendingUp, Target, Users, RefreshCw, AlertCircle, ArrowRight } from "lucide-react";
 import { ManagerInsights } from "@/hooks/useManagerDashboard";
 import { cn } from "@/lib/utils";
 
@@ -6,6 +6,10 @@ interface AITeamInsightsProps {
   insights: ManagerInsights | null;
   isLoading: boolean;
   onRefresh: () => void;
+  /** Resolved same-team user_id for the top coaching opportunity, or null when
+   * the AI-provided rep_name has no unambiguous match. Never accept an AI id. */
+  coachingRepId?: string | null;
+  onCoachRep?: (userId: string) => void;
 }
 
 type Accent = "primary" | "warning" | "destructive" | "success";
