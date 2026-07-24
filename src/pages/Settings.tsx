@@ -319,17 +319,18 @@ export default function Settings() {
             <ViperCard className="p-6">
               <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-1">— Appearance</p>
               <h2 className="font-display italic text-xl mb-6">Display Settings</h2>
-              
+
               <div className="space-y-6">
-                <div className="flex items-center justify-between opacity-70">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Moon className="h-5 w-5 text-primary" />
                     <div>
-                      <Label className="text-base">Dark Theme</Label>
-                      <p className="text-sm text-muted-foreground">PitchViper is designed dark-first. Light mode is not available.</p>
+                      <Label className="text-base">Theme</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Light is the default. Use the theme toggle in the top bar to switch to dark or follow your system.
+                      </p>
                     </div>
                   </div>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Always on</span>
                 </div>
 
                 <Separator />
