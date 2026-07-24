@@ -20,6 +20,7 @@ const KNOWN_CODES = new Set([
   "method_not_allowed",
   "checkout_failed",
   "apply_failed",
+  "provider_mismatch",
   "invalid_url",
   "internal_error",
 ]);
