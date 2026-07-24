@@ -7,6 +7,7 @@ import {
   type PlanId,
   isSafeStripeUrl,
 } from "@/lib/billingPlans";
+import { parseFunctionErrorCode } from "@/lib/billingErrors";
 
 export interface TeamBillingRow {
   team_id: string;

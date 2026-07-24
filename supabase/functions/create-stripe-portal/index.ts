@@ -36,16 +36,27 @@ serve(async (req) => {
     });
     if (!rl.allowed) return rl.response!;
 
-    const { data: roleRow } = await service.from("user_roles").select("role").eq("user_id", userId);
+    const { data: roleRow, error: roleErr } = await service
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    if (roleErr) {
+      console.error("portal role lookup failed", roleErr.message);
+      return jsonResponse({ error: "internal_error" }, { status: 500 }, cors);
+    }
     const roles = (roleRow ?? []).map((r) => r.role as string);
     if (!roles.some((r) => MANAGEMENT_ROLES.includes(r))) {
       return jsonResponse({ error: "forbidden" }, { status: 403 }, cors);
     }
-    const { data: profile } = await service
+    const { data: profile, error: profErr } = await service
       .from("profiles")
       .select("team_id")
       .eq("user_id", userId)
       .maybeSingle();
+    if (profErr) {
+      console.error("portal profile lookup failed", profErr.message);
+      return jsonResponse({ error: "internal_error" }, { status: 500 }, cors);
+    }
     const teamId = profile?.team_id;
     if (!teamId) return jsonResponse({ error: "no_team" }, { status: 400 }, cors);
 
@@ -55,11 +66,15 @@ serve(async (req) => {
       return jsonResponse({ error: "billing_not_configured" }, { status: 503 }, cors);
     }
 
-    const { data: billing } = await service
+    const { data: billing, error: billErr } = await service
       .from("team_billing")
       .select("stripe_customer_id")
       .eq("team_id", teamId)
       .maybeSingle();
+    if (billErr) {
+      console.error("portal billing lookup failed", billErr.message);
+      return jsonResponse({ error: "internal_error" }, { status: 500 }, cors);
+    }
     if (!billing?.stripe_customer_id) {
       return jsonResponse({ error: "no_customer" }, { status: 409 }, cors);
     }
