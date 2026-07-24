@@ -233,23 +233,6 @@ export function TeamMembersManager() {
         <CardContent className="space-y-6">
           {showForm && (
             <div className="space-y-4 border rounded-md p-4 bg-muted/20">
-              {alowareUsers.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Prefill from Aloware (optional)</Label>
-                  <Select value={selectedAlowareUser} onValueChange={handleSelectAlowareUser}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an Aloware user…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {alowareUsers.map((u) => (
-                        <SelectItem key={u.id} value={String(u.id)}>
-                          {u.name} · {u.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
