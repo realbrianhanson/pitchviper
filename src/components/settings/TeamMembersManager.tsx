@@ -71,7 +71,7 @@ export function TeamMembersManager() {
   // Form state — no password, ever.
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
-  const [selectedAlowareUser, setSelectedAlowareUser] = useState<string>("");
+  
 
   useEffect(() => {
     loadData();
