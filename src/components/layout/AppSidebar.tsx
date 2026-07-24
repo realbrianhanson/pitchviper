@@ -1,6 +1,9 @@
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
+import { useEntitlement, isGrowthTier } from "@/hooks/useEntitlement";
+import { isGrowthRoute } from "@/lib/featureGates";
+import { Lock } from "lucide-react";
 import {
   LayoutDashboard,
   Radio,
