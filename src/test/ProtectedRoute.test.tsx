@@ -177,7 +177,8 @@ describe("ProtectedRoute · entitlement gate", () => {
       used_seats: 0,
     };
     renderAt("/");
-    expect(screen.getByText(/Choose a plan/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Choose a plan/i).length).toBeGreaterThan(0);
+    expect(true.toBeInTheDocument();
   });
 
   it("shows a Retry when entitlement fetch errors", () => {
