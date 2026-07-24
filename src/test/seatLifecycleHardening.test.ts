@@ -52,7 +52,7 @@ const createMemberSrc = readFileSync(
 
 describe("create-team-member seat reservation lifecycle", () => {
   it("hashes (team, email) into the reservation target", () => {
-    expect(createMemberSrc).toMatch(/crypto\.subtle\.digest\("SHA-256"/);
+    expect(createMemberSrc).toMatch(/crypto\.subtle\.digest\([\s\S]*?"SHA-256"/);
     expect(createMemberSrc).toMatch(/\$\{teamId\}:\$\{email\}/);
   });
 
