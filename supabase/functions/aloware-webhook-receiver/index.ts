@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { timingSafeEqualStrings } from "../_shared/timingSafe.ts";
 import { logAlowareEvent, readBoundedJson } from "../_shared/alowareSafe.ts";
+import { checkTeamEntitlementByTeamId } from "../_shared/entitlement.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
