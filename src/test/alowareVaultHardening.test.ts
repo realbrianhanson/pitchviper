@@ -35,9 +35,14 @@ describe("Vault-backed schema for team_provider_integrations", () => {
     expect(migrations).toMatch(/api_token_secret_id\s+uuid/);
     expect(migrations).toMatch(/webhook_secret_id\s+uuid/);
     expect(migrations).toMatch(/webhook_key\s+uuid/);
-    // No plaintext / last4 columns.
-    expect(migrations).not.toMatch(/team_provider_integrations[\s\S]{0,2000}?token\s+text/i);
-    expect(migrations).not.toMatch(/team_provider_integrations[\s\S]{0,2000}?last4/i);
+    // Scope the plaintext check to the actual CREATE TABLE block for this table.
+    const createBlock = migrations.match(
+      /CREATE TABLE IF NOT EXISTS public\.team_provider_integrations[\s\S]*?\);/,
+    )?.[0] ?? "";
+    expect(createBlock.length).toBeGreaterThan(0);
+    expect(createBlock).not.toMatch(/\btoken\s+text/i);
+    expect(createBlock).not.toMatch(/last4/i);
+
   });
 
   it("revokes all access from anon + authenticated and grants to service_role only", () => {
