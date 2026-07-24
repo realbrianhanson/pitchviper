@@ -306,7 +306,6 @@ export function TeamMembersManager() {
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Aloware</TableHead>
                     <TableHead className="w-[60px]" />
                   </TableRow>
                 </TableHeader>
