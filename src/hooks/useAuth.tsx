@@ -16,6 +16,8 @@ interface Profile {
   promo_validated: boolean;
 }
 
+export type AppRole = "owner" | "admin" | "manager" | "rep";
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -24,10 +26,15 @@ interface AuthContextType {
   isLoading: boolean;
   profileLoaded: boolean;
   profileError: string | null;
+  role: AppRole | null;
+  canManageTeam: boolean;
+  /** Backward-compatible alias — true for owner, admin, or manager. */
   isManager: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
+
+const MANAGEMENT_ROLES: readonly AppRole[] = ["owner", "admin", "manager"];
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
