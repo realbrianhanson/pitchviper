@@ -89,7 +89,7 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
       <div className="flex items-center gap-1.5 md:gap-2">
         <button
           onClick={onOpenPalette}
-          className="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          className="hidden sm:inline-flex lg:hidden h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
           aria-label="Open command palette"
         >
           <Search className="h-4 w-4" strokeWidth={1.75} />
