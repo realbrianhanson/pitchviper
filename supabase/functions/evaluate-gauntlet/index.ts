@@ -2,6 +2,7 @@
 // Client never supplies challenge content, passing score, or completion rows.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { authenticatePost, boundedString, clampInt, corsHeaders, errorResponse, isUuid, jsonResponse } from "../_shared/edgeAuth.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const MAX_RESPONSES = 12;
@@ -92,6 +93,9 @@ serve(async (req) => {
   const auth = await authenticatePost(req);
   if (!auth.ok) return auth.response;
   const { userId, serviceClient } = auth.ctx;
+
+  const ent = await requireTeamEntitlement(serviceClient, userId, "growth");
+  if (!ent.ok) return ent.response;
 
   const rl = await enforceRateLimit(userId, "evaluate-gauntlet", { perMinute: 6, perDay: 60, serviceClient });
   if (!rl.allowed) return rl.response!;

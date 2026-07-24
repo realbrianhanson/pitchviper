@@ -20,6 +20,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { CheckCircle2, ExternalLink, ShieldCheck } from "lucide-react";
+import { LicensedSeats } from "@/components/billing/LicensedSeats";
 
 const ACTIVE_STATES = new Set(["active", "trialing", "past_due"]);
 
@@ -117,6 +118,10 @@ export default function Billing() {
             </div>
           ) : null}
         </section>
+
+        <LicensedSeats />
+
+
 
         {/* Interval toggle */}
         <div className="flex items-center justify-between flex-wrap gap-4">

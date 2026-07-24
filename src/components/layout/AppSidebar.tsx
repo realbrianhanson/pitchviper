@@ -1,6 +1,9 @@
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
+import { useEntitlement, isGrowthTier } from "@/hooks/useEntitlement";
+import { isGrowthRoute } from "@/lib/featureGates";
+import { Lock } from "lucide-react";
 import {
   LayoutDashboard,
   Radio,
@@ -97,24 +100,42 @@ export function isNavItemActive(pathname: string, url: string, exact?: boolean):
   return pathname === url || pathname.startsWith(url + "/");
 }
 
-function NavItemRow({ item, isCollapsed, active }: { item: NavItem; isCollapsed: boolean; active: boolean }) {
+function NavItemRow({
+  item,
+  isCollapsed,
+  active,
+  locked,
+}: {
+  item: NavItem;
+  isCollapsed: boolean;
+  active: boolean;
+  locked?: boolean;
+}) {
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild tooltip={item.title} isActive={active}>
+      <SidebarMenuButton asChild tooltip={locked ? `${item.title} · Growth plan` : item.title} isActive={active}>
         <NavLink
           to={item.url}
           className={cn(
             "relative flex items-center gap-3 px-3 py-2 text-[15px] leading-tight transition-colors duration-150 rounded-md",
             active
               ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-              : "text-sidebar-foreground/75 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+              : "text-sidebar-foreground/75 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
+            locked && "opacity-60",
           )}
         >
           <item.icon
             className={cn("h-[18px] w-[18px] shrink-0", active ? "text-primary" : "text-sidebar-foreground/60")}
             strokeWidth={1.75}
           />
-          {!isCollapsed && <span>{item.title}</span>}
+          {!isCollapsed && (
+            <span className="flex items-center gap-2">
+              {item.title}
+              {locked && (
+                <Lock className="h-3 w-3 text-muted-foreground" strokeWidth={2} aria-label="Growth plan" />
+              )}
+            </span>
+          )}
         </NavLink>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -125,6 +146,8 @@ export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const location = useLocation();
   const { isManager } = useAuth();
+  const { data: ent } = useEntitlement();
+  const growthAllowed = isGrowthTier(ent);
   const isCollapsed = state === "collapsed";
 
   return (
@@ -165,6 +188,7 @@ export function AppSidebar() {
                     item={item}
                     isCollapsed={isCollapsed}
                     active={isNavItemActive(location.pathname, item.url, item.exact)}
+                    locked={!growthAllowed && isGrowthRoute(item.url)}
                   />
                 ))}
               </SidebarMenu>
@@ -189,6 +213,7 @@ export function AppSidebar() {
                       item={item}
                       isCollapsed={isCollapsed}
                       active={isNavItemActive(location.pathname, item.url, item.exact)}
+                      locked={!growthAllowed && isGrowthRoute(item.url)}
                     />
                   ))}
                   <SidebarMenuItem>

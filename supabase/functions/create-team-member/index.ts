@@ -237,6 +237,19 @@ Deno.serve(async (req) => {
     }
 
     // ── INVITE ────────────────────────────────────────────────────────────
+    // Seat/entitlement gate — refuse before we touch auth or email.
+    const { data: seatData, error: seatErr } = await supabase.rpc(
+      "check_team_seat_available",
+      { p_team_id: teamId },
+    );
+    if (seatErr) return json({ success: false, code: "server_error" }, 500);
+    const seat = (seatData ?? {}) as Record<string, unknown>;
+    if (seat.ok !== true) {
+      const code = String(seat.code ?? "subscription_required");
+      const status = code === "seat_limit_reached" ? 409 : 402;
+      return json({ success: false, code }, status);
+    }
+
     const { email, fullName, alowareUserId } = body;
 
     // Look up existing auth user by email (paginated scan capped for safety).

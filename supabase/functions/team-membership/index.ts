@@ -96,6 +96,34 @@ serve(async (req) => {
         typeof body.teamCode === "string" ? body.teamCode.trim().toUpperCase() : "";
       if (!CODE_RE.test(raw)) return json(400, { error: "invalid_code" });
 
+      // Resolve target team id up front (leak-safe: same-shape error if missing).
+      const { data: teamRow, error: findErr } = await service.rpc("find_team_by_code", {
+        _code: raw,
+      });
+      if (findErr) {
+        console.error("[team-membership] find failed");
+        return json(500, { error: "server_error" });
+      }
+      const teamRowData = Array.isArray(teamRow) ? teamRow[0] : teamRow;
+      const targetTeamId = teamRowData?.id as string | undefined;
+      if (!targetTeamId) return json(404, { error: "team_not_found" });
+
+      // Seat/entitlement gate BEFORE mutating anything.
+      const { data: seatData, error: seatErr } = await service.rpc(
+        "check_team_seat_available",
+        { p_team_id: targetTeamId },
+      );
+      if (seatErr) {
+        console.error("[team-membership] seat check failed");
+        return json(500, { error: "server_error" });
+      }
+      const seat = (seatData ?? {}) as Record<string, unknown>;
+      if (seat.ok !== true) {
+        const code = String(seat.code ?? "subscription_required");
+        const status = code === "seat_limit_reached" ? 409 : 402;
+        return json(status, { error: code });
+      }
+
       const { data, error } = await service.rpc("svc_join_team_by_code", {
         _user_id: userId,
         _code: raw,
