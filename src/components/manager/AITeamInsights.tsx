@@ -99,6 +99,16 @@ export function AITeamInsights({ insights, isLoading, onRefresh, coachingRepId, 
               <p className="text-xs text-muted-foreground">
                 Focus on: {insights.coaching_opportunity.suggested_focus}
               </p>
+              {coachingRepId && onCoachRep ? (
+                <button
+                  type="button"
+                  onClick={() => onCoachRep(coachingRepId)}
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-sm"
+                  aria-label={`Coach ${insights.coaching_opportunity.rep_name}`}
+                >
+                  Coach this rep <ArrowRight className="h-3 w-3" />
+                </button>
+              ) : null}
             </InsightRow>
           )}
 
