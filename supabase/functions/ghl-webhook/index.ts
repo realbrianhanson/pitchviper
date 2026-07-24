@@ -6,6 +6,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { timingSafeEqualStrings } from "../_shared/timingSafe.ts";
+import { checkTeamEntitlementByTeamId } from "../_shared/entitlement.ts";
+
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -118,6 +120,28 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Resolve the mapped team BEFORE writing so we can honor entitlement.
+    // The DB trigger `enforce_active_entitlement` fires on auth.uid()-driven
+    // writes; webhooks run as service_role and bypass it, so we enforce the
+    // gate here per resolved team_id to avoid accumulating CRM data for
+    // expired subscriptions.
+    let mappedTeamId: string | null = null;
+    if (matchedUserId) {
+      const { data: prof } = await supabase
+        .from("profiles").select("team_id").eq("user_id", matchedUserId).maybeSingle();
+      mappedTeamId = prof?.team_id ?? null;
+    }
+    if (mappedTeamId) {
+      const ent = await checkTeamEntitlementByTeamId(supabase, mappedTeamId, "starter");
+      if (!ent.ok) {
+        // Stable 200 so the provider doesn't retry-storm on paused teams.
+        return new Response(
+          JSON.stringify({ ok: true, ignored: true }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     const { data, error } = await supabase
       .from("ghl_activities")
       .insert({
@@ -134,6 +158,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (error) throw error;
+
 
     // When we matched a rep to a team, stamp the company_settings integration
     // signals so the setup wizard can honestly reflect a live GHL connection.

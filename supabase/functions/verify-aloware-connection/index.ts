@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { authenticatePost, corsHeaders, errorResponse, isUuid, jsonResponse } from "../_shared/edgeAuth.ts";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
 import { boundedText, logAlowareEvent, readBoundedJson } from "../_shared/alowareSafe.ts";
+import { getTeamAlowareToken } from "../_shared/alowareIntegration.ts";
 import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 async function fetchAlowareUsers(alowareToken: string): Promise<unknown[] | null> {
@@ -27,8 +28,7 @@ serve(async (req) => {
 
   const _ent = await requireTeamEntitlement(serviceClient, userId, "starter");
   if (!_ent.ok) return _ent.response;
-  const alowareToken = Deno.env.get("ALOWARE_API_TOKEN");
-  if (!alowareToken) return errorResponse("provider_unconfigured", 503, { success: false });
+  // Per-team Aloware token resolved lazily after profile.team_id lookup.
 
   const limit = await enforceRateLimit(userId, "verify-aloware-connection", { perMinute: 20, perDay: 200, serviceClient });
   if (!limit.allowed) return limit.response;
@@ -41,6 +41,14 @@ serve(async (req) => {
   const { data: callerProfile } = await serviceClient
     .from("profiles").select("team_id").eq("user_id", userId).maybeSingle();
   const teamId = callerProfile?.team_id ?? null;
+
+  // Resolve caller team's Aloware token from Vault (never a global env fallback).
+  const alowareToken = await getTeamAlowareToken(serviceClient, teamId);
+  const needsToken = action === "verify" || action === "sync-team";
+  if (needsToken && !alowareToken) {
+    return errorResponse("integration_not_configured", 400, { success: false });
+  }
+
 
   const requireMgmt = async () => {
     const { data: isMgmt } = await serviceClient.rpc("has_management_role", { _user_id: userId });

@@ -31,6 +31,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useOnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { NotificationSettings } from "@/components/notifications/NotificationSettings";
 import { AlowareConnectionCard } from "@/components/settings/AlowareConnectionCard";
+import { AlowareCompanyConnection } from "@/components/settings/AlowareCompanyConnection";
+import { AlowareWebhookSetup } from "@/components/settings/AlowareWebhookSetup";
+
 import { CompanyProfileCard } from "@/components/settings/CompanyProfileCard";
 import { toast } from "sonner";
 import { PageTransition } from "@/components/ui/page-transition";
@@ -323,9 +326,12 @@ export default function Settings() {
           </TabsContent>
 
           {/* Phone System Tab */}
-          <TabsContent value="phone">
+          <TabsContent value="phone" className="space-y-6">
+            <AlowareCompanyConnection />
+            <AlowareWebhookSetup />
             <AlowareConnectionCard />
           </TabsContent>
+
 
           {/* Display Tab */}
           <TabsContent value="display">

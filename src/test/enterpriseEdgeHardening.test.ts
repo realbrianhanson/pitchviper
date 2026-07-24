@@ -77,7 +77,7 @@ describe("verify_jwt=false coverage", () => {
     const stripe = src("stripe-webhook");
     expect(stripe).toMatch(/stripe-signature/i);
     const aloware = src("aloware-webhook-receiver");
-    expect(aloware).toMatch(/ALOWARE_WEBHOOK_SECRET|timingSafeEqual/);
+    expect(aloware).toMatch(/verifyWebhookAuth|resolveWebhookKey/);
     const proc = src("process-aloware-transcription");
     expect(proc).toMatch(/timingSafeEqual|SERVICE_ROLE_KEY/);
   });

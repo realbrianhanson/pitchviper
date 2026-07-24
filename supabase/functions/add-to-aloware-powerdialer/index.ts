@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { authenticatePost, corsHeaders, errorResponse, jsonResponse } from "../_shared/edgeAuth.ts";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
 import { boundedText, logAlowareEvent, normalizePhone, readBoundedJson, safeEmail } from "../_shared/alowareSafe.ts";
+import { getTeamAlowareToken } from "../_shared/alowareIntegration.ts";
 import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 const MAX_CONTACTS = 100;
@@ -15,8 +16,7 @@ serve(async (req) => {
 
   const _ent = await requireTeamEntitlement(serviceClient, userId, "starter");
   if (!_ent.ok) return _ent.response;
-  const alowareToken = Deno.env.get("ALOWARE_API_TOKEN");
-  if (!alowareToken) return errorResponse("provider_unconfigured", 503, { success: false });
+  // Per-team Aloware token resolved lazily after profile.team_id lookup.
 
   const limit = await enforceRateLimit(userId, "add-to-aloware-powerdialer", { perMinute: 10, perDay: 200, serviceClient });
   if (!limit.allowed) return limit.response;
@@ -48,6 +48,9 @@ serve(async (req) => {
   const { data: profile } = await serviceClient
     .from("profiles").select("aloware_user_id, team_id").eq("user_id", userId).maybeSingle();
   if (!profile?.aloware_user_id) return errorResponse("aloware_not_linked", 400, { success: false });
+  const alowareToken = await getTeamAlowareToken(serviceClient, profile.team_id);
+  if (!alowareToken) return errorResponse("integration_not_configured", 400, { success: false });
+
 
   const added: Array<{ phoneNumber: string; name: string; success: true; alowareContactId?: unknown }> = [];
   const failed: Array<{ phoneNumber: string; name: string; error: string }> = [];
