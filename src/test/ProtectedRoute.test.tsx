@@ -10,10 +10,33 @@ const authState = {
     | null,
   loading: false,
   profileLoaded: false,
+  canManageTeam: false,
 };
 
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => authState,
+}));
+
+const entState = {
+  data: undefined as
+    | undefined
+    | {
+        access: boolean;
+        reason: string;
+        tier: string;
+        can_manage: boolean;
+        seat_limit: number;
+        used_seats: number;
+      },
+  isLoading: false,
+  isError: false,
+  refetch: vi.fn(),
+};
+
+vi.mock("@/hooks/useEntitlement", () => ({
+  useEntitlement: () => entState,
+  isGrowthTier: () => false,
+  trialDaysRemaining: () => 0,
 }));
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -49,7 +72,19 @@ function reset() {
   authState.profile = null;
   authState.loading = false;
   authState.profileLoaded = false;
+  authState.canManageTeam = false;
+  entState.data = {
+    access: true,
+    reason: "active",
+    tier: "growth",
+    can_manage: false,
+    seat_limit: 10,
+    used_seats: 1,
+  };
+  entState.isLoading = false;
+  entState.isError = false;
 }
+
 
 describe("ProtectedRoute", () => {
   it("redirects unauthenticated users to /sign-in", () => {
