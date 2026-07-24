@@ -202,47 +202,20 @@ export function ClickToDialProvider({ children }: { children: React.ReactNode })
     setPendingSMS(null);
   }, []);
 
-  const sendSMS = useCallback(async (phoneNumber: string, message: string, contactName?: string, dealId?: string) => {
+  const sendSMS = useCallback(async (phoneNumber: string, _message: string, contactName?: string, _dealId?: string) => {
     setIsSendingSMS(true);
-    
     try {
-      const { data, error } = await supabase.functions.invoke('send-aloware-sms', {
-        body: {
-          phoneNumber,
-          message,
-          contactName,
-          dealId,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        toast({
-          title: "SMS Sent",
-          description: `Message sent to ${contactName || phoneNumber}`,
-        });
-        closeSMSModal();
-        return { success: true };
-      } else {
-        toast({
-          title: "SMS Failed",
-          description: data.error || "Failed to send SMS",
-          variant: "destructive",
-        });
-        return { success: false, error: data.error };
-      }
-    } catch (error: any) {
+      openExternalDialer();
       toast({
-        title: "SMS Error",
-        description: error.message || "Failed to send SMS",
-        variant: "destructive",
+        title: "Open your phone system",
+        description: `Send the message to ${contactName || phoneNumber} from your phone system.`,
       });
-      return { success: false, error: error.message };
+      closeSMSModal();
+      return { success: false, error: "provider_unavailable" };
     } finally {
       setIsSendingSMS(false);
     }
-  }, [toast, closeSMSModal]);
+  }, [toast, closeSMSModal, openExternalDialer]);
 
   return (
     <ClickToDialContext.Provider
