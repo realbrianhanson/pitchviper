@@ -3,6 +3,7 @@ import {
   authenticatePostOrService, corsHeaders, errorResponse, jsonResponse,
   readBoundedJson, isUuid,
 } from "../_shared/edgeAuth.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 interface StageHistory { deal_id: string; from_stage: string | null; to_stage: string; changed_at: string; }
 
@@ -11,6 +12,11 @@ serve(async (req) => {
   const auth = await authenticatePostOrService(req);
   if (!auth.ok) return auth.response;
   const { userId, serviceClient, isService } = auth.ctx;
+  if (!isService) {
+    const _ent = await requireTeamEntitlement(serviceClient, userId, "growth");
+    if (!_ent.ok) return _ent.response;
+  }
+
 
   const body = await readBoundedJson(req, 4 * 1024);
   if (!body || typeof body !== "object") return errorResponse("invalid_body", 400);

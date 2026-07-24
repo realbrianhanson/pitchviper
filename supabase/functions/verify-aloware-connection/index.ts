@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { authenticatePost, corsHeaders, errorResponse, isUuid, jsonResponse } from "../_shared/edgeAuth.ts";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
 import { boundedText, logAlowareEvent, readBoundedJson } from "../_shared/alowareSafe.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 async function fetchAlowareUsers(alowareToken: string): Promise<unknown[] | null> {
   try {
@@ -24,6 +25,8 @@ serve(async (req) => {
   if (!auth.ok) return auth.response;
   const { userId, serviceClient } = auth.ctx;
 
+  const _ent = await requireTeamEntitlement(serviceClient, userId, "starter");
+  if (!_ent.ok) return _ent.response;
   const alowareToken = Deno.env.get("ALOWARE_API_TOKEN");
   if (!alowareToken) return errorResponse("provider_unconfigured", 503, { success: false });
 

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { timingSafeEqualStrings } from "../_shared/timingSafe.ts";
 import { logAlowareEvent, readBoundedJson } from "../_shared/alowareSafe.ts";
+import { checkTeamEntitlementByTeamId } from "../_shared/entitlement.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -89,6 +90,12 @@ async function handleCallCompleted(supabase: any, payload: any) {
   if (!profile) {
     await logAlowareEvent(supabase, { event_type: "call_unmatched", processed: false, error_code: "no_matching_user" });
     return jsonRes({ success: false, error: "user_not_found" }, 200);
+  }
+
+  const _teamEnt = await checkTeamEntitlementByTeamId(supabase, profile.team_id, "starter");
+  if (!_teamEnt.ok) {
+    await logAlowareEvent(supabase, { event_type: "call_ignored", team_id: profile.team_id, processed: false, error_code: _teamEnt.code });
+    return jsonRes({ success: false, error: "subscription_required" }, 200);
   }
 
   const disposition = DISPOSITION_MAP[dispositionRaw] ?? (dispositionRaw ? dispositionRaw.toLowerCase().replace(/\s+/g, "_") : null);

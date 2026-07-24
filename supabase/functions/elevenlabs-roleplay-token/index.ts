@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -64,6 +65,8 @@ serve(async (req) => {
 
     // Rate-limit paid voice-token minting (per-user).
     const rl = await enforceRateLimit(authedUserId, 'elevenlabs-roleplay-token', { serviceClient: supabase });
+    const _ent = await requireTeamEntitlement(supabase, authedUserId, "starter");
+    if (!_ent.ok) return _ent.response;
     if (!rl.allowed) return rl.response!;
 
     // If scenario_id given, ensure it exists and is active (scenarios are shared, not per-user)

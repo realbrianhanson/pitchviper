@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -39,6 +40,8 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
     const rl = await enforceRateLimit(userData.user.id, 'check-badge-eligibility', { serviceClient: supabase, perMinute: 30, perDay: 500 });
+    const _ent = await requireTeamEntitlement(supabase, userData.user.id, "starter");
+    if (!_ent.ok) return _ent.response;
     if (!rl.allowed) return rl.response!;
 
     const { user_id, trigger_type } = await req.json();

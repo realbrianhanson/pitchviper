@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { authenticatePost, boundedString, clampInt, corsHeaders, errorResponse, jsonResponse } from "../_shared/edgeAuth.ts";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 const CATEGORIES = new Set(["price", "authority", "need", "trust", "timing", "competitor", "product", "other"]);
 const DIFFICULTIES = new Set(["easy", "medium", "hard", "beginner", "intermediate", "advanced"]);
@@ -12,6 +13,8 @@ serve(async (req) => {
   if (!auth.ok) return auth.response;
   const { userId, serviceClient } = auth.ctx;
 
+  const _ent = await requireTeamEntitlement(serviceClient, userId, "starter");
+  if (!_ent.ok) return _ent.response;
   const rl = await enforceRateLimit(userId, "score-objection-response", { perMinute: 15, perDay: 200, serviceClient });
   if (!rl.allowed) return rl.response!;
 

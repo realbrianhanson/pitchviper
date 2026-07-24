@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders, errorResponse, isUuid, jsonResponse } from "../_shared/edgeAuth.ts";
 import { boundedText, logAlowareEvent, readBoundedJson } from "../_shared/alowareSafe.ts";
 import { timingSafeEqualStrings } from "../_shared/timingSafe.ts";
+import { checkTeamEntitlementByTeamId } from "../_shared/entitlement.ts";
 
 const MAX_TRANSCRIPT_CHARS = 200_000;
 
@@ -26,6 +27,15 @@ serve(async (req) => {
   if (!callId || !transcription) return errorResponse("invalid_args", 400, { success: false });
 
   const supabase = createClient(supabaseUrl, serviceKey);
+
+  const { data: callRow } = await supabase
+    .from("calls").select("team_id").eq("id", callId).maybeSingle();
+  const _teamEnt = await checkTeamEntitlementByTeamId(supabase, callRow?.team_id ?? null, "starter");
+  if (!_teamEnt.ok) {
+    await logAlowareEvent(supabase, { event_type: "transcription_ignored", team_id: callRow?.team_id ?? null, processed: false, error_code: _teamEnt.code });
+    return jsonResponse({ success: false, error: "subscription_required" }, 200);
+  }
+
   const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
 
   let analysis: Record<string, unknown> | null = null;

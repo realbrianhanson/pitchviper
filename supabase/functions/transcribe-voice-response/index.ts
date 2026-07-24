@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { authenticatePost, corsHeaders, errorResponse, jsonResponse } from "../_shared/edgeAuth.ts";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
 const ALLOWED_MIME = new Set([
@@ -22,6 +23,8 @@ serve(async (req) => {
   if (!auth.ok) return auth.response;
   const { userId, serviceClient } = auth.ctx;
 
+  const _ent = await requireTeamEntitlement(serviceClient, userId, "starter");
+  if (!_ent.ok) return _ent.response;
   const rl = await enforceRateLimit(userId, "transcribe-voice-response", { perMinute: 20, perDay: 300, serviceClient });
   if (!rl.allowed) return rl.response!;
 

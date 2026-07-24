@@ -3,6 +3,7 @@
 // is size- and count-bounded so a malicious client can't blow up storage.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { authenticatePost, boundedString, corsHeaders, errorResponse, isUuid, jsonResponse } from "../_shared/edgeAuth.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 const MAX_MESSAGES = 100;
 const MAX_MESSAGE_CHARS = 5000;
@@ -19,6 +20,8 @@ serve(async (req) => {
   if (!auth.ok) return auth.response;
   const { userId, serviceClient } = auth.ctx;
 
+  const _ent = await requireTeamEntitlement(serviceClient, userId, "starter");
+  if (!_ent.ok) return _ent.response;
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return errorResponse("invalid_body", 400); }
 

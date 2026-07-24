@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -38,6 +39,8 @@ serve(async (req) => {
     }
 
     const rl = await enforceRateLimit(user.id, 'generate-performance-insights', { serviceClient: supabase });
+    const _ent = await requireTeamEntitlement(supabase, user.id, "growth");
+    if (!_ent.ok) return _ent.response;
     if (!rl.allowed) return rl.response!;
 
     const thirtyDaysAgo = new Date();

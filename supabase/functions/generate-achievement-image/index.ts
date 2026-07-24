@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -37,6 +38,10 @@ serve(async (req) => {
 
     const rl = await enforceRateLimit(userData.user.id, 'generate-achievement-image');
     if (!rl.allowed) return rl.response!;
+
+    const _svc = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const _ent = await requireTeamEntitlement(_svc, userData.user.id, "starter");
+    if (!_ent.ok) return _ent.response;
 
 
     const { badge_name, badge_icon, badge_rarity, user_name, achievement_date } = await req.json();

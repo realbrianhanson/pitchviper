@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { authenticatePost, corsHeaders, errorResponse, jsonResponse } from "../_shared/edgeAuth.ts";
+import { requireTeamEntitlement } from "../_shared/entitlement.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -7,6 +8,8 @@ serve(async (req) => {
   if (!auth.ok) return auth.response;
   const { userId, serviceClient } = auth.ctx;
 
+  const _ent = await requireTeamEntitlement(serviceClient, userId, "starter");
+  if (!_ent.ok) return _ent.response;
   try {
     const { data: profile } = await serviceClient
       .from("profiles").select("*, teams(id, name)").eq("user_id", userId).maybeSingle();
