@@ -62,9 +62,9 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-40 flex h-[68px] items-center justify-between gap-3 md:gap-6 border-b border-border bg-card px-4 sm:px-6 lg:px-8">
       {/* Left: mobile trigger + page title */}
-      <div className="flex items-center gap-3 min-w-0">
-        <SidebarTrigger className="md:hidden -ml-1 text-muted-foreground hover:text-foreground" />
-        <h1 className="text-[17px] font-medium text-foreground truncate leading-none">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <SidebarTrigger className="md:hidden -ml-1 text-muted-foreground hover:text-foreground shrink-0" />
+        <h1 className="text-[17px] font-medium text-foreground truncate leading-none min-w-0">
           {title || "Dashboard"}
         </h1>
       </div>
