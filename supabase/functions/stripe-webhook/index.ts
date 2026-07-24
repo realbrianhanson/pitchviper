@@ -128,10 +128,13 @@ serve(async (req) => {
   } catch (err) {
     const code = normalizeFailureCode((err as Error).message);
     console.error("stripe-webhook processing failed", event.type, code);
-    await service
+    const { error: failErr } = await service
       .from("stripe_webhook_events")
       .update({ status: "failed", error: code })
       .eq("event_id", event.id);
+    if (failErr) {
+      console.error("stripe-webhook ledger fail-update failed", event.type);
+    }
     return new Response("processing_error", { status: 500 });
   }
 });
@@ -184,7 +187,7 @@ async function processEvent(
   if (!teamId) return "ignored";
 
   if (event.type === "customer.subscription.deleted") {
-    const { error } = await service
+    const { data: updated, error } = await service
       .from("team_billing")
       .update({
         status: "canceled",
@@ -192,8 +195,10 @@ async function processEvent(
         stripe_subscription_id: null,
         last_webhook_at: new Date().toISOString(),
       })
-      .eq("team_id", teamId);
+      .eq("team_id", teamId)
+      .select("team_id");
     if (error) throw new Error("apply_failed");
+    if (!updated || updated.length !== 1) throw new Error("apply_failed");
     return { teamId };
   }
 
@@ -237,6 +242,11 @@ async function applySubscription(service: Svc, teamId: string, sub: Stripe.Subsc
       : null,
     last_webhook_at: new Date().toISOString(),
   };
-  const { error } = await service.from("team_billing").update(patch).eq("team_id", teamId);
+  const { data: updated, error } = await service
+    .from("team_billing")
+    .update(patch)
+    .eq("team_id", teamId)
+    .select("team_id");
   if (error) throw new Error("apply_failed");
+  if (!updated || updated.length !== 1) throw new Error("apply_failed");
 }

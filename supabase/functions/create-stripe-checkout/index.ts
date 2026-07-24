@@ -14,6 +14,8 @@ import {
 } from "../_shared/billing.ts";
 
 const MANAGEMENT_ROLES = ["owner", "admin", "manager"];
+// Only columns that actually exist on public.profiles. Email lives on auth.users.
+export const PROFILE_CHECKOUT_COLUMNS = "team_id, full_name" as const;
 // Bucket concurrent identical checkout attempts within this window.
 const CHECKOUT_BUCKET_SECONDS = 300;
 
@@ -75,7 +77,7 @@ serve(async (req) => {
 
     const { data: profile, error: profErr } = await service
       .from("profiles")
-      .select("team_id, email, full_name")
+      .select(PROFILE_CHECKOUT_COLUMNS)
       .eq("user_id", userId)
       .maybeSingle();
     if (profErr) {
@@ -128,7 +130,7 @@ serve(async (req) => {
     if (!customerId) {
       const customer = await stripe.customers.create(
         {
-          email: profile?.email ?? userData.user.email ?? undefined,
+          email: userData.user.email ?? undefined,
           name: profile?.full_name ?? undefined,
           metadata: { team_id: teamId },
         },
