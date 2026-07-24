@@ -13,7 +13,7 @@ import { isSystemsStepComplete } from "@/lib/workspaceSetup";
 // -----------------------------------------------------------------------------
 describe("sales system registry", () => {
   it("registers dialer_io, manual, gohighlevel, and legacy_aloware", () => {
-    const ids = SALES_SYSTEMS.map((s) => s.id).sort();
+    const ids = Object.keys(SALES_SYSTEM_REGISTRY).sort();
     expect(ids).toEqual(
       ["dialer_io", "gohighlevel", "legacy_aloware", "manual"].sort(),
     );
