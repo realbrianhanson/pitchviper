@@ -186,10 +186,11 @@ export default function RoleplaySession() {
             timestamp: new Date().toISOString(),
           };
           setMessages([openingMessage]);
-          await supabase
-            .from("roleplay_sessions")
-            .update({ transcript: JSON.parse(JSON.stringify([openingMessage])) })
-            .eq("id", sessionRow.id);
+          // Route the opening line through the authenticated append endpoint —
+          // clients no longer have direct UPDATE on roleplay_sessions.
+          await supabase.functions.invoke("roleplay-append-transcript", {
+            body: { session_id: sessionRow.id, messages: [openingMessage] },
+          });
         }
 
         setIsLoading(false);
@@ -334,40 +335,27 @@ export default function RoleplaySession() {
     setSessionState("analyzing");
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/roleplay-analyze`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            session_id: sessionId,
-            scenario_id: scenarioId,
-            transcript: messages,
-            duration_seconds: elapsedSeconds,
-            hints_used: hintsUsed,
-          }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke("roleplay-analyze", {
+        body: {
+          session_id: sessionId,
+          scenario_id: scenarioId,
+          transcript: messages,
+          duration_seconds: elapsedSeconds,
+          hints_used: hintsUsed,
+        },
+      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 429) {
-          toast.error("Rate limit exceeded. Please wait a moment.");
-          setSessionState("active");
-          return;
-        } else if (response.status === 402) {
-          toast.error("AI credits exhausted. Please add credits.");
-          setSessionState("active");
-          return;
-        }
-        throw new Error(errorData.error || "Analysis failed");
+      if (error) {
+        const code = (error as { context?: { status?: number } })?.context?.status;
+        if (code === 429) toast.error("Rate limit exceeded. Please wait a moment.");
+        else if (code === 402) toast.error("AI credits exhausted. Please add credits.");
+        else if (code === 409) toast.error("Analysis already in progress — please wait.");
+        else toast.error("Failed to analyze session");
+        setSessionState("active");
+        return;
       }
 
-      const result = await response.json();
-      setAnalysisResult(result);
+      setAnalysisResult(data);
       setSessionState("results");
     } catch (error) {
       console.error("Error analyzing session:", error);
@@ -384,14 +372,9 @@ export default function RoleplaySession() {
     }
 
     try {
-      await supabase
-        .from("roleplay_sessions")
-        .update({
-          status: "abandoned",
-          duration_seconds: elapsedSeconds,
-          completed_at: new Date().toISOString(),
-        })
-        .eq("id", sessionId);
+      await supabase.functions.invoke("roleplay-abandon-session", {
+        body: { session_id: sessionId, duration_seconds: elapsedSeconds },
+      });
 
       navigate("/roleplay");
     } catch (error) {

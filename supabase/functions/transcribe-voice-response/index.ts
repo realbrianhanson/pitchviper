@@ -1,87 +1,61 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { authenticatePost, corsHeaders, errorResponse, jsonResponse } from "../_shared/edgeAuth.ts";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
+const ALLOWED_MIME = new Set([
+  "audio/webm", "audio/webm;codecs=opus", "audio/ogg", "audio/ogg;codecs=opus",
+  "audio/wav", "audio/wave", "audio/x-wav", "audio/mpeg", "audio/mp4", "audio/x-m4a", "audio/aac",
+]);
+
+function mimeAllowed(type: string | undefined | null): boolean {
+  if (!type) return false;
+  const base = type.split(";")[0].trim().toLowerCase();
+  if (ALLOWED_MIME.has(type.toLowerCase()) || ALLOWED_MIME.has(base)) return true;
+  return base.startsWith("audio/");
+}
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const auth = await authenticatePost(req);
+  if (!auth.ok) return auth.response;
+  const { userId, serviceClient } = auth.ctx;
+
+  const rl = await enforceRateLimit(userId, "transcribe-voice-response", { perMinute: 20, perDay: 300, serviceClient });
+  if (!rl.allowed) return rl.response!;
+
+  let formData: FormData;
+  try { formData = await req.formData(); } catch { return errorResponse("invalid_body", 400); }
+
+  // Enforce exactly one audio file field
+  const entries = Array.from(formData.entries()).filter(([k]) => k === "audio");
+  if (entries.length !== 1) return errorResponse("invalid_audio", 400);
+  const audio = entries[0][1];
+  if (!(audio instanceof File)) return errorResponse("invalid_audio", 400);
+  if (audio.size === 0) return errorResponse("empty_audio", 400);
+  if (audio.size > MAX_BYTES) return errorResponse("audio_too_large", 413);
+  if (!mimeAllowed(audio.type)) return errorResponse("unsupported_audio_type", 415);
+
+  const key = Deno.env.get("ELEVENLABS_API_KEY");
+  if (!key) return errorResponse("stt_not_configured", 503);
+
+  const upstream = new FormData();
+  upstream.append("file", audio);
+  upstream.append("model_id", "scribe_v1");
+  upstream.append("language_code", "eng");
+
+  const res = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
+    method: "POST",
+    headers: { "xi-api-key": key },
+    body: upstream,
+  });
+  if (!res.ok) {
+    if (res.status === 429) return errorResponse("rate_limit", 429);
+    return errorResponse("stt_failed", 502);
   }
 
-  try {
-    // Auth
-    const authHeader = req.headers.get('Authorization') ?? '';
-    if (!authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-    const _token = authHeader.replace('Bearer ', '');
-    const _authClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: `Bearer ${_token}` } } }
-    );
-    const { data: _userData, error: _userErr } = await _authClient.auth.getUser();
-    if (_userErr || !_userData?.user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
-    const formData = await req.formData();
-    const audioFile = formData.get('audio') as File;
-    const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
-
-    if (!ELEVENLABS_API_KEY) {
-      throw new Error('ElevenLabs API key not configured');
-    }
-
-    if (!audioFile) {
-      throw new Error('Audio file is required');
-    }
-
-    console.log('Received audio file:', audioFile.name, audioFile.size, 'bytes');
-
-    // Use ElevenLabs Speech-to-Text
-    const apiFormData = new FormData();
-    apiFormData.append('file', audioFile);
-    apiFormData.append('model_id', 'scribe_v1');
-    apiFormData.append('language_code', 'eng');
-
-    const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
-      method: 'POST',
-      headers: {
-        'xi-api-key': ELEVENLABS_API_KEY,
-      },
-      body: apiFormData,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('ElevenLabs STT error:', response.status, errorText);
-      throw new Error(`ElevenLabs STT API error: ${response.status}`);
-    }
-
-    const transcription = await response.json();
-    console.log('Transcription result:', transcription);
-
-    return new Response(
-      JSON.stringify({
-        text: transcription.text,
-        words: transcription.words || [],
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    console.error('Error transcribing audio:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  }
+  const data = await res.json().catch(() => null);
+  const text = typeof data?.text === "string" ? data.text : "";
+  return jsonResponse({ text });
 });

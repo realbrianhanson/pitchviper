@@ -140,28 +140,13 @@ export function useAudioTraining() {
   const transcribeAudio = useCallback(async (audioBlob: Blob): Promise<string> => {
     try {
       setIsTranscribing(true);
-      
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.webm');
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe-voice-response`,
-        {
-          method: 'POST',
-          headers: {
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to transcribe audio');
-      }
-
-      const data = await response.json();
-      return data.text || '';
+      const { data, error } = await supabase.functions.invoke('transcribe-voice-response', {
+        body: formData,
+      });
+      if (error) throw error;
+      return (data as { text?: string })?.text ?? '';
     } catch (error) {
       console.error('Error transcribing audio:', error);
       toast.error('Failed to transcribe audio');
@@ -178,30 +163,16 @@ export function useAudioTraining() {
   ): Promise<ResponseEvaluation> => {
     try {
       setIsScoring(true);
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/score-objection-response`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            objection_text: objection.objection_text,
-            user_response: userResponse,
-            category: objection.category,
-            difficulty: objection.difficulty,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to score response');
-      }
-
-      return await response.json();
+      const { data, error } = await supabase.functions.invoke('score-objection-response', {
+        body: {
+          objection_text: objection.objection_text,
+          user_response: userResponse,
+          category: objection.category,
+          difficulty: objection.difficulty,
+        },
+      });
+      if (error) throw error;
+      return (data as ResponseEvaluation) ?? { score: 0, feedback: 'Error scoring response' };
     } catch (error) {
       console.error('Error scoring response:', error);
       toast.error('Failed to score response');

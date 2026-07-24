@@ -1,10 +1,7 @@
+// Live per-turn voice analysis. Best-effort, POST-only, self-authenticated.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { authenticatePost, boundedString, corsHeaders, errorResponse, isUuid, jsonResponse } from "../_shared/edgeAuth.ts";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 interface AnalysisResult {
   addressed_objection: boolean;
@@ -13,141 +10,108 @@ interface AnalysisResult {
   win_conditions_achieved: string[];
 }
 
+const EMPTY: AnalysisResult = {
+  addressed_objection: false,
+  attempted_close: false,
+  positive_momentum: false,
+  win_conditions_achieved: [],
+};
+
+function clampAnalysis(raw: unknown, winSet: Set<string>): AnalysisResult {
+  const obj = (raw && typeof raw === "object") ? raw as Record<string, unknown> : {};
+  const arr = Array.isArray(obj.win_conditions_achieved) ? obj.win_conditions_achieved : [];
+  return {
+    addressed_objection: obj.addressed_objection === true,
+    attempted_close: obj.attempted_close === true,
+    positive_momentum: obj.positive_momentum === true,
+    win_conditions_achieved: arr
+      .filter((v): v is string => typeof v === "string" && winSet.has(v))
+      .slice(0, 10),
+  };
+}
+
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const auth = await authenticatePost(req);
+  if (!auth.ok) return auth.response;
+  const { userId, serviceClient } = auth.ctx;
+
+  const rl = await enforceRateLimit(userId, "roleplay-voice-analyze", { perMinute: 30, perDay: 400, serviceClient });
+  if (!rl.allowed) return rl.response!;
+
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch { return errorResponse("invalid_body", 400); }
+
+  const sessionId = body.session_id;
+  const scenarioId = body.scenario_id;
+  if (!isUuid(sessionId) || !isUuid(scenarioId)) return errorResponse("invalid_ids", 400);
+
+  const userMessage = boundedString(body.user_message, 2000);
+  const agentMessage = boundedString(body.agent_message, 2000) ?? "";
+  if (!userMessage) return errorResponse("invalid_message", 400);
+
+  const { data: session } = await serviceClient
+    .from("roleplay_sessions")
+    .select("user_id, scenario_id")
+    .eq("id", sessionId)
+    .maybeSingle();
+  if (!session || session.user_id !== userId || session.scenario_id !== scenarioId) {
+    return errorResponse("session_not_found", 404);
   }
 
+  const { data: scenario } = await serviceClient
+    .from("roleplay_scenarios")
+    .select("win_conditions, objections_to_include")
+    .eq("id", scenarioId)
+    .maybeSingle();
+  if (!scenario) return errorResponse("scenario_not_found", 404);
+
+  const winConditions: string[] = Array.isArray(scenario.win_conditions) ? scenario.win_conditions : [];
+  const objections: string[] = Array.isArray(scenario.objections_to_include) ? scenario.objections_to_include : [];
+  const winSet = new Set(winConditions);
+
+  const apiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!apiKey) return jsonResponse({ analysis: EMPTY });
+
+  const prompt = `Analyze this sales conversation exchange.
+
+Salesperson: "${userMessage}"
+Prospect: "${agentMessage || "(no response)"}"
+
+Win conditions:
+${winConditions.map((w) => `- ${w}`).join("\n")}
+
+Known objections:
+${objections.map((o) => `- ${o}`).join("\n")}
+
+Return ONLY JSON:
+{"addressed_objection":true|false,"attempted_close":true|false,"positive_momentum":true|false,"win_conditions_achieved":["exact strings from list"]}`;
+
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: "You analyze sales conversations. Return only valid JSON." },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: 250,
+      temperature: 0.2,
+    }),
+  });
+
+  if (!res.ok) return jsonResponse({ analysis: EMPTY });
+
+  const data = await res.json().catch(() => null);
+  const content = data?.choices?.[0]?.message?.content;
+  if (typeof content !== "string") return jsonResponse({ analysis: EMPTY });
   try {
-    const { scenario_id, session_id, user_message, agent_message } = await req.json();
-
-    if (!scenario_id || !session_id || !user_message) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceKey);
-
-    // Auth check
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const token = authHeader.replace("Bearer ", "");
-    if (!token) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const authClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-    });
-    const { data: userData, error: userErr } = await authClient.auth.getUser();
-    if (userErr || !userData.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Verify session ownership
-    const { data: sessionOwner } = await supabase
-      .from("roleplay_sessions")
-      .select("user_id")
-      .eq("id", session_id)
-      .maybeSingle();
-    if (!sessionOwner || sessionOwner.user_id !== userData.user.id) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Fetch scenario
-    const { data: scenario, error: scenarioError } = await supabase
-      .from("roleplay_scenarios")
-      .select("win_conditions, objections_to_include")
-      .eq("id", scenario_id)
-      .maybeSingle();
-
-    if (scenarioError || !scenario) throw new Error("Scenario not found");
-
-    const winConditions: string[] = scenario.win_conditions ?? [];
-    const objections: string[] = scenario.objections_to_include ?? [];
-
-    const analysisPrompt = `Analyze this sales conversation exchange and return a JSON object.
-
-Salesperson said: "${user_message}"
-Prospect responded: "${agent_message ?? "(no response yet)"}"
-
-Context - Win conditions for this scenario:
-${winConditions.map((wc) => `- ${wc}`).join("\n")}
-
-Objections that might be addressed:
-${objections.map((obj) => `- ${obj}`).join("\n")}
-
-Return ONLY a valid JSON object (no markdown, no explanation):
-{
-  "addressed_objection": true/false (did salesperson address a known objection?),
-  "attempted_close": true/false (did salesperson try to close or advance the sale?),
-  "positive_momentum": true/false (did the prospect show positive buying signals?),
-  "win_conditions_achieved": ["exact condition text from the list above"] (empty array if none)
-}`;
-
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: "You are an expert sales coach analyzing conversations. Return only valid JSON." },
-          { role: "user", content: analysisPrompt },
-        ],
-        max_tokens: 300,
-        temperature: 0.3,
-      }),
-    });
-
-    let analysis: AnalysisResult = {
-      addressed_objection: false,
-      attempted_close: false,
-      positive_momentum: false,
-      win_conditions_achieved: [],
-    };
-
-    if (aiResponse.ok) {
-      const data = await aiResponse.json();
-      const text = data.choices?.[0]?.message?.content || "";
-      try {
-        const match = text.match(/\{[\s\S]*\}/);
-        if (match) analysis = JSON.parse(match[0]);
-      } catch (e) {
-        console.error("Failed to parse voice analysis:", e);
-      }
-    } else if (aiResponse.status === 429 || aiResponse.status === 402) {
-      // Silently degrade — live tracking is best-effort
-      return new Response(JSON.stringify({ analysis }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ analysis }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("Voice analyze error:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    const parsed = JSON.parse(content.replace(/```json\s*|```/gi, "").trim());
+    return jsonResponse({ analysis: clampAnalysis(parsed, winSet) });
+  } catch {
+    return jsonResponse({ analysis: EMPTY });
   }
 });
