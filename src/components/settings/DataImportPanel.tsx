@@ -37,8 +37,9 @@ export function DataImportPanel() {
           <li className="flex items-start gap-3">
             <ClipboardList className="h-4 w-4 mt-[3px] text-primary shrink-0" />
             <span>
-              <span className="text-foreground">Log call</span> from any deal, contact or
-              the dial modal. Dispositions feed daily stats and streaks.
+              <span className="text-foreground">Log a call</span> from the top-nav Log call
+              action or from the dial handoff — contact, company and number are
+              pre-filled. Dispositions feed daily stats and streaks.
             </span>
           </li>
           <li className="flex items-start gap-3">
