@@ -376,6 +376,8 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const _ent = await requireTeamEntitlement(supabase, authedUserId, "starter");
+    if (!_ent.ok) return _ent.response;
 
     const body = await req.json().catch(() => ({}));
     const {
