@@ -412,7 +412,6 @@ export default function WorkspaceSetup() {
                 <div className="space-y-5">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline">{setup.teamMemberCount} member{setup.teamMemberCount === 1 ? "" : "s"}</Badge>
-                    {setup.mappedRepCount > 0 && <Badge variant="outline">{setup.mappedRepCount} mapped to Aloware</Badge>}
                   </div>
                   <div className="rounded-[10px] border border-border bg-background/50 p-4">
                     <TeamMembersManager />
