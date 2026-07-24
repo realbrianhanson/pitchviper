@@ -92,12 +92,12 @@ describe("event-bound XP awards", () => {
     expect(useCallLogging).toContain("_source_id: call.id");
     expect(useCallLogging).not.toMatch(/award_user_xp/);
   });
-  it("useGauntlet awards XP with the completion id and shows amount only when newly awarded", () => {
-    expect(useGauntlet).toContain("award_event_xp");
-    expect(useGauntlet).toContain("_reason: 'gauntlet_passed'");
-    expect(useGauntlet).toContain("_source_id: completionId");
+  it("useGauntlet routes evaluation through the server (no client XP writes)", () => {
+    // Gauntlet XP + completion are now server-owned via evaluate-gauntlet.
     expect(useGauntlet).not.toMatch(/award_user_xp/);
-    // Only newly-awarded results show the toast (guard on awarded flag).
-    expect(useGauntlet).toMatch(/\.awarded\b/);
+    expect(useGauntlet).not.toMatch(/award_event_xp/);
+    expect(useGauntlet).toContain('supabase.functions.invoke("evaluate-gauntlet"');
+    // Toast still fires only when the server confirms a fresh award.
+    expect(useGauntlet).toMatch(/xp_award\?\.awarded/);
   });
 });
