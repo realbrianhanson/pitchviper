@@ -118,6 +118,48 @@ export function nextActionStatus(current: CoachingActionStatus): CoachingActionS
   return null;
 }
 
+// Rep-side authorization: reps may only advance forward through the pipeline
+// (assigned -> in_progress -> completed) and cannot reopen a completed action.
+// Managers get more latitude and are checked separately on the server.
+export function canRepAdvanceStatus(
+  current: CoachingActionStatus,
+  next: CoachingActionStatus
+): boolean {
+  if (current === "completed") return false;
+  const forward = nextActionStatus(current);
+  return forward !== null && forward === next;
+}
+
+// Normalize a display name for safe matching: strip URLs, collapse whitespace,
+// lowercase. Used to resolve AI-provided rep names against known team members
+// without ever trusting the string as an identifier.
+export function normalizeDisplayName(name: string | null | undefined): string {
+  if (!name) return "";
+  return String(name)
+    .replace(/https?:\/\/\S+/gi, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+// Returns a user_id ONLY if exactly one team member's normalized name matches.
+// Ambiguous or missing => null. Never accept an AI-provided id.
+export function resolveTeamMemberByName<T extends { user_id: string; full_name: string | null }>(
+  name: string | null | undefined,
+  members: readonly T[]
+): string | null {
+  const target = normalizeDisplayName(name);
+  if (!target) return null;
+  let match: string | null = null;
+  for (const m of members) {
+    if (normalizeDisplayName(m.full_name) === target) {
+      if (match) return null; // ambiguous
+      match = m.user_id;
+    }
+  }
+  return match;
+}
+
 export function isOverdue(due_date: string | null | undefined, status: CoachingActionStatus, now = new Date()): boolean {
   if (!due_date || status === "completed") return false;
   const d = new Date(`${due_date}T23:59:59Z`);
