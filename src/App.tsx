@@ -55,6 +55,7 @@ const TeamSettings = lazy(() => import("./pages/TeamSettings"));
 const CoachingConsole = lazy(() => import("./pages/CoachingConsole"));
 const AICoachInsightsPage = lazy(() => import("./pages/AICoachInsightsPage"));
 const ManagerDashboard = lazy(() => import("./pages/ManagerDashboard"));
+const WorkspaceSetup = lazy(() => import("./pages/WorkspaceSetup"));
 const CompetitionsManager = lazy(() => import("./pages/CompetitionsManager"));
 const Settings = lazy(() => import("./pages/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -137,6 +138,7 @@ const App = () => (
                      <Route path="/ai-coach" element={<ProtectedRoute><AICoachInsightsPage /></ProtectedRoute>} />
                       <Route path="/manager" element={<ProtectedRoute><ManagerDashboard /></ProtectedRoute>} />
                       <Route path="/manager/competitions" element={<ProtectedRoute><CompetitionsManager /></ProtectedRoute>} />
+                      <Route path="/workspace-setup" element={<ProtectedRoute><WorkspaceSetup /></ProtectedRoute>} />
                       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                       
                       {/* Catch-all */}

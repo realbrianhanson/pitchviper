@@ -1,5 +1,6 @@
+import { useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Settings, Bell, Phone, Webhook, RefreshCw, Users } from "lucide-react";
+import { Bell, Phone, Webhook, RefreshCw, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NotificationSettings } from "@/components/notifications/NotificationSettings";
 import { AlowareTeamConfig } from "@/components/settings/AlowareTeamConfig";
@@ -7,11 +8,23 @@ import { AlowareWebhookSetup } from "@/components/settings/AlowareWebhookSetup";
 import { AlowareSyncPanel } from "@/components/settings/AlowareSyncPanel";
 import { TeamMembersManager } from "@/components/settings/TeamMembersManager";
 
+const VALID_TABS = new Set(["team", "aloware", "sync", "webhook", "notifications"]);
+
 export default function TeamSettings() {
+  const [params, setParams] = useSearchParams();
+  const tabParam = params.get("tab");
+  const value = tabParam && VALID_TABS.has(tabParam) ? tabParam : "team";
+
+  const setTab = (next: string) => {
+    const p = new URLSearchParams(params);
+    p.set("tab", next);
+    setParams(p, { replace: true });
+  };
+
   return (
     <AppLayout title="Settings">
       <div className="animate-fade-in">
-        <Tabs defaultValue="team" className="space-y-6">
+        <Tabs value={value} onValueChange={setTab} className="space-y-6">
           <TabsList>
             <TabsTrigger value="team" className="gap-2">
               <Users className="h-4 w-4" />

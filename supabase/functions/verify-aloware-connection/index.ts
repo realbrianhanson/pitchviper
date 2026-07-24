@@ -117,11 +117,43 @@ serve(async (req) => {
         );
       }
       
+      // On a genuine successful verification by team management, stamp
+      // company_settings so the setup wizard reflects a real Aloware connection.
+      try {
+        const { data: isMgmt } = await supabase.rpc('has_management_role', { _user_id: user.id });
+        if (isMgmt) {
+          const { data: callerProfile } = await supabase
+            .from('profiles').select('team_id').eq('user_id', user.id).maybeSingle();
+          if (callerProfile?.team_id) {
+            const nowIso = new Date().toISOString();
+            const { data: existing } = await supabase
+              .from('company_settings')
+              .select('id, crm_connected_at')
+              .eq('team_id', callerProfile.team_id)
+              .maybeSingle();
+            if (existing?.id) {
+              await supabase.from('company_settings').update({
+                crm_provider: 'aloware',
+                crm_connected_at: existing.crm_connected_at ?? nowIso,
+              }).eq('id', existing.id);
+            } else {
+              await supabase.from('company_settings').insert({
+                team_id: callerProfile.team_id,
+                crm_provider: 'aloware',
+                crm_connected_at: nowIso,
+              });
+            }
+          }
+        }
+      } catch (stampErr) {
+        console.warn('verify-aloware-connection could not stamp company_settings', stampErr);
+      }
+
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           users: alowareUsers.data || alowareUsers,
-          message: 'Successfully connected to Aloware' 
+          message: 'Successfully connected to Aloware'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

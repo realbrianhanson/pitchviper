@@ -130,10 +130,42 @@ Deno.serve(async (req) => {
         payload,
         occurred_at: pickOccurredAt(payload),
       })
-      .select("id, matched_user_id, unassigned, match_method")
+      .select("id, matched_user_id, unassigned, match_method, team_id")
       .maybeSingle();
 
     if (error) throw error;
+
+    // When we matched a rep to a team, stamp the company_settings integration
+    // signals so the setup wizard can honestly reflect a live GHL connection.
+    if (data?.team_id) {
+      try {
+        const nowIso = new Date().toISOString();
+        const { data: existing } = await supabase
+          .from("company_settings")
+          .select("id, crm_connected_at, first_sync_at")
+          .eq("team_id", data.team_id)
+          .maybeSingle();
+        if (existing?.id) {
+          await supabase
+            .from("company_settings")
+            .update({
+              crm_provider: "gohighlevel",
+              crm_connected_at: existing.crm_connected_at ?? nowIso,
+              first_sync_at: existing.first_sync_at ?? nowIso,
+            })
+            .eq("id", existing.id);
+        } else {
+          await supabase.from("company_settings").insert({
+            team_id: data.team_id,
+            crm_provider: "gohighlevel",
+            crm_connected_at: nowIso,
+            first_sync_at: nowIso,
+          });
+        }
+      } catch (stampErr) {
+        console.warn("ghl-webhook could not stamp company_settings", stampErr);
+      }
+    }
 
     return new Response(JSON.stringify({ ok: true, activity: data }), {
       status: 200,

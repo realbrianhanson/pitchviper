@@ -423,6 +423,32 @@ Deno.serve(async (req) => {
       processed: true,
     });
 
+    // Stamp company_settings so the setup wizard reflects a real Aloware sync.
+    try {
+      const nowIso = new Date().toISOString();
+      const { data: existing } = await supabase
+        .from("company_settings")
+        .select("id, first_sync_at, crm_connected_at")
+        .eq("team_id", teamId)
+        .maybeSingle();
+      if (existing?.id) {
+        await supabase.from("company_settings").update({
+          crm_provider: "aloware",
+          crm_connected_at: existing.crm_connected_at ?? nowIso,
+          first_sync_at: existing.first_sync_at ?? nowIso,
+        }).eq("id", existing.id);
+      } else {
+        await supabase.from("company_settings").insert({
+          team_id: teamId,
+          crm_provider: "aloware",
+          crm_connected_at: nowIso,
+          first_sync_at: nowIso,
+        });
+      }
+    } catch (stampErr) {
+      console.warn("sync-aloware-data could not stamp company_settings", stampErr);
+    }
+
     console.log("Aloware sync completed:", results);
 
     return new Response(

@@ -101,6 +101,15 @@ export function useManagerDashboard() {
     setIsLoading(true);
     setError(null);
     try {
+      // 0) Company targets (fall back to sensible defaults when unset)
+      const { data: companyRow } = await supabase
+        .from('company_settings')
+        .select('daily_calls_target, daily_appointments_target')
+        .eq('team_id', profile.team_id)
+        .maybeSingle();
+      const perRepCalls = companyRow?.daily_calls_target ?? 50;
+      const perRepAppts = companyRow?.daily_appointments_target ?? 3;
+
       // 1) Team members
       const { data: profiles, error: profilesErr } = await supabase
         .from('profiles')
@@ -231,9 +240,9 @@ export function useManagerDashboard() {
         currently_active: members.filter((m) => activeStatuses.includes(m.status)).length,
         on_calls_now: members.filter((m) => m.status === 'on_call').length,
         today_calls: members.reduce((sum, m) => sum + m.today_calls, 0),
-        today_calls_target: members.length * 50,
+        today_calls_target: members.length * perRepCalls,
         today_appointments: members.reduce((sum, m) => sum + m.today_appointments, 0),
-        today_appointments_target: members.length * 3,
+        today_appointments_target: members.length * perRepAppts,
         today_revenue: members.reduce((sum, m) => sum + m.today_revenue, 0),
         period_calls: team_period_calls,
         period_deals_won: team_period_wins,

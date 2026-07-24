@@ -20,6 +20,7 @@ import {
   Gamepad2,
   Cog,
   Phone,
+  Building2,
 } from "lucide-react";
 
 import {
@@ -78,6 +79,7 @@ const managerNavItems: NavItem[] = [
   { title: "Manager Dashboard", url: "/manager", icon: BarChart3, exact: true },
   { title: "Coaching Console", url: "/coaching", icon: Users },
   { title: "Competitions", url: "/manager/competitions", icon: Gamepad2 },
+  { title: "Company Setup", url: "/workspace-setup", icon: Building2 },
   { title: "Team Settings", url: "/team-settings", icon: Settings },
 ];
 

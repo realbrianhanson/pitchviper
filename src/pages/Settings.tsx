@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { 
   User, 
   Bell, 
@@ -41,10 +42,22 @@ export default function Settings() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   
+  // Tab selection (query-param controllable, e.g. /settings?tab=company)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const SETTINGS_TABS = new Set(["profile", "company", "notifications", "phone", "display", "sounds", "help"]);
+  const tabParam = searchParams.get("tab");
+  const settingsTab = tabParam && SETTINGS_TABS.has(tabParam) ? tabParam : "profile";
+  const setSettingsTab = (next: string) => {
+    const p = new URLSearchParams(searchParams);
+    p.set("tab", next);
+    setSearchParams(p, { replace: true });
+  };
+
   // Profile state
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [title, setTitle] = useState(profile?.title || "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
+
   
   // Preferences state
   const [darkMode, setDarkMode] = useState(true);
@@ -150,7 +163,7 @@ export default function Settings() {
           <p className="text-muted-foreground">Manage your account and preferences</p>
         </div>
 
-        <Tabs defaultValue="profile" className="space-y-6">
+        <Tabs value={settingsTab} onValueChange={setSettingsTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-flex">
             <TabsTrigger value="profile" className="gap-2">
               <User className="h-4 w-4" />
@@ -319,17 +332,18 @@ export default function Settings() {
             <ViperCard className="p-6">
               <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-1">— Appearance</p>
               <h2 className="font-display italic text-xl mb-6">Display Settings</h2>
-              
+
               <div className="space-y-6">
-                <div className="flex items-center justify-between opacity-70">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Moon className="h-5 w-5 text-primary" />
                     <div>
-                      <Label className="text-base">Dark Theme</Label>
-                      <p className="text-sm text-muted-foreground">PitchViper is designed dark-first. Light mode is not available.</p>
+                      <Label className="text-base">Theme</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Light is the default. Use the theme toggle in the top bar to switch to dark or follow your system.
+                      </p>
                     </div>
                   </div>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Always on</span>
                 </div>
 
                 <Separator />
