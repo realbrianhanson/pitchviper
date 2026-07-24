@@ -431,10 +431,10 @@ export default function WorkspaceSetup() {
                 <div className="space-y-5">
                   <div className="grid gap-3 md:grid-cols-3">
                     <SystemChoice
-                      title="Aloware"
-                      description="Sync calls, SMS, and user mapping automatically."
-                      status={setup.settings?.crm_provider === "aloware" && setup.settings?.crm_connected_at ? "Connected" : setup.settings?.crm_provider === "aloware" ? "Selected — connect in Team Settings" : undefined}
-                      onSelect={() => chooseSystem("aloware")}
+                      title="Dialer.io"
+                      description="Modern power-dialer. Recommended — reps dial in Dialer.io while PitchViper handles coaching and pipeline."
+                      status={setup.settings?.crm_provider === "dialer_io" ? "Selected" : undefined}
+                      onSelect={() => chooseSystem("dialer_io")}
                       disabled={saving}
                     />
                     <SystemChoice
@@ -453,7 +453,7 @@ export default function WorkspaceSetup() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    A connection isn't confirmed until we receive a successful verification or sync from the provider.
+                    Native sync is only claimed once a real handoff exists. Dialer.io and manual workflows work today.
                   </p>
                   <StepFooter
                     onBack={goBack}
