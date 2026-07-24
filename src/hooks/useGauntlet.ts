@@ -32,6 +32,9 @@ export interface EvaluationResult {
   averageScore: number;
   passed: boolean;
   overallFeedback: string;
+  completion_id?: string;
+  xp_award?: { awarded: boolean; amount: number };
+  already_completed?: boolean;
 }
 
 export function useGauntlet() {
@@ -45,17 +48,14 @@ export function useGauntlet() {
   const fetchTodayChallenge = useCallback(async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      
       const { data: challenge, error } = await supabase
         .from('gauntlet_challenges')
         .select('*')
         .eq('challenge_date', today)
         .maybeSingle();
-
       if (error && error.code !== 'PGRST116') {
         console.error("Error fetching challenge:", error);
       }
-
       setTodayChallenge(challenge);
     } catch (error) {
       console.error("Error:", error);
@@ -64,7 +64,6 @@ export function useGauntlet() {
 
   const fetchTodayCompletion = useCallback(async () => {
     if (!user || !todayChallenge) return;
-
     try {
       const { data: completion, error } = await supabase
         .from('user_gauntlet_completions')
@@ -72,11 +71,9 @@ export function useGauntlet() {
         .eq('user_id', user.id)
         .eq('challenge_id', todayChallenge.id)
         .maybeSingle();
-
       if (error && error.code !== 'PGRST116') {
         console.error("Error fetching completion:", error);
       }
-
       setTodayCompletion(completion);
     } catch (error) {
       console.error("Error:", error);
@@ -85,46 +82,27 @@ export function useGauntlet() {
 
   const calculateStreak = useCallback(async () => {
     if (!user) return;
-
     try {
-      // Get all completions ordered by date
       const { data: completions, error } = await supabase
         .from('user_gauntlet_completions')
-        .select(`
-          *,
-          gauntlet_challenges!inner(challenge_date)
-        `)
+        .select(`*, gauntlet_challenges!inner(challenge_date)`)
         .eq('user_id', user.id)
         .eq('passed', true)
         .order('completed_at', { ascending: false });
-
       if (error) throw error;
-
-      if (!completions?.length) {
-        setStreak(0);
-        return;
-      }
-
-      // Calculate streak
+      if (!completions?.length) { setStreak(0); return; }
       let currentStreak = 0;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
       for (let i = 0; i < completions.length; i++) {
         const challengeDate = new Date((completions[i].gauntlet_challenges as { challenge_date: string }).challenge_date);
         challengeDate.setHours(0, 0, 0, 0);
-        
         const expectedDate = new Date(today);
         expectedDate.setDate(today.getDate() - i);
         expectedDate.setHours(0, 0, 0, 0);
-
-        if (challengeDate.getTime() === expectedDate.getTime()) {
-          currentStreak++;
-        } else {
-          break;
-        }
+        if (challengeDate.getTime() === expectedDate.getTime()) currentStreak++;
+        else break;
       }
-
       setStreak(currentStreak);
     } catch (error) {
       console.error("Error calculating streak:", error);
@@ -136,43 +114,31 @@ export function useGauntlet() {
   }, [fetchTodayChallenge]);
 
   useEffect(() => {
-    if (todayChallenge) {
-      fetchTodayCompletion();
-    }
+    if (todayChallenge) fetchTodayCompletion();
   }, [todayChallenge, fetchTodayCompletion]);
 
-  useEffect(() => {
-    calculateStreak();
-  }, [calculateStreak]);
+  useEffect(() => { calculateStreak(); }, [calculateStreak]);
 
-  const evaluateResponses = async (
-    responses: unknown[]
-  ): Promise<EvaluationResult | null> => {
+  // Server-scored + server-persisted. Client only submits raw responses;
+  // the edge function loads challenge content, calls AI, validates output,
+  // writes the completion row, and mints the XP ledger entry.
+  const submitChallenge = async (responses: unknown[]): Promise<EvaluationResult | null> => {
     if (!todayChallenge) return null;
-
     setIsEvaluating(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evaluate-gauntlet`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            challengeType: todayChallenge.challenge_type,
-            responses,
-            challengeContent: todayChallenge.content,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Evaluation failed");
+      const { data, error } = await supabase.functions.invoke("evaluate-gauntlet", {
+        body: { action: "evaluate", challengeId: todayChallenge.id, responses },
+      });
+      if (error) {
+        toast.error("Failed to evaluate responses");
+        return null;
       }
-
-      const result = await response.json();
+      const result = data as EvaluationResult;
+      if (result?.passed && result.xp_award?.awarded && result.xp_award.amount > 0) {
+        toast.success(`+${result.xp_award.amount} XP earned!`);
+      }
+      await fetchTodayCompletion();
+      await calculateStreak();
       return result;
     } catch (error) {
       console.error("Evaluation error:", error);
@@ -183,97 +149,18 @@ export function useGauntlet() {
     }
   };
 
-  const submitCompletion = async (
-    responses: unknown[],
-    evaluation: EvaluationResult
-  ): Promise<boolean> => {
-    if (!user || !todayChallenge) return false;
-
-    try {
-      const { data: existing } = await supabase
-        .from('user_gauntlet_completions')
-        .select('id, attempts')
-        .eq('user_id', user.id)
-        .eq('challenge_id', todayChallenge.id)
-        .maybeSingle();
-
-      let completionId: string | null = existing?.id ?? null;
-
-      if (existing) {
-        const { error } = await supabase
-          .from('user_gauntlet_completions')
-          .update({
-            score: evaluation.averageScore,
-            passed: evaluation.passed,
-            attempts: existing.attempts + 1,
-            responses: responses as Json,
-            feedback: evaluation as unknown as Json,
-            completed_at: new Date().toISOString(),
-          })
-          .eq('id', existing.id);
-        if (error) throw error;
-      } else {
-        const { data: inserted, error } = await supabase
-          .from('user_gauntlet_completions')
-          .insert({
-            user_id: user.id,
-            challenge_id: todayChallenge.id,
-            score: evaluation.averageScore,
-            passed: evaluation.passed,
-            attempts: 1,
-            responses: responses as Json,
-            feedback: evaluation as unknown as Json,
-          })
-          .select('id')
-          .single();
-        if (error) throw error;
-        completionId = inserted?.id ?? null;
-      }
-
-      // Event-bound XP: only awarded once per completion, server derives amount.
-      if (evaluation.passed && completionId) {
-        const { data: awardData, error: awardError } = await supabase.rpc(
-          'award_event_xp',
-          { _reason: 'gauntlet_passed', _source_id: completionId },
-        );
-        if (awardError) {
-          console.error('[useGauntlet] award_event_xp failed');
-        } else if (awardData && (awardData as any).awarded) {
-          const amount = (awardData as any).amount ?? 0;
-          if (amount > 0) toast.success(`+${amount} XP earned!`);
-        }
-      }
-
-      await fetchTodayCompletion();
-      await calculateStreak();
-      return true;
-    } catch (error) {
-      console.error("Error submitting completion:", error);
-      toast.error("Failed to save completion");
-      return false;
-    }
-  };
-
   const skipChallenge = async (): Promise<void> => {
     if (!user || !todayChallenge) return;
-
     try {
-      await supabase
-        .from('user_gauntlet_completions')
-        .insert({
-          user_id: user.id,
-          challenge_id: todayChallenge.id,
-          score: 0,
-          passed: false,
-          attempts: 0,
-          responses: {},
-          feedback: { skipped: true },
-        });
-
+      const { error } = await supabase.functions.invoke("evaluate-gauntlet", {
+        body: { action: "skip", challengeId: todayChallenge.id },
+      });
+      if (error) throw error;
       await fetchTodayCompletion();
       toast.info("Challenge skipped. Your streak has been reset.");
     } catch (error) {
       console.error("Error skipping:", error);
+      toast.error("Could not skip challenge");
     }
   };
 
@@ -285,8 +172,7 @@ export function useGauntlet() {
     streak,
     hasCompletedToday: !!todayCompletion,
     hasPassed: todayCompletion?.passed ?? false,
-    evaluateResponses,
-    submitCompletion,
+    submitChallenge,
     skipChallenge,
     refetch: fetchTodayChallenge,
   };
