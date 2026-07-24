@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 0);
         } else {
           setProfile(null);
-          setIsManager(false);
+          setRole(null);
           setProfileLoaded(true);
           setProfileError(null);
         }
