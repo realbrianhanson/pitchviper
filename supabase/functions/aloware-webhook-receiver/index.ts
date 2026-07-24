@@ -92,6 +92,12 @@ async function handleCallCompleted(supabase: any, payload: any) {
     return jsonRes({ success: false, error: "user_not_found" }, 200);
   }
 
+  const _teamEnt = await checkTeamEntitlementByTeamId(supabase, profile.team_id, "starter");
+  if (!_teamEnt.ok) {
+    await logAlowareEvent(supabase, { event_type: "call_ignored", team_id: profile.team_id, processed: false, error_code: _teamEnt.code });
+    return jsonRes({ success: false, error: "subscription_required" }, 200);
+  }
+
   const disposition = DISPOSITION_MAP[dispositionRaw] ?? (dispositionRaw ? dispositionRaw.toLowerCase().replace(/\s+/g, "_") : null);
   const outcomeRaw = String(payload.outcome ?? payload.call_status ?? "connected").toLowerCase();
   const outcome = OUTCOME_MAP[outcomeRaw] ?? "connected";
