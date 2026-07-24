@@ -41,10 +41,22 @@ export default function Settings() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   
+  // Tab selection (query-param controllable, e.g. /settings?tab=company)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const SETTINGS_TABS = new Set(["profile", "company", "notifications", "phone", "display", "sounds", "help"]);
+  const tabParam = searchParams.get("tab");
+  const settingsTab = tabParam && SETTINGS_TABS.has(tabParam) ? tabParam : "profile";
+  const setSettingsTab = (next: string) => {
+    const p = new URLSearchParams(searchParams);
+    p.set("tab", next);
+    setSearchParams(p, { replace: true });
+  };
+
   // Profile state
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [title, setTitle] = useState(profile?.title || "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
+
   
   // Preferences state
   const [darkMode, setDarkMode] = useState(true);
