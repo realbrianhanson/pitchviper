@@ -43,6 +43,12 @@ export function LicensedSeats() {
   const [seats, setSeats] = useState<number>(initial);
   const [pending, setPending] = useState(false);
 
+  // Keep the input in sync when the authoritative seat_limit changes
+  // (e.g., after a successful update or a refetch elsewhere).
+  useEffect(() => {
+    setSeats(initial);
+  }, [initial]);
+
   const plan = (ent?.plan ?? "starter") as PlanId;
   const interval = (ent?.interval ?? "monthly") as BillingInterval;
   const planDef = useMemo(() => PLANS.find((p) => p.id === plan) ?? PLANS[0], [plan]);
@@ -69,17 +75,30 @@ export function LicensedSeats() {
   if (!ent.access || ent.seat_limit === 0) return null;
 
   const minAllowed = Math.max(MIN_SEATS, used);
-  const clamped = Math.max(minAllowed, Math.min(MAX_SEATS, seats || 0));
-  const disabled = !canManageTeam || pending || clamped === ent.seat_limit;
-  const estimatedTotal = perSeat * clamped;
+  // Do NOT silently clamp user input — validate it and show inline feedback.
+  const isInteger = Number.isFinite(seats) && Number.isInteger(seats);
+  const inRange = isInteger && seats >= minAllowed && seats <= MAX_SEATS;
+  const valid = inRange;
+  const unchanged = seats === ent.seat_limit;
+  const disabled = !canManageTeam || pending || !valid || unchanged;
+  const estimatedTotal = perSeat * (valid ? seats : ent.seat_limit);
   const intervalLabel = interval === "annual" ? "/ year" : "/ month";
 
+  let validationMessage: string | null = null;
+  if (!isInteger) {
+    validationMessage = "Enter a whole number of seats.";
+  } else if (seats < minAllowed) {
+    validationMessage = `Minimum is ${minAllowed} (current team size).`;
+  } else if (seats > MAX_SEATS) {
+    validationMessage = `Maximum is ${MAX_SEATS} seats.`;
+  }
+
   const submit = async () => {
-    if (!canManageTeam) return;
+    if (!canManageTeam || !valid) return;
     setPending(true);
     try {
       const { data, error } = await supabase.functions.invoke("update-stripe-seats", {
-        body: { seats: clamped },
+        body: { seats },
       });
       if (error) {
         const code = await parseFunctionErrorCode(error);
@@ -87,7 +106,7 @@ export function LicensedSeats() {
       }
       const payload = data as { error?: string; seats?: number };
       if (payload?.error) throw new Error(payload.error);
-      toast.success(`Seats updated to ${payload.seats ?? clamped}`);
+      toast.success(`Seats updated to ${payload.seats ?? seats}`);
       await refetch();
       qc.invalidateQueries({ queryKey: ["billing"] });
     } catch (err) {
