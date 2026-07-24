@@ -12,14 +12,23 @@ import { AITeamInsights } from "@/components/manager/AITeamInsights";
 import { ManagerQuickActions } from "@/components/manager/ManagerQuickActions";
 import { ForecastSection } from "@/components/manager/ForecastSection";
 import { EditorialLoading } from "@/components/ui/editorial-skeleton";
-import { ViperButton } from "@/components/ui/viper-button";
+import { Button } from "@/components/ui/button";
 
 function formatDate(): string {
   return new Date().toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
-  }).toUpperCase();
+  });
+}
+
+function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <div className="mb-4">
+      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+      {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
+    </div>
+  );
 }
 
 export default function ManagerDashboard() {
@@ -47,7 +56,7 @@ export default function ManagerDashboard() {
     return (
       <AppLayout title="Manager Console">
         <div className="flex items-center justify-center min-h-[60vh]">
-          <EditorialLoading label="Initializing Console" />
+          <EditorialLoading label="Loading console" />
         </div>
       </AppLayout>
     );
@@ -57,11 +66,9 @@ export default function ManagerDashboard() {
     return (
       <AppLayout title="Manager Console">
         <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-          <Shield className="h-12 w-12 text-muted-foreground mb-6" strokeWidth={1.5} />
-          <h2 className="font-display italic text-3xl mb-2">Access Denied</h2>
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            Manager credentials required
-          </p>
+          <Shield className="h-10 w-10 text-muted-foreground mb-4" strokeWidth={1.5} />
+          <h2 className="text-xl font-semibold mb-1">Access denied</h2>
+          <p className="text-sm text-muted-foreground">Manager credentials required.</p>
         </div>
       </AppLayout>
     );
@@ -73,121 +80,103 @@ export default function ManagerDashboard() {
 
   return (
     <AppLayout title="Manager Console">
-    <div className="max-w-7xl mx-auto w-full space-y-8">
-      {/* Hero */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 pb-2"
-      >
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70 mb-3">
-            Manager Console · {formatDate()}
-          </p>
-          <h1 className="font-display text-5xl md:text-6xl leading-[1.05]">
-            Floor view, <span className="italic">{firstName}.</span>
-          </h1>
-        </div>
-        <div className="w-full md:w-auto flex flex-col md:flex-row md:items-end gap-6 md:gap-8">
-          <div className="md:border-l md:border-border md:pl-8">
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 block mb-1">
-              Active
-            </span>
-            <span className="font-display italic text-5xl leading-none text-success tabular-nums">
-              {activeReps}
-            </span>
-            <span className="font-mono text-xs text-muted-foreground/60 ml-1">/ {totalReps}</span>
+      <div className="max-w-[1400px] mx-auto w-full space-y-6">
+        {/* Intro */}
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6"
+        >
+          <div>
+            <p className="text-xs text-muted-foreground mb-1.5">{formatDate()}</p>
+            <h1 className="text-[32px] md:text-[40px] font-semibold leading-tight tracking-tight text-foreground">
+              Team overview, {firstName}.
+            </h1>
+            <div className="mt-2 flex items-center gap-3">
+              <p className="text-sm text-muted-foreground">Here's how your team is performing today.</p>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs text-foreground">
+                <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                <span className="tabular-nums font-medium">{activeReps}</span>
+                <span className="text-muted-foreground">of {totalReps} active</span>
+              </span>
+            </div>
           </div>
-          <ManagerQuickActions />
-        </div>
-      </motion.div>
-
-      {/* Error banner */}
-      {error && (
-        <div className="flex items-start gap-3 p-4 border-l-2 border border-destructive/40 border-l-destructive bg-destructive/5">
-          <AlertCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
-          <div className="flex-1">
-            <p className="font-semibold text-destructive">Couldn't load team data</p>
-            <p className="text-sm text-muted-foreground mt-1">{error}</p>
+          <div className="w-full lg:w-auto">
+            <ManagerQuickActions />
           </div>
-          <ViperButton variant="outline" size="sm" onClick={refetch} className="gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Retry
-          </ViperButton>
-        </div>
-      )}
+        </motion.div>
 
-      {/* Empty team state */}
-      {!isLoading && !error && teamMembers.length === 0 ? (
-        <div className="border border-border bg-background p-12 text-center">
-          <Users className="h-12 w-12 mx-auto text-muted-foreground/60 mb-4" strokeWidth={1.5} />
-          <h3 className="font-display italic text-2xl mb-2">No team members yet</h3>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Invite reps from Team Settings — once they start logging calls and pipeline activity, you'll see live aggregates and coaching flags here.
-          </p>
-        </div>
-      ) : (
-      <>
-      {/* Performance triage — action first */}
-      <div>
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="font-display text-2xl">Triage</h2>
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-            Who needs you now
-          </span>
-        </div>
-        <PerformanceSnapshot
-          needsAttention={needsAttention}
-          onFire={onFire}
-          coachingDue={coachingDue}
-        />
-      </div>
-
-      {/* Floor performance */}
-      <div>
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="font-display text-2xl">Floor Performance</h2>
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-            Today and 30-day context
-          </span>
-        </div>
-        <TeamOverviewCards overview={overview} isLoading={isLoading} />
-      </div>
-
-      {/* Forecast */}
-      <div>
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="font-display text-2xl">Revenue Forecast</h2>
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-            Pipeline outlook
-          </span>
-        </div>
-        <ForecastSection />
-      </div>
-
-      {/* Team + AI insights */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-border border border-border">
-        <div className="lg:col-span-8 bg-background p-6">
-          <div className="flex items-baseline justify-between mb-5">
-            <h2 className="font-display text-2xl">The Roster</h2>
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-              {teamMembers.length} reps
-            </span>
+        {/* Error banner */}
+        {error && (
+          <div className="flex items-start gap-3 p-4 rounded-[12px] border border-destructive/30 bg-destructive/5">
+            <AlertCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-destructive text-sm">Couldn't load team data</p>
+              <p className="text-sm text-muted-foreground mt-1">{error}</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={refetch} className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Retry
+            </Button>
           </div>
-          <TeamTable members={teamMembers} isLoading={isLoading} />
-        </div>
-        <div className="lg:col-span-4 bg-background p-6">
-          <AITeamInsights
-            insights={insights}
-            isLoading={isLoadingInsights}
-            onRefresh={refreshInsights}
-          />
-        </div>
+        )}
+
+        {/* Empty */}
+        {!isLoading && !error && teamMembers.length === 0 ? (
+          <div className="rounded-[12px] border border-border bg-card p-12 text-center shadow-sm">
+            <Users className="h-10 w-10 mx-auto text-muted-foreground mb-4" strokeWidth={1.5} />
+            <h3 className="text-lg font-semibold mb-1">No team members yet</h3>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Invite reps from Team Settings — once they start logging calls and pipeline activity, you'll see live aggregates and coaching flags here.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Triage */}
+            <section>
+              <SectionHeader title="Triage" subtitle="Who needs your attention right now" />
+              <PerformanceSnapshot
+                needsAttention={needsAttention}
+                onFire={onFire}
+                coachingDue={coachingDue}
+              />
+            </section>
+
+            {/* Floor performance */}
+            <section>
+              <SectionHeader title="Floor performance" subtitle="Live today and 30-day context" />
+              <TeamOverviewCards overview={overview} isLoading={isLoading} />
+            </section>
+
+            {/* Forecast */}
+            <section>
+              <SectionHeader title="Revenue forecast" subtitle="Pipeline outlook and quota progress" />
+              <ForecastSection />
+            </section>
+
+            {/* Roster + insights */}
+            <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              <div className="lg:col-span-8">
+                <div className="flex items-baseline justify-between mb-3">
+                  <h2 className="text-lg font-semibold text-foreground">Roster</h2>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {teamMembers.length} {teamMembers.length === 1 ? "rep" : "reps"}
+                  </span>
+                </div>
+                <TeamTable members={teamMembers} isLoading={isLoading} />
+              </div>
+              <div className="lg:col-span-4">
+                <AITeamInsights
+                  insights={insights}
+                  isLoading={isLoadingInsights}
+                  onRefresh={refreshInsights}
+                />
+              </div>
+            </section>
+          </>
+        )}
       </div>
-      </>
-      )}
-    </div>
     </AppLayout>
   );
 }
