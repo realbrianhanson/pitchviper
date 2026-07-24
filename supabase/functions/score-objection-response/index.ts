@@ -1,127 +1,87 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { authenticatePost, boundedString, clampInt, corsHeaders, errorResponse, jsonResponse } from "../_shared/edgeAuth.ts";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const CATEGORIES = new Set(["price", "authority", "need", "trust", "timing", "competitor", "product", "other"]);
+const DIFFICULTIES = new Set(["easy", "medium", "hard", "beginner", "intermediate", "advanced"]);
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  try {
-    const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
-    if (!token) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    const userResp = await fetch(`${Deno.env.get('SUPABASE_URL')}/auth/v1/user`, { headers: { apikey: Deno.env.get('SUPABASE_ANON_KEY')!, Authorization: `Bearer ${token}` } });
-    if (!userResp.ok) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  const auth = await authenticatePost(req);
+  if (!auth.ok) return auth.response;
+  const { userId, serviceClient } = auth.ctx;
 
-    const { objection_text, user_response, category, difficulty } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  const rl = await enforceRateLimit(userId, "score-objection-response", { perMinute: 15, perDay: 200, serviceClient });
+  if (!rl.allowed) return errorResponse("rate_limit", 429, { retry_after_seconds: rl.retryAfterSeconds });
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error('API key not configured');
-    }
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch { return errorResponse("invalid_body", 400); }
 
-    if (!objection_text || !user_response) {
-      throw new Error('Objection text and user response are required');
-    }
+  const objectionText = boundedString(body.objection_text, 1000);
+  const userResponse = boundedString(body.user_response, 2000);
+  const category = typeof body.category === "string" && CATEGORIES.has(body.category) ? body.category : "other";
+  const difficulty = typeof body.difficulty === "string" && DIFFICULTIES.has(body.difficulty) ? body.difficulty : "medium";
+  if (!objectionText || !userResponse) return errorResponse("invalid_fields", 400);
 
-    const systemPrompt = `You are a sales training AI that evaluates responses to prospect objections.
-    
-You must evaluate how well the sales rep handled the objection and provide:
-1. A score from 0-100
-2. Brief feedback (2-3 sentences)
-3. A suggested better response if score is below 80
+  const apiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!apiKey) return errorResponse("ai_not_configured", 503);
 
-Consider these criteria:
-- Acknowledged the prospect's concern
-- Didn't get defensive
-- Asked clarifying questions or redirected
-- Provided value or addressed the root concern
-- Maintained rapport and professional tone
-
-The objection category is: ${category}
-The difficulty level is: ${difficulty}`;
-
-    const userPrompt = `Prospect objection: "${objection_text}"
-
-Rep's response: "${user_response}"
-
-Evaluate this response and return JSON with: score (0-100), feedback (string), suggestedResponse (string or null if score >= 80)`;
-
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        tools: [
-          {
-            type: 'function',
-            function: {
-              name: 'evaluate_response',
-              description: 'Evaluate the sales rep response to an objection',
-              parameters: {
-                type: 'object',
-                properties: {
-                  score: {
-                    type: 'number',
-                    description: 'Score from 0-100',
-                  },
-                  feedback: {
-                    type: 'string',
-                    description: 'Brief feedback about the response',
-                  },
-                  suggestedResponse: {
-                    type: 'string',
-                    description: 'A better response if score is below 80, null otherwise',
-                  },
-                },
-                required: ['score', 'feedback'],
-              },
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
+          content: `You evaluate a sales rep's response to a prospect objection. Category: ${category}. Difficulty: ${difficulty}. Consider: acknowledgement, not being defensive, clarifying questions, providing value, maintaining rapport.`,
+        },
+        {
+          role: "user",
+          content: `Objection: "${objectionText}"\nResponse: "${userResponse}"`,
+        },
+      ],
+      tools: [{
+        type: "function",
+        function: {
+          name: "evaluate_response",
+          description: "Score the response",
+          parameters: {
+            type: "object",
+            properties: {
+              score: { type: "number", description: "0-100" },
+              feedback: { type: "string", description: "2-3 sentences" },
+              suggestedResponse: { type: "string", description: "Better response if score below 80" },
             },
+            required: ["score", "feedback"],
           },
-        ],
-        tool_choice: { type: 'function', function: { name: 'evaluate_response' } },
-      }),
-    });
+        },
+      }],
+      tool_choice: { type: "function", function: { name: "evaluate_response" } },
+    }),
+  });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI API error:', response.status, errorText);
-      throw new Error(`AI API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    
-    if (!toolCall) {
-      throw new Error('No evaluation returned from AI');
-    }
-
-    const evaluation = JSON.parse(toolCall.function.arguments);
-    
-    return new Response(
-      JSON.stringify(evaluation),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    console.error('Error scoring response:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+  if (!res.ok) {
+    if (res.status === 429) return errorResponse("rate_limit", 429);
+    if (res.status === 402) return errorResponse("credits_exhausted", 402);
+    return errorResponse("ai_failed", 502);
   }
+
+  const data = await res.json().catch(() => null);
+  const args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+  if (typeof args !== "string") return errorResponse("ai_invalid_response", 502);
+
+  let parsed: Record<string, unknown>;
+  try { parsed = JSON.parse(args); } catch { return errorResponse("ai_invalid_response", 502); }
+
+  const score = clampInt(parsed.score, 0, 100, 0);
+  const feedback = boundedString(parsed.feedback, 800) ?? "Response evaluated.";
+  const suggestedResponse = boundedString(parsed.suggestedResponse, 1000);
+
+  return jsonResponse({
+    score,
+    feedback,
+    suggestedResponse: score < 80 ? suggestedResponse : null,
+  });
 });
