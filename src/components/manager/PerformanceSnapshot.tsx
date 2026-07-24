@@ -30,6 +30,12 @@ function initials(name: string): string {
 
 export function PerformanceSnapshot({ needsAttention, onFire, coachingDue }: PerformanceSnapshotProps) {
   const [modalType, setModalType] = useState<ModalType>(null);
+  const navigate = useNavigate();
+
+  const gotoCoaching = (userId: string) => {
+    setModalType(null);
+    navigate(`/coaching?rep=${encodeURIComponent(userId)}`);
+  };
 
   const tiles = [
     {
