@@ -35,10 +35,10 @@ serve(async (req) => {
 
     const { team_id } = await req.json();
 
-    // Caller must be a manager on that team
-    const { data: isManager } = await authClient.rpc('has_role', { _user_id: userData.user.id, _role: 'manager' });
+    // Caller must be owner/admin/manager on that team. Team is derived server-side.
     const { data: callerProfile } = await supabase.from('profiles').select('team_id').eq('user_id', userData.user.id).maybeSingle();
-    if (!isManager || callerProfile?.team_id !== team_id) {
+    const { data: isMgmt } = await supabase.rpc('has_management_role', { _user_id: userData.user.id });
+    if (!isMgmt || !callerProfile?.team_id || callerProfile.team_id !== team_id) {
       return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
