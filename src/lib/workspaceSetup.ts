@@ -77,7 +77,10 @@ export function isSystemsStepComplete(input: Pick<WorkspaceSetupInput, "crm_prov
   const s = input.setup_state ?? {};
   const provider = (input.crm_provider ?? "none") as CrmProvider;
   if (s.systems_deferred) return true;
-  if (provider === "manual" && s.systems_reviewed) return true;
+  // Manual + Dialer.io complete on explicit review — no external adapter to verify.
+  if ((provider === "manual" || provider === "dialer_io") && s.systems_reviewed) return true;
+  // Legacy Aloware setups stay "complete" if they were previously connected;
+  // never allow a fresh setup to satisfy this branch via aloware alone.
   if ((provider === "aloware" || provider === "gohighlevel") && (input.crm_connected_at || input.first_sync_at)) return true;
   return false;
 }
