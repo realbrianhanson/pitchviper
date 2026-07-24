@@ -131,7 +131,7 @@ export function TeamMembersManager() {
           action: "invite",
           email: email.trim(),
           fullName: fullName.trim(),
-          alowareUserId: selectedAlowareUser || null,
+          
         },
       });
 
