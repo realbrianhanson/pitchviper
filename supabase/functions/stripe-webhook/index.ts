@@ -187,7 +187,7 @@ async function processEvent(
   if (!teamId) return "ignored";
 
   if (event.type === "customer.subscription.deleted") {
-    const { error } = await service
+    const { data: updated, error } = await service
       .from("team_billing")
       .update({
         status: "canceled",
@@ -195,8 +195,10 @@ async function processEvent(
         stripe_subscription_id: null,
         last_webhook_at: new Date().toISOString(),
       })
-      .eq("team_id", teamId);
+      .eq("team_id", teamId)
+      .select("team_id");
     if (error) throw new Error("apply_failed");
+    if (!updated || updated.length !== 1) throw new Error("apply_failed");
     return { teamId };
   }
 
