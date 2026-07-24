@@ -265,18 +265,19 @@ export function AlowareTeamConfig() {
         )}
 
         {/* Info Box */}
-        <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+        <div className="p-4 rounded-none border border-border bg-muted/40">
           <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-amber-500" />
-            Setup Instructions
+            <AlertCircle className="h-4 w-4 text-primary" />
+            Setup order
           </h4>
           <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-            <li>Add your Aloware API token in Cloud Secrets (ALOWARE_API_TOKEN)</li>
-            <li>Click "Test Token" to verify the connection</li>
-            <li>Click "Sync Team Members" to pull Aloware users</li>
-            <li>Map each team member to their Aloware account</li>
+            <li>Save and verify your company Aloware token in the Company Aloware Connection card above</li>
+            <li>Click "Test token" to confirm this device can reach Aloware</li>
+            <li>Click "Sync team members" to pull Aloware users</li>
+            <li>Map each teammate to their Aloware account</li>
           </ol>
         </div>
+
       </ViperCardContent>
     </ViperCard>
   );
