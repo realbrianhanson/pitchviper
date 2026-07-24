@@ -80,3 +80,12 @@ verify_jwt = false
 
 [functions.sync-aloware-data]
 verify_jwt = false
+
+[functions.create-stripe-checkout]
+verify_jwt = false
+
+[functions.create-stripe-portal]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
