@@ -273,9 +273,22 @@ export function useCoaching() {
   });
 
   const updateActionStatus = useMutation({
-    mutationFn: async (input: { action_id: string; status: CoachingActionStatus }) => {
+    mutationFn: async (input: {
+      action_id: string;
+      status: CoachingActionStatus;
+      current_status?: CoachingActionStatus;
+    }) => {
       if (!user) throw new Error("not_authenticated");
       if (!isCoachingActionStatus(input.status)) throw new Error("invalid_status");
+      // Client-side belt for reps: block reopen/backward moves before hitting the RPC.
+      // The RPC is still authoritative and enforces the same rule server-side.
+      if (
+        !canManageTeam &&
+        input.current_status &&
+        !canRepAdvanceStatus(input.current_status, input.status)
+      ) {
+        throw new Error("forbidden");
+      }
       const { data, error } = await supabase.rpc("update_coaching_action_status", {
         p_action_id: input.action_id,
         p_status: input.status,
