@@ -47,7 +47,7 @@ function InsightRow({
   );
 }
 
-export function AITeamInsights({ insights, isLoading, onRefresh }: AITeamInsightsProps) {
+export function AITeamInsights({ insights, isLoading, onRefresh, coachingRepId, onCoachRep }: AITeamInsightsProps) {
   return (
     <div className="rounded-[12px] border border-border bg-card p-6 shadow-sm h-full">
       <div className="flex items-center justify-between mb-4">
