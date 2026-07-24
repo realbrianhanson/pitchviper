@@ -150,7 +150,7 @@ export default function Settings() {
           <p className="text-muted-foreground">Manage your account and preferences</p>
         </div>
 
-        <Tabs defaultValue="profile" className="space-y-6">
+        <Tabs value={settingsTab} onValueChange={setSettingsTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-flex">
             <TabsTrigger value="profile" className="gap-2">
               <User className="h-4 w-4" />
