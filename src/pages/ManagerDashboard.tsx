@@ -144,6 +144,9 @@ export default function ManagerDashboard() {
           </div>
         ) : (
           <>
+            {/* Workspace setup checklist (hidden once completed) */}
+            <WorkspaceSetupChecklist />
+
             {/* Triage */}
             <section>
               <SectionHeader title="Triage" subtitle="Who needs your attention right now" />
