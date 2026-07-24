@@ -47,7 +47,7 @@ import { ResearchButton } from '@/components/research/ResearchButton';
 import { DealCoachPanel } from '@/components/pipeline/DealCoachPanel';
 import { ClickToDialButton } from '@/components/calls/ClickToDialButton';
 import { SendSMSButton } from '@/components/calls/SendSMSButton';
-import { useAlowareLead } from '@/hooks/useAlowareLead';
+// Legacy Aloware push retired — deals stay in PitchViper's pipeline.
 import { cn } from '@/lib/utils';
 
 interface DealDetailPanelProps {
