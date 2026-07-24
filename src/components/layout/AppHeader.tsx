@@ -112,7 +112,9 @@ export function AppHeader({ title, onOpenPalette }: AppHeaderProps) {
         <LogCallModal open={showLogCall} onOpenChange={setShowLogCall} />
 
         <div className="flex items-center gap-0.5 text-muted-foreground">
-          <ChatPanel />
+          <div className="hidden sm:flex">
+            <ChatPanel />
+          </div>
           <NotificationBell />
           <ThemeToggle />
         </div>
