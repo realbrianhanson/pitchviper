@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders, errorResponse, isUuid, jsonResponse } from "../_shared/edgeAuth.ts";
 import { boundedText, logAlowareEvent, readBoundedJson } from "../_shared/alowareSafe.ts";
 import { timingSafeEqualStrings } from "../_shared/timingSafe.ts";
+import { checkTeamEntitlementByTeamId } from "../_shared/entitlement.ts";
 
 const MAX_TRANSCRIPT_CHARS = 200_000;
 
