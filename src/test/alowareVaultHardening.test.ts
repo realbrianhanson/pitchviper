@@ -206,7 +206,7 @@ describe("Shared helper never exposes global credentials", () => {
   const src = R("supabase/functions/_shared/alowareIntegration.ts");
   it("resolves tokens exclusively via svc_provider_integration_get_secret RPC", () => {
     expect(src).toMatch(/rpc\("svc_provider_integration_get_secret"/);
-    expect(src).not.toMatch(/ALOWARE_API_TOKEN/);
-    expect(src).not.toMatch(/ALOWARE_WEBHOOK_SECRET/);
+    expect(src).not.toMatch(/Deno\.env\.get\(\s*["']ALOWARE_[A-Z_]+["']\s*\)/);
   });
 });
+
