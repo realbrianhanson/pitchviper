@@ -94,11 +94,12 @@ describe("Aloware webhook receiver — tenant-scoped auth", () => {
   it("resolves owning team from ?key= before parsing payload beyond bounded bytes", () => {
     expect(src).toMatch(/searchParams\.get\("key"\)/);
     expect(src).toMatch(/resolveWebhookKey/);
-    // key resolution must appear before payload JSON parse
-    const keyIdx = src.indexOf("resolveWebhookKey");
-    const payloadIdx = src.indexOf("readBoundedJson");
+    // key resolution must appear before the JSON body is parsed.
+    const keyIdx = src.search(/resolveWebhookKey\s*\(/);
+    const payloadIdx = src.search(/await\s+readBoundedJson\s*\(/);
     expect(keyIdx).toBeGreaterThan(-1);
     expect(payloadIdx).toBeGreaterThan(keyIdx);
+
   });
   it("has zero references to legacy global ALOWARE_WEBHOOK_SECRET or ALOWARE_API_TOKEN", () => {
     expect(src).not.toMatch(/ALOWARE_WEBHOOK_SECRET/);
