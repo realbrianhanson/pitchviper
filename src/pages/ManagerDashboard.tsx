@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Shield, AlertCircle, Users, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
@@ -14,6 +14,7 @@ import { ForecastSection } from "@/components/manager/ForecastSection";
 import { WorkspaceSetupChecklist } from "@/components/manager/WorkspaceSetupChecklist";
 import { EditorialLoading } from "@/components/ui/editorial-skeleton";
 import { Button } from "@/components/ui/button";
+import { resolveTeamMemberByName } from "@/lib/coachingValidation";
 
 function formatDate(): string {
   return new Date().toLocaleDateString("en-US", {
