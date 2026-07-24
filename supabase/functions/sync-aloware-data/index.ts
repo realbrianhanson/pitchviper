@@ -369,15 +369,6 @@ Deno.serve(async (req) => {
     }
     const authedUserId = userData.user.id;
 
-    const apiToken = Deno.env.get("ALOWARE_API_TOKEN");
-    if (!apiToken) {
-      console.error("ALOWARE_API_TOKEN not configured");
-      return new Response(
-        JSON.stringify({ success: false, error: "Aloware API token not configured" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const _ent = await requireTeamEntitlement(supabase, authedUserId, "starter");
     if (!_ent.ok) return _ent.response;
@@ -403,6 +394,14 @@ Deno.serve(async (req) => {
     }
 
     const userId = authedUserId;
+
+    const apiToken = await getTeamAlowareToken(supabase, teamId);
+    if (!apiToken) {
+      return new Response(
+        JSON.stringify({ success: false, error: "integration_not_configured" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     console.log(`Starting Aloware sync: type=${syncType}, team=${teamId}`);
 
