@@ -23,7 +23,7 @@ serve(async (req) => {
   const { userId, serviceClient } = auth.ctx;
 
   const rl = await enforceRateLimit(userId, "transcribe-voice-response", { perMinute: 20, perDay: 300, serviceClient });
-  if (!rl.allowed) return errorResponse("rate_limit", 429, { retry_after_seconds: rl.retryAfterSeconds });
+  if (!rl.allowed) return rl.response!;
 
   let formData: FormData;
   try { formData = await req.formData(); } catch { return errorResponse("invalid_body", 400); }

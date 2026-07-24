@@ -125,7 +125,7 @@ serve(async (req) => {
   const { userId, serviceClient } = auth.ctx;
 
   const rl = await enforceRateLimit(userId, "roleplay-analyze", { perMinute: 4, perDay: 40, serviceClient });
-  if (!rl.allowed) return errorResponse("rate_limit", 429, { retry_after_seconds: rl.retryAfterSeconds });
+  if (!rl.allowed) return rl.response!;
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return errorResponse("invalid_body", 400); }

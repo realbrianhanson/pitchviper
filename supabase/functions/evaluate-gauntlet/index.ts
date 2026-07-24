@@ -94,7 +94,7 @@ serve(async (req) => {
   const { userId, serviceClient } = auth.ctx;
 
   const rl = await enforceRateLimit(userId, "evaluate-gauntlet", { perMinute: 6, perDay: 60, serviceClient });
-  if (!rl.allowed) return errorResponse("rate_limit", 429, { retry_after_seconds: rl.retryAfterSeconds });
+  if (!rl.allowed) return rl.response!;
 
   let body: Record<string, unknown>;
   try {
