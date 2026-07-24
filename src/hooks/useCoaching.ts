@@ -230,7 +230,7 @@ export function useCoaching() {
           stats: data.stats as RepStats,
         };
       },
-      enabled: !!repId,
+      enabled: !!repId && canManageTeam,
       staleTime: 5 * 60 * 1000,
     });
 
