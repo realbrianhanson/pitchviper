@@ -101,6 +101,15 @@ export function useManagerDashboard() {
     setIsLoading(true);
     setError(null);
     try {
+      // 0) Company targets (fall back to sensible defaults when unset)
+      const { data: companyRow } = await supabase
+        .from('company_settings')
+        .select('daily_calls_target, daily_appointments_target')
+        .eq('team_id', profile.team_id)
+        .maybeSingle();
+      const perRepCalls = companyRow?.daily_calls_target ?? 50;
+      const perRepAppts = companyRow?.daily_appointments_target ?? 3;
+
       // 1) Team members
       const { data: profiles, error: profilesErr } = await supabase
         .from('profiles')
