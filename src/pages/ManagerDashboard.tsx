@@ -141,6 +141,14 @@ export default function ManagerDashboard() {
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
               Invite reps from Team Settings — once they start logging calls and pipeline activity, you'll see live aggregates and coaching flags here.
             </p>
+            <div className="mt-5 flex items-center justify-center gap-2">
+              <Button asChild size="sm">
+                <Link to="/team-settings?tab=team">Invite reps</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/sample-workspace">Explore a sample workspace</Link>
+              </Button>
+            </div>
           </div>
         ) : (
           <>
