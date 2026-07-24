@@ -440,9 +440,8 @@ Deno.serve(async (req) => {
       await release();
     }
 
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "unknown";
-    console.log(JSON.stringify({ action: "error", status: "exception", note: msg.slice(0, 200) }));
+  } catch {
+    console.log(JSON.stringify({ action: "error", status: "exception" }));
     return json({ success: false, error: "internal_error" }, 500);
   }
 });
