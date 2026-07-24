@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 import {
-  SALES_SYSTEMS,
+  SALES_SYSTEM_REGISTRY,
   normalizeSalesSystem,
   hasInAppTelephony,
 } from "@/lib/salesSystem";
