@@ -194,6 +194,8 @@ export default function ManagerDashboard() {
                   insights={insights}
                   isLoading={isLoadingInsights}
                   onRefresh={refreshInsights}
+                  coachingRepId={coachingRepId}
+                  onCoachRep={(id) => navigate(`/coaching?rep=${id}`)}
                 />
               </div>
             </section>
