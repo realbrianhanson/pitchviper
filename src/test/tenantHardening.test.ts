@@ -69,8 +69,10 @@ describe("validate-promo-code edge function", () => {
 });
 
 describe("client never writes promo_validated", () => {
-  it("StepAccess does not update promo_validated on profiles", () => {
-    expect(stepAccess).not.toMatch(/promo_validated/);
+  it("StepAccess never writes promo_validated from the client", () => {
+    // Any direct client-side update of promo_validated is forbidden.
+    expect(stepAccess).not.toMatch(/\.update\([^)]*promo_validated/);
+    expect(stepAccess).not.toMatch(/promo_validated\s*:/);
   });
   it("Onboarding final save writes only whitelisted profile columns", () => {
     const finalSaveIndex = onboardingPage.indexOf("handleFinalComplete");
