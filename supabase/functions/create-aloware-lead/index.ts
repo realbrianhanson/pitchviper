@@ -48,6 +48,9 @@ serve(async (req) => {
     .select("aloware_user_id, team_id")
     .eq("user_id", userId)
     .maybeSingle();
+  const alowareToken = await getTeamAlowareToken(serviceClient, profile?.team_id ?? null);
+  if (!alowareToken) return errorResponse("integration_not_configured", 400, { success: false });
+
 
   const leadPayload: Record<string, unknown> = {
     api_token: alowareToken,

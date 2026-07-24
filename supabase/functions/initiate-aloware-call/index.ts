@@ -40,6 +40,9 @@ serve(async (req) => {
     .eq("user_id", userId)
     .maybeSingle();
   if (!profile?.aloware_user_id) return errorResponse("aloware_not_linked", 400, { success: false });
+  const alowareToken = await getTeamAlowareToken(serviceClient, profile.team_id);
+  if (!alowareToken) return errorResponse("integration_not_configured", 400, { success: false });
+
 
   const effectiveLine = linePhoneNumber || (isSafePhone(profile.default_aloware_line) ? normalizePhone(profile.default_aloware_line) : null);
   if (!effectiveLine) return errorResponse("no_outbound_line", 400, { success: false });

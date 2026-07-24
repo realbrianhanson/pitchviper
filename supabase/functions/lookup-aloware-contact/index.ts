@@ -25,6 +25,9 @@ serve(async (req) => {
   const action = boundedText(body.action, 20) ?? "lookup";
   const { data: profile } = await serviceClient
     .from("profiles").select("team_id").eq("user_id", userId).maybeSingle();
+  const alowareToken = await getTeamAlowareToken(serviceClient, profile?.team_id ?? null);
+  if (!alowareToken) return errorResponse("integration_not_configured", 400, { success: false });
+
 
   if (action === "lookup") {
     const phoneNumber = body.phoneNumber != null && body.phoneNumber !== "" ? normalizePhone(body.phoneNumber) : null;
