@@ -97,6 +97,23 @@ export function ClickToDialProvider({ children }: { children: React.ReactNode })
   const [pendingSMS, setPendingSMS] = useState<SMSParams | null>(null);
   const [isSendingSMS, setIsSendingSMS] = useState(false);
 
+  // Manual call log handoff state
+  const [isManualLogOpen, setIsManualLogOpen] = useState(false);
+  const [manualLogInitial, setManualLogInitial] = useState<ManualLogInitialData | null>(null);
+
+  const openManualLog = useCallback((initial?: ManualLogInitialData) => {
+    setManualLogInitial(initial ?? null);
+    setIsManualLogOpen(true);
+  }, []);
+
+  const closeManualLog = useCallback(() => {
+    setIsManualLogOpen(false);
+    // Keep the initial data around briefly so the closing animation still
+    // shows the hydrated fields; the modal owns its own reset on close.
+    setManualLogInitial(null);
+  }, []);
+
+
   // Check for active call on mount
   useEffect(() => {
     const checkActiveCall = async () => {
