@@ -296,6 +296,18 @@ serve(async (req) => {
         );
       }
 
+      // The target profile must live on the caller's team.
+      const { data: callerProfile } = await supabase
+        .from('profiles').select('team_id').eq('user_id', user.id).maybeSingle();
+      const { data: targetProfile } = await supabase
+        .from('profiles').select('team_id').eq('id', profileId).maybeSingle();
+      if (!callerProfile?.team_id || callerProfile.team_id !== targetProfile?.team_id) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Forbidden' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ aloware_user_id: alowareUserId })
