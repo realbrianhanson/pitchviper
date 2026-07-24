@@ -45,6 +45,8 @@ const CLASSIFICATION: Record<string, "starter" | "growth" | "recovery" | "auth" 
   "send-aloware-sms": "starter",
   "verify-aloware-connection": "starter",
   "sync-aloware-data": "starter",
+  "manage-aloware-integration": "starter",
+
   // recovery / auth / webhook — no entitlement gate
   "create-stripe-checkout": "recovery",
   "create-stripe-portal": "recovery",
