@@ -21,6 +21,7 @@ import {
   Cog,
   Phone,
   Building2,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -82,6 +83,8 @@ const managerNavItems: NavItem[] = [
   { title: "Company Setup", url: "/workspace-setup", icon: Building2 },
   { title: "Team Settings", url: "/team-settings", icon: Settings },
 ];
+
+const sampleNavItem: NavItem = { title: "Sample workspace", url: "/sample-workspace", icon: Sparkles };
 
 const bottomNavItems: NavItem[] = [
   { title: "Settings", url: "/settings", icon: Cog },
@@ -186,6 +189,29 @@ export function AppSidebar() {
                       active={isNavItemActive(location.pathname, item.url, item.exact)}
                     />
                   ))}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="Sample workspace" isActive={isNavItemActive(location.pathname, sampleNavItem.url)}>
+                      <NavLink
+                        to={sampleNavItem.url}
+                        className={cn(
+                          "relative flex items-center gap-3 px-3 py-2 text-[15px] leading-tight transition-colors duration-150 rounded-md",
+                          isNavItemActive(location.pathname, sampleNavItem.url)
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                            : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 italic"
+                        )}
+                      >
+                        <sampleNavItem.icon className="h-[18px] w-[18px] shrink-0 text-sidebar-foreground/50" strokeWidth={1.75} />
+                        {!isCollapsed && (
+                          <span className="flex items-center gap-2">
+                            {sampleNavItem.title}
+                            <span className="text-[9px] uppercase tracking-wide font-medium not-italic text-muted-foreground border border-border rounded px-1 py-px">
+                              Sample
+                            </span>
+                          </span>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>

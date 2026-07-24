@@ -274,7 +274,15 @@ export default function WorkspaceSetup() {
             Configure your sales floor
           </h1>
           <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
-            Five short steps. You can revisit any of them later from Settings.
+            Five short steps. You can revisit any of them later from Settings.{" "}
+            <button
+              type="button"
+              onClick={() => navigate("/sample-workspace")}
+              className="text-primary font-medium hover:underline"
+            >
+              Explore a sample workspace
+            </button>{" "}
+            to see the finished experience.
           </p>
           <div className="mt-5 flex items-center gap-4">
             <div className="flex-1 max-w-md">
