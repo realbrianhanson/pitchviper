@@ -199,7 +199,7 @@ export default function WorkspaceSetup() {
     }
   };
 
-  const chooseSystem = async (provider: "aloware" | "gohighlevel" | "manual") => {
+  const chooseSystem = async (provider: "dialer_io" | "gohighlevel" | "manual") => {
     setSaving(true);
     try {
       if (provider === "manual") {
@@ -207,12 +207,17 @@ export default function WorkspaceSetup() {
         await setup.patchState({ systems_reviewed: true, systems_deferred: false });
         toast.success("Set to manual operation");
         goNext();
+      } else if (provider === "dialer_io") {
+        // No public Dialer.io connect contract yet — record the selection
+        // and mark reviewed. Reps operate in Dialer.io directly.
+        await setup.save({ crm_provider: "dialer_io" }, { action: "workspace_setup_system_selected", metadata: { provider } });
+        await setup.patchState({ systems_reviewed: true, systems_deferred: false });
+        toast.success("Dialer.io selected. Open it from Settings › Phone system when you're ready.");
+        goNext();
       } else {
         await setup.save({ crm_provider: provider }, { action: "workspace_setup_system_selected", metadata: { provider } });
-        toast.success(`Provider set to ${provider === "aloware" ? "Aloware" : "GoHighLevel"}. Complete the connection in Team Settings.`);
-        // Deep-link into the correct tab so the user can actually connect.
-        if (provider === "aloware") navigate("/team-settings?tab=aloware");
-        else navigate("/team-settings?tab=webhook");
+        toast.success("GoHighLevel selected. Configure the webhook in Settings.");
+        navigate("/team-settings?tab=data-import");
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Couldn't save selection");
