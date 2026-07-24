@@ -326,13 +326,6 @@ export function TeamMembersManager() {
                           )}
                         </TableCell>
                         <TableCell>
-                          {member.aloware_user_id ? (
-                            <Badge variant="default">Linked</Badge>
-                          ) : (
-                            <Badge variant="outline">—</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
