@@ -15,8 +15,7 @@ describe("sampleWorkspace fixtures", () => {
     expect(Object.isFrozen(SAMPLE_WORKSPACE.reps[0])).toBe(true);
     expect(Object.isFrozen(SAMPLE_WORKSPACE.kpis[0])).toBe(true);
     expect(() => {
-      // @ts-expect-error runtime immutability check
-      SAMPLE_WORKSPACE.reps[0].name = "mutated";
+      (SAMPLE_WORKSPACE.reps[0] as { name: string }).name = "mutated";
     }).toThrow();
   });
 
