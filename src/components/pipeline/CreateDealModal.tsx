@@ -125,7 +125,7 @@ export function CreateDealModal({ open, onOpenChange, onSubmit, initialStage = '
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Search for existing contacts in Aloware</p>
+                <p>Search existing contacts</p>
               </TooltipContent>
             </Tooltip>
           </DialogTitle>
