@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntitlement } from "@/hooks/useEntitlement";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,9 +20,10 @@ const SEAT_ERROR_LABELS: Record<string, string> = {
   seats_below_used: "You can't reduce below current team size.",
   seats_above_max: `Maximum is ${MAX_SEATS} seats.`,
   no_subscription: "No active subscription.",
-  subscription_inactive: "Subscription is not active.",
+  subscription_inactive: "Subscription is not active. Manage it in the Billing Portal.",
   subscription_item_missing: "Subscription setup issue. Contact support.",
   invalid_plan: "Subscription price isn't recognized. Contact support.",
+  provider_mismatch: "Stripe returned an unexpected result. Try again.",
   forbidden: "Only managers can update seats.",
   unauthorized: "Please sign in again.",
   invalid_body: "Enter a valid seat count.",
@@ -41,6 +42,12 @@ export function LicensedSeats() {
       : Math.max(MIN_SEATS, ent?.used_seats ?? MIN_SEATS);
   const [seats, setSeats] = useState<number>(initial);
   const [pending, setPending] = useState(false);
+
+  // Keep the input in sync when the authoritative seat_limit changes
+  // (e.g., after a successful update or a refetch elsewhere).
+  useEffect(() => {
+    setSeats(initial);
+  }, [initial]);
 
   const plan = (ent?.plan ?? "starter") as PlanId;
   const interval = (ent?.interval ?? "monthly") as BillingInterval;
@@ -68,17 +75,30 @@ export function LicensedSeats() {
   if (!ent.access || ent.seat_limit === 0) return null;
 
   const minAllowed = Math.max(MIN_SEATS, used);
-  const clamped = Math.max(minAllowed, Math.min(MAX_SEATS, seats || 0));
-  const disabled = !canManageTeam || pending || clamped === ent.seat_limit;
-  const estimatedTotal = perSeat * clamped;
+  // Do NOT silently clamp user input — validate it and show inline feedback.
+  const isInteger = Number.isFinite(seats) && Number.isInteger(seats);
+  const inRange = isInteger && seats >= minAllowed && seats <= MAX_SEATS;
+  const valid = inRange;
+  const unchanged = seats === ent.seat_limit;
+  const disabled = !canManageTeam || pending || !valid || unchanged;
+  const estimatedTotal = perSeat * (valid ? seats : ent.seat_limit);
   const intervalLabel = interval === "annual" ? "/ year" : "/ month";
 
+  let validationMessage: string | null = null;
+  if (!isInteger) {
+    validationMessage = "Enter a whole number of seats.";
+  } else if (seats < minAllowed) {
+    validationMessage = `Minimum is ${minAllowed} (current team size).`;
+  } else if (seats > MAX_SEATS) {
+    validationMessage = `Maximum is ${MAX_SEATS} seats.`;
+  }
+
   const submit = async () => {
-    if (!canManageTeam) return;
+    if (!canManageTeam || !valid) return;
     setPending(true);
     try {
       const { data, error } = await supabase.functions.invoke("update-stripe-seats", {
-        body: { seats: clamped },
+        body: { seats },
       });
       if (error) {
         const code = await parseFunctionErrorCode(error);
@@ -86,7 +106,7 @@ export function LicensedSeats() {
       }
       const payload = data as { error?: string; seats?: number };
       if (payload?.error) throw new Error(payload.error);
-      toast.success(`Seats updated to ${payload.seats ?? clamped}`);
+      toast.success(`Seats updated to ${payload.seats ?? seats}`);
       await refetch();
       qc.invalidateQueries({ queryKey: ["billing"] });
     } catch (err) {
@@ -112,19 +132,39 @@ export function LicensedSeats() {
           </p>
         </div>
         {canManageTeam ? (
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min={minAllowed}
-              max={MAX_SEATS}
-              value={seats}
-              onChange={(e) => setSeats(Number(e.target.value) || 0)}
-              className="w-24 h-10 border border-border bg-background px-3 font-mono text-sm text-right"
-              aria-label="Licensed seats"
-            />
-            <Button onClick={submit} disabled={disabled} size="sm">
-              {pending ? "Updating…" : "Update seats"}
-            </Button>
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step={1}
+                min={minAllowed}
+                max={MAX_SEATS}
+                value={Number.isFinite(seats) ? seats : ""}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    setSeats(Number.NaN);
+                    return;
+                  }
+                  const n = Number(raw);
+                  setSeats(Number.isFinite(n) ? n : Number.NaN);
+                }}
+                aria-invalid={!valid}
+                className="w-24 h-10 border border-border bg-background px-3 font-mono text-sm text-right"
+                aria-label="Licensed seats"
+              />
+              <Button onClick={submit} disabled={disabled} size="sm">
+                {pending ? "Updating…" : "Update seats"}
+              </Button>
+            </div>
+            {validationMessage ? (
+              <p
+                role="alert"
+                className="text-[10px] font-mono uppercase tracking-[0.12em] text-destructive"
+              >
+                {validationMessage}
+              </p>
+            ) : null}
           </div>
         ) : (
           <p className="text-xs font-mono uppercase tracking-[0.12em] text-muted-foreground">
