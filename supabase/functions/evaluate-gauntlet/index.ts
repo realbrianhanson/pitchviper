@@ -94,6 +94,9 @@ serve(async (req) => {
   if (!auth.ok) return auth.response;
   const { userId, serviceClient } = auth.ctx;
 
+  const ent = await requireTeamEntitlement(serviceClient, userId, "growth");
+  if (!ent.ok) return ent.response;
+
   const rl = await enforceRateLimit(userId, "evaluate-gauntlet", { perMinute: 6, perDay: 60, serviceClient });
   if (!rl.allowed) return rl.response!;
 
