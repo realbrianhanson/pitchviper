@@ -140,3 +140,54 @@ describe("ProtectedRoute", () => {
     expect(screen.getByText("ONBOARDING")).toBeInTheDocument();
   });
 });
+
+// Additional entitlement-gate tests
+
+describe("ProtectedRoute · entitlement gate", () => {
+  it("blocks app content when entitlement.access is false", () => {
+    reset();
+    authState.user = { id: "u1" };
+    authState.profileLoaded = true;
+    authState.profile = { promo_validated: true, onboarding_completed: true };
+    entState.data = {
+      access: false,
+      reason: "expired",
+      tier: "starter",
+      can_manage: true,
+      seat_limit: 0,
+      used_seats: 0,
+    };
+    renderAt("/");
+    expect(screen.getByText(/Workspace paused/i)).toBeInTheDocument();
+    expect(screen.queryByText("APP CONTENT")).not.toBeInTheDocument();
+  });
+
+  it("shows manager CTA (Choose a plan) for managers when paused", () => {
+    reset();
+    authState.user = { id: "u1" };
+    authState.profileLoaded = true;
+    authState.profile = { promo_validated: true, onboarding_completed: true };
+    authState.canManageTeam = true;
+    entState.data = {
+      access: false,
+      reason: "expired",
+      tier: "starter",
+      can_manage: true,
+      seat_limit: 0,
+      used_seats: 0,
+    };
+    renderAt("/");
+    expect(screen.getByText(/Choose a plan/i)).toBeInTheDocument();
+  });
+
+  it("shows a Retry when entitlement fetch errors", () => {
+    reset();
+    authState.user = { id: "u1" };
+    authState.profileLoaded = true;
+    authState.profile = { promo_validated: true, onboarding_completed: true };
+    entState.data = undefined;
+    entState.isError = true;
+    renderAt("/");
+    expect(screen.getByText(/Retry/i)).toBeInTheDocument();
+  });
+});
