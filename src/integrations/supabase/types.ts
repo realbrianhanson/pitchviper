@@ -2433,8 +2433,17 @@ export type Database = {
         }
         Returns: Json
       }
+      check_team_entitlement: {
+        Args: { p_min_tier?: string; p_user_id: string }
+        Returns: Json
+      }
+      check_team_seat_available: { Args: { p_team_id: string }; Returns: Json }
       claim_stripe_webhook_event: {
         Args: { p_event_id: string; p_event_type: string; p_object_id: string }
+        Returns: Json
+      }
+      compute_entitlement: {
+        Args: { p_billing: Database["public"]["Tables"]["team_billing"]["Row"] }
         Returns: Json
       }
       create_coaching_session_with_actions: {
@@ -2455,6 +2464,7 @@ export type Database = {
         }[]
       }
       generate_team_code: { Args: never; Returns: string }
+      get_my_entitlement: { Args: never; Returns: Json }
       get_or_create_daily_stats: {
         Args: { p_user_id: string }
         Returns: {
@@ -2665,6 +2675,17 @@ export type Database = {
         | "roleplay"
         | "custom"
       competition_status: "upcoming" | "active" | "completed" | "cancelled"
+      entitlement_reason:
+        | "ok"
+        | "trial"
+        | "trial_expired"
+        | "active"
+        | "cancel_at_period_end"
+        | "past_due_grace"
+        | "no_team"
+        | "no_billing"
+        | "expired"
+        | "unknown_status"
       gauntlet_challenge_type:
         | "objection_blast"
         | "pitch_perfect"
@@ -2895,6 +2916,18 @@ export const Constants = {
         "custom",
       ],
       competition_status: ["upcoming", "active", "completed", "cancelled"],
+      entitlement_reason: [
+        "ok",
+        "trial",
+        "trial_expired",
+        "active",
+        "cancel_at_period_end",
+        "past_due_grace",
+        "no_team",
+        "no_billing",
+        "expired",
+        "unknown_status",
+      ],
       gauntlet_challenge_type: [
         "objection_blast",
         "pitch_perfect",
