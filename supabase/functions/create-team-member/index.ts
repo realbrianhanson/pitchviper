@@ -375,8 +375,8 @@ Deno.serve(async (req) => {
           return json({ success: false, code: "invite_failed" }, 500);
         }
         // Profile now consumes a seat — reservation is fulfilled.
-        await supabase.rpc("svc_consume_reservation", { p_reservation_id: reservationId }).catch(() => {});
-        consumed = true;
+        const finalizeErr = await finalizeReservation();
+        if (finalizeErr) return finalizeErr;
         console.log(JSON.stringify({ managerId: manager.id, action: "invite", status: "resent" }));
         return json({ success: true, status: "resent" });
       }
