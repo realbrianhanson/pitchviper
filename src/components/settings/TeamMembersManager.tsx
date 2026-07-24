@@ -111,7 +111,7 @@ export function TeamMembersManager() {
   const resetForm = () => {
     setEmail("");
     setFullName("");
-    setSelectedAlowareUser("");
+    
   };
 
   const handleInvite = async () => {
