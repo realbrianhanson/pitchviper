@@ -42,16 +42,19 @@ export function isCoachingActionStatus(v: unknown): v is CoachingActionStatus {
   return typeof v === "string" && (COACHING_ACTION_STATUSES as readonly string[]).includes(v);
 }
 
-export function sanitizeSessionDraft(draft: CoachingSessionDraft): {
-  ok: true;
-  value: {
-    rep_id: string;
-    notes: string;
-    focus_areas: string[];
-    actions: Array<{ title: string; description: string | null; due_date: string | null }>;
-    due_date: string | null;
-  };
-} | { ok: false; error: string } {
+export type SanitizedSession = {
+  rep_id: string;
+  notes: string;
+  focus_areas: string[];
+  actions: Array<{ title: string; description: string | null; due_date: string | null }>;
+  due_date: string | null;
+};
+
+export type SanitizeResult =
+  | { ok: true; value: SanitizedSession }
+  | { ok: false; error: string };
+
+export function sanitizeSessionDraft(draft: CoachingSessionDraft): SanitizeResult {
   if (!isUuid(draft.rep_id)) return { ok: false, error: "Select a team member." };
 
   const notes = (draft.notes ?? "").trim();
