@@ -67,7 +67,8 @@ describe("verify_jwt=false coverage", () => {
         /authenticatePost\(/.test(s) ||
         /authenticatePostOrService\(/.test(s) ||
         /authClient\.auth\.getUser\(\)/.test(s) ||
-        /supabase\.auth\.getUser\(/.test(s);
+        /supabase\.auth\.getUser\(/.test(s) ||
+        /\/auth\/v1\/user/.test(s);
       expect(hasSelfAuth, `${name} must self-authenticate`).toBe(true);
     }
   });
