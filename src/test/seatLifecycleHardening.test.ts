@@ -105,9 +105,27 @@ describe("create-team-member seat reservation lifecycle", () => {
     expect(createMemberSrc).toMatch(/seat_limit_reached.*409.*402/s);
   });
 
-  it("consumes the reservation on both fresh and re-invite success paths", () => {
-    const consumes = createMemberSrc.match(/svc_consume_reservation/g) ?? [];
-    expect(consumes.length).toBeGreaterThanOrEqual(2);
+  it("uses a single checked finalize helper on both success paths", () => {
+    // Both fresh and re-invite success paths must go through finalizeReservation
+    // so consumed=true is only set when the RPC returned data===true and no error.
+    const calls = createMemberSrc.match(/finalizeReservation\(\)/g) ?? [];
+    expect(calls.length).toBeGreaterThanOrEqual(2);
+    // The helper checks the RPC result explicitly.
+    expect(createMemberSrc).toMatch(/data === true/);
+    expect(createMemberSrc).toMatch(/consumed = true/);
+    // Never blindly assume success from svc_consume_reservation.
+    expect(createMemberSrc).not.toMatch(
+      /svc_consume_reservation[\s\S]{0,200}?\.catch\(\(\) => \{\}\);\s*consumed = true/,
+    );
+  });
+
+  it("cleans up and returns invite_failed if consuming the reservation fails", () => {
+    expect(createMemberSrc).toMatch(/reservation_finalize_failed/);
+    // Failure path releases and returns invite_failed instead of silently
+    // marking the seat consumed.
+    expect(createMemberSrc).toMatch(
+      /svc_release_reservation[\s\S]{0,400}?reservation_finalize_failed[\s\S]{0,200}?code: "invite_failed"/,
+    );
   });
 
   it("releases the reservation in a finally block on any failure path", () => {
@@ -115,7 +133,50 @@ describe("create-team-member seat reservation lifecycle", () => {
     expect(createMemberSrc).toMatch(/} finally {\s*await release\(\);/);
   });
 
+  it("outer catch logs only a stable code and never leaks an exception message", () => {
+    expect(createMemberSrc).toMatch(/} catch {\s*\n\s*console\.log[\s\S]*?status: "exception"/);
+    expect(createMemberSrc).not.toMatch(/err\.message/);
+    expect(createMemberSrc).not.toMatch(/msg\.slice/);
+  });
+
   it("supports resend-invite for existing invited users", () => {
     expect(createMemberSrc).toMatch(/action: z\.literal\("resend-invite"\)/);
+  });
+});
+
+const licensedSeatsSrc = readFileSync(
+  resolve(__dirname, "../../src/components/billing/LicensedSeats.tsx"),
+  "utf-8",
+);
+
+describe("LicensedSeats validation", () => {
+  it("does not silently clamp user input before submitting", () => {
+    // The old implementation submitted a `clamped` value; the new one sends
+    // exact `seats` and refuses to submit when out of range.
+    expect(licensedSeatsSrc).not.toMatch(/body:\s*\{\s*seats:\s*clamped\s*\}/);
+    expect(licensedSeatsSrc).toMatch(/body:\s*\{\s*seats\s*\}/);
+  });
+
+  it("computes a valid flag as integer && seats>=max(5,used) && seats<=500", () => {
+    expect(licensedSeatsSrc).toMatch(/Number\.isInteger\(seats\)/);
+    expect(licensedSeatsSrc).toMatch(/seats >= minAllowed/);
+    expect(licensedSeatsSrc).toMatch(/seats <= MAX_SEATS/);
+    expect(licensedSeatsSrc).toMatch(/Math\.max\(MIN_SEATS, used\)/);
+  });
+
+  it("disables submit and surfaces inline validation when invalid", () => {
+    expect(licensedSeatsSrc).toMatch(/disabled = [^;]*!valid/);
+    expect(licensedSeatsSrc).toMatch(/validationMessage/);
+    expect(licensedSeatsSrc).toMatch(/aria-invalid=\{!valid\}/);
+  });
+
+  it("preserves the useEffect that syncs the input with the authoritative limit", () => {
+    expect(licensedSeatsSrc).toMatch(/useEffect\(\(\) => \{\s*setSeats\(initial\);/);
+  });
+
+  it("keeps the estimate and per-seat proration copy", () => {
+    expect(licensedSeatsSrc).toMatch(/Estimated:/);
+    expect(licensedSeatsSrc).toMatch(/perSeatPrice/);
+    expect(licensedSeatsSrc).toMatch(/formatUSD\(perSeat\)/);
   });
 });
