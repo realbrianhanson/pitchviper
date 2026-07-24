@@ -183,6 +183,9 @@ export default function CommandCenter() {
             />
           </div>
         </div>
+
+        {/* Row 3: My coaching actions */}
+        <MyCoachingActions />
       </div>
     </AppLayout>
   );
