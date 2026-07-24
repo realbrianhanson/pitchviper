@@ -1694,39 +1694,101 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_webhook_events: {
+        Row: {
+          attempts: number
+          error: string | null
+          event_id: string
+          event_type: string
+          object_id: string | null
+          processed_at: string | null
+          received_at: string
+          status: string
+          team_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          error?: string | null
+          event_id: string
+          event_type: string
+          object_id?: string | null
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          team_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          error?: string | null
+          event_id?: string
+          event_type?: string
+          object_id?: string | null
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          team_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_webhook_events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_billing: {
         Row: {
+          billing_interval: string
+          cancel_at_period_end: boolean
           created_at: string
           current_period_end: string | null
+          last_webhook_at: string | null
           plan: string
           seat_limit: number
           status: string
           stripe_customer_id: string | null
+          stripe_price_id: string | null
           stripe_subscription_id: string | null
+          subscription_quantity: number
           team_id: string
           trial_ends_at: string
           updated_at: string
         }
         Insert: {
+          billing_interval?: string
+          cancel_at_period_end?: boolean
           created_at?: string
           current_period_end?: string | null
+          last_webhook_at?: string | null
           plan?: string
           seat_limit?: number
           status?: string
           stripe_customer_id?: string | null
+          stripe_price_id?: string | null
           stripe_subscription_id?: string | null
+          subscription_quantity?: number
           team_id: string
           trial_ends_at?: string
           updated_at?: string
         }
         Update: {
+          billing_interval?: string
+          cancel_at_period_end?: boolean
           created_at?: string
           current_period_end?: string | null
+          last_webhook_at?: string | null
           plan?: string
           seat_limit?: number
           status?: string
           stripe_customer_id?: string | null
+          stripe_price_id?: string | null
           stripe_subscription_id?: string | null
+          subscription_quantity?: number
           team_id?: string
           trial_ends_at?: string
           updated_at?: string
