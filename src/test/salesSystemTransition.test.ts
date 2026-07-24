@@ -116,6 +116,8 @@ describe("Aloware customer surfaces are retired", () => {
         const trimmed = line.trim();
         if (trimmed.startsWith("//") || trimmed.startsWith("*")) continue;
         if (/AlowareContact/.test(line)) continue;
+        // legacy DB column names and enum ids are internal identifiers, not UI copy
+        if (/aloware_user_id|legacy_aloware/.test(line)) continue;
         bad.push({ file: f, line: trimmed });
       }
     }
